@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://repopilot.dev/schemas/fixture-config.schema.json",
+  "title": "RepoPilot fixture configuration",
+  "description": "Committed at the root of every repository fixture as repopilot.fixture.json. Defines the fixture's identity, its sandbox image, and the exhaustive allow-list of test commands the system may execute. A command absent from this file cannot be run (FR-022, Principle II).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slug", "displayName", "sandbox", "commands"],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$",
+      "description": "Stable identifier; must also appear in the deployment's allowed set."
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "sandbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["image"],
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Pre-baked container image with all dependencies already restored. The sandbox runs with no network, so nothing may be fetched at test time.",
+          "minLength": 1
+        },
+        "workdir": {
+          "type": "string",
+          "default": "/workspace",
+          "description": "Mount point of the run's disposable working copy inside the container."
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 900,
+          "default": 300,
+          "description": "Hard limit; on expiry the container is killed and the run reports a timeout (FR-023, SC-009)."
+        },
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 128,
+          "maximum": 8192,
+          "default": 2048
+        },
+        "cpuCount": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 8,
+          "default": 2
+        },
+        "pidsLimit": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 4096,
+          "default": 256
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "description": "Exhaustive allow-list. run_tests selects by name only; there is no parameter that accepts a command string.",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "argv"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,40}$",
+            "description": "Referenced by run_tests.command_name and by evaluation task definitions."
+          },
+          "argv": {
+            "type": "array",
+            "description": "Argument vector, executed directly. Never a shell string — no shell is invoked, so operators such as && or | have no special meaning and are rejected.",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "purpose": {
+            "type": "string",
+            "enum": ["baseline", "verify", "lint"],
+            "default": "verify"
+          }
+        }
+      }
+    },
+    "indexing": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional per-fixture overrides layered on top of the global exclusion set. Overrides may narrow what is indexed; they may not widen it to include an excluded category.",
+      "properties": {
+        "additionalExcludedGlobs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 100
+        },
+        "documentationGlobs": {
+          "type": "array",
+          "description": "Paths treated as documentation for search_docs. Defaults to README*, docs/**, and **/*.md.",
+          "items": { "type": "string" },
+          "maxItems": 50
+        },
+        "maxFileBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 262144
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "slug": "sample-dotnet-api",
+      "displayName": "Sample .NET Minimal API",
+      "description": "Small ASP.NET Core service used as an evaluation fixture.",
+      "sandbox": {
+        "image": "repopilot/fixture-dotnet:1",
+        "workdir": "/workspace",
+        "timeoutSeconds": 300,
+        "memoryMegabytes": 2048,
+        "cpuCount": 2
+      },
+      "commands": [
+        { "name": "unit", "argv": ["dotnet", "test", "--no-restore"], "purpose": "verify" },
+        { "name": "build", "argv": ["dotnet", "build", "--no-restore"], "purpose": "baseline" }
+      ],
+      "indexing": {
+        "additionalExcludedGlobs": ["**/TestResults/**"],
+        "maxFileBytes": 262144
+      }
+    }
+  ]
+}

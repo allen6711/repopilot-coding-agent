@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "title": "RepoPilot evaluation task",
+  "description": "One committed, reproducible task under evals/tasks/. At least 30 must exist for an evaluation to be complete (FR-031, SC-011). Every success condition must be checkable without human judgement. Reference patches live under evals/tasks/_reference/, outside every fixture root, so no indexing or file-read path can reach them (FR-035).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "repositorySlug",
+    "category",
+    "description",
+    "relevantFiles",
+    "baselineTestCommand",
+    "successTestCommand",
+    "successCondition"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$",
+      "description": "Stable identifier, e.g. bugfix-null-guard-01. Used as seededTaskId when starting a run."
+    },
+    "repositorySlug": {
+      "type": "string",
+      "description": "Must match a registered fixture's slug."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["bug_fix", "input_validation", "api_behavior", "refactor", "test_work"],
+      "description": "Mix targeted by the README evaluation plan: 8 bug fixes, 6 input-validation changes, 6 API behavior changes, 5 refactors, 5 test tasks."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 2000,
+      "description": "Given to the agent verbatim as the task. Must not name the files to change — that is the ground truth being measured."
+    },
+    "relevantFiles": {
+      "type": "array",
+      "description": "Ground truth for Recall@5. A task counts as retrieved when at least one of these appears in the top five retrieved results (FR-032, SC-005).",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "description": "Repository-relative path within the fixture."
+      }
+    },
+    "baselineTestCommand": {
+      "type": "string",
+      "description": "Command name from the fixture's allow-list. Establishes the pre-change state; for a bug-fix task this is expected to fail before the change."
+    },
+    "successTestCommand": {
+      "type": "string",
+      "description": "Command name from the fixture's allow-list, run after the approved change is applied."
+    },
+    "successCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "description": "Machine-checkable completion criterion. No option here admits human judgement.",
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "tests_pass" }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": { "const": "tests_pass_and_baseline_failed" },
+            "note": { "type": "string" }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": { "const": "output_contains" },
+            "substring": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "substring"]
+        },
+        {
+          "properties": {
+            "type": { "const": "output_matches" },
+            "pattern": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "pattern"]
+        }
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "tests_pass",
+            "tests_pass_and_baseline_failed",
+            "output_contains",
+            "output_matches"
+          ]
+        },
+        "substring": { "type": "string" },
+        "pattern": { "type": "string" },
+        "note": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "expectedChangedFiles": {
+      "type": "array",
+      "description": "Optional diagnostic signal only. Never used to decide success — that is the success condition's job — and never shown to the agent.",
+      "items": { "type": "string" },
+      "maxItems": 20
+    },
+    "referencePatch": {
+      "type": "string",
+      "description": "Optional path under evals/tasks/_reference/. Kept outside every fixture root by design; read only by humans reviewing the dataset, never by the agent (FR-035).",
+      "pattern": "^_reference/"
+    }
+  },
+  "examples": [
+    {
+      "id": "bugfix-null-guard-01",
+      "repositorySlug": "sample-dotnet-api",
+      "category": "bug_fix",
+      "description": "Requests to the order lookup endpoint return a 500 when the customer has no shipping address on file. It should return the order with a null shipping address instead of failing.",
+      "relevantFiles": ["src/Orders/OrderLookupService.cs"],
+      "baselineTestCommand": "unit",
+      "successTestCommand": "unit",
+      "successCondition": { "type": "tests_pass_and_baseline_failed" },
+      "expectedChangedFiles": ["src/Orders/OrderLookupService.cs"],
+      "referencePatch": "_reference/bugfix-null-guard-01.patch"
+    }
+  ]
+}
