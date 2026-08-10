@@ -24,6 +24,9 @@ independently.
 - **[P]**: Can run in parallel (different files, no dependency on incomplete work)
 - **[Story]**: Which user story the task belongs to (US1–US4)
 - Exact file paths are included in every task
+- **Suffixed IDs** (T011a, T052a, …) were added by the `/speckit-analyze` remediation on 2026-08-10.
+  They sit in execution order at the point of the suffix and never renumber an existing task, so
+  every earlier reference stays valid — the same convention the spec uses for requirement IDs.
 
 ## Path Conventions
 
@@ -37,18 +40,20 @@ task set, `sandbox/` for pre-baked execution images.
 
 **Purpose**: Project initialization and the scaffolding every later phase depends on.
 
-- [ ] T001 Create the solution and six projects (`RepoPilot.Domain`, `RepoPilot.Application`, `RepoPilot.Infrastructure`, `RepoPilot.Agent`, `RepoPilot.Api`, `RepoPilot.Evals`) with project references enforcing the layering in `RepoPilot.sln` and `src/`
-- [ ] T002 [P] Add package references — Agent Framework, Anthropic SDK, EF Core + Npgsql + pgvector, DiffPlex, Docker.DotNet, OpenTelemetry — to the relevant `src/RepoPilot.*/*.csproj`
-- [ ] T003 [P] Scaffold the React + TypeScript + Vite app in `web/repopilot-ui/` with TanStack Query and Vitest configured
-- [ ] T004 [P] Create `docker-compose.yml` with PostgreSQL 17 + pgvector and an OpenTelemetry collector
-- [ ] T005 [P] Create test projects `tests/unit/`, `tests/integration/` (with Testcontainers), and `tests/e2e/`
-- [ ] T006 [P] Configure formatting and linting in `.editorconfig`, `web/repopilot-ui/eslint.config.js`, and `web/repopilot-ui/.prettierrc`
-- [ ] T007 [P] Add the CI workflow in `.github/workflows/ci.yml` that runs unit, integration, and e2e tests and blocks merge on failure
-- [ ] T008 [P] Create pre-baked sandbox images with dependencies restored at build time in `sandbox/Dockerfile.dotnet`, `sandbox/Dockerfile.node`, and `sandbox/Dockerfile.python`
-- [ ] T009 [P] Define strongly-typed configuration options (workspace root, concurrency limit, context budget, indexing limits, allowed repository slugs) in `src/RepoPilot.Application/Configuration/`
-- [ ] T010 [P] Create the evaluation directory layout `evals/fixtures/`, `evals/tasks/`, `evals/tasks/_reference/`, and `evals/results/`, with `_reference/` deliberately outside every fixture root (FR-035)
-- [ ] T011 [P] Add the first repository fixture with its committed `repopilot.fixture.json` under `evals/fixtures/sample-dotnet-api/`
-- [ ] T012 [P] Add the fixture and evaluation-task JSON schemas to `src/RepoPilot.Application/Schemas/` and wire schema validation helpers
+- [X] T001 Create the solution and six projects (`RepoPilot.Domain`, `RepoPilot.Application`, `RepoPilot.Infrastructure`, `RepoPilot.Agent`, `RepoPilot.Api`, `RepoPilot.Evals`) with project references enforcing the layering in `RepoPilot.sln` and `src/`
+- [X] T002 [P] Add package references — Agent Framework, Anthropic SDK, EF Core + Npgsql + pgvector, DiffPlex, Docker.DotNet, OpenTelemetry — to the relevant `src/RepoPilot.*/*.csproj`
+- [X] T003 [P] Scaffold the React + TypeScript + Vite app in `web/repopilot-ui/` with TanStack Query and Vitest configured
+- [X] T004 [P] Create `docker-compose.yml` with PostgreSQL 17 + pgvector and an OpenTelemetry collector
+- [X] T005 [P] Create test projects `tests/unit/`, `tests/integration/` (with Testcontainers), and `tests/e2e/`
+- [X] T006 [P] Configure formatting and linting in `.editorconfig`, `web/repopilot-ui/eslint.config.js`, and `web/repopilot-ui/.prettierrc`
+- [X] T007 [P] Add the CI workflow in `.github/workflows/ci.yml` that runs unit, integration, and e2e tests and blocks merge on failure
+- [X] T007a [P] Add `.github/CODEOWNERS` requiring review on `evals/fixtures/**/repopilot.fixture.json` and `evals/tasks/**`, so a fixture's command allow-list cannot change without the same review as source code (FR-022b)
+- [X] T008 [P] Create pre-baked sandbox images with dependencies restored at build time in `sandbox/Dockerfile.dotnet`, `sandbox/Dockerfile.node`, and `sandbox/Dockerfile.python`
+- [X] T009 [P] Define strongly-typed configuration options (workspace root, concurrency limit, context budget, indexing limits, allowed repository slugs) in `src/RepoPilot.Application/Configuration/`
+- [X] T010 [P] Create the evaluation directory layout `evals/fixtures/`, `evals/tasks/`, `evals/tasks/_reference/`, and `evals/results/`, with `_reference/` deliberately outside every fixture root (FR-035)
+- [X] T011 [P] Add the first repository fixture with its committed `repopilot.fixture.json` under `evals/fixtures/sample-dotnet-api/`
+- [X] T011a [P] Add one seeded evaluation task (`evals/tasks/bugfix-null-guard-01.json`) against that fixture, so User Story 1's end-to-end test and the `quickstart.md` walkthrough can run before User Story 4 authors the full set. Without this, US1 is not independently testable despite claiming to be
+- [X] T012 [P] Add the fixture and evaluation-task JSON schemas to `src/RepoPilot.Application/Schemas/` and wire schema validation helpers
 
 ---
 
@@ -67,6 +72,8 @@ Story 1's independent test requires a pre-indexed fixture.
 - [ ] T015 [P] Unit test every (stage, trigger) pair exhaustively, asserting legal transitions succeed and illegal ones throw, in `tests/unit/Domain/RunStateMachineTests.cs` (FR-009)
 - [ ] T016 [P] Implement `PathGuard.Resolve(root, candidate)` with canonicalization and symlink-escape rejection in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-024, FR-024b)
 - [ ] T017 [P] Unit test `PathGuard` for `..` traversal, absolute paths, URL-encoded traversal, and symlinks present in the fixture, in `tests/unit/Domain/PathGuardTests.cs` (SC-010)
+- [ ] T017a [P] Extend `PathGuard` with a read-only root concept and register the fixture root as read-only, so a write resolution against it is refused at the guard rather than only being avoided by convention, in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-016a)
+- [ ] T017b [P] Unit test that every write-intent resolution against the fixture root is refused on all code paths, in `tests/unit/Domain/FixtureIsReadOnlyTests.cs` (FR-016a)
 - [ ] T018 [P] Implement `DiffHash` canonical serialization (entries sorted by path, `path\noperation\nsha256(content)`, joined and hashed) in `src/RepoPilot.Domain/Proposals/DiffHash.cs` (FR-019a)
 - [ ] T019 [P] Unit test `DiffHash` for entry-order independence, content sensitivity, and stability across diff-rendering changes, in `tests/unit/Domain/DiffHashTests.cs` (FR-020a)
 - [ ] T020 [P] Define the four permission classes and the `CapabilityDescriptor` that binds a capability to exactly one class in `src/RepoPilot.Domain/Capabilities/` (FR-026c)
@@ -80,6 +87,7 @@ Story 1's independent test requires a pre-indexed fixture.
 - [ ] T025 Implement `RepoPilotDbContext` with entity configurations for all ten entities from data-model.md in `src/RepoPilot.Infrastructure/Persistence/`
 - [ ] T026 Create the initial migration enabling pgvector, creating the PostgreSQL enums, HNSW/GIN/trigram indexes, and the UNIQUE constraints on `approval_decisions.proposal_id` and `(run_id, sequence)` in `src/RepoPilot.Infrastructure/Migrations/`
 - [ ] T027 Integration test that the database itself refuses a second decision on a decided proposal and refuses a decision with a null actor or hash, in `tests/integration/Persistence/ApprovalConstraintTests.cs` (FR-018, SC-015)
+- [ ] T027a Configure decision records as append-only — no update or delete path in the model configuration, enforced by database grants — and integration test that an update or delete attempt fails and that records outlive their run, in `src/RepoPilot.Infrastructure/Persistence/AuditConfiguration.cs` and `tests/integration/Persistence/AuditImmutabilityTests.cs` (FR-019b)
 - [ ] T028 [P] Define repository port interfaces in `src/RepoPilot.Application/Ports/` and their EF Core implementations in `src/RepoPilot.Infrastructure/Persistence/Repositories/`
 
 ### Provider adapters
@@ -87,6 +95,7 @@ Story 1's independent test requires a pre-indexed fixture.
 - [ ] T029 [P] Define `IChatProviderAdapter` in `src/RepoPilot.Application/Ports/IChatProviderAdapter.cs` and implement it over the Anthropic SDK with `claude-opus-5`, adaptive thinking, and per-stage effort in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs`
 - [ ] T030 [P] Define `IEmbeddingProviderAdapter` and implement the local ONNX generator, pinning model id and dimensions per repository, in `src/RepoPilot.Infrastructure/Providers/OnnxEmbeddingAdapter.cs`
 - [ ] T031 [P] Architecture test asserting no provider or SDK type is referenced from `RepoPilot.Application` or `RepoPilot.Domain`, in `tests/unit/Architecture/LayeringTests.cs`
+- [ ] T031a [P] Capture token and cost metadata from provider responses in the adapter and attach it to the run and stage spans and to a cost metric, in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs` and `src/RepoPilot.Infrastructure/Observability/` — the constitution requires traces to cover token and cost metadata where the provider exposes it, and T043 alone does not name it (Principle IV)
 
 ### Retrieval pipeline
 
@@ -102,6 +111,7 @@ Story 1's independent test requires a pre-indexed fixture.
 
 - [ ] T039 [P] Implement `ToolInvoker` enforcing permission class, path guard, size and context budgets, and writing the audit record in a `finally` block, in `src/RepoPilot.Agent/Invocation/ToolInvoker.cs` (FR-027)
 - [ ] T040 [P] Unit test that a throwing capability still produces a `failed` audit record and that exceeding the context budget refuses rather than truncates, in `tests/unit/Agent/ToolInvokerTests.cs` (FR-006)
+- [ ] T040a [P] Unit test the per-file size limit at both enforcement points — indexing exclusion and bounded file read — in `tests/unit/Agent/FileSizeLimitTests.cs`, closing the constitution's "file-size and context-size limits" test area (only the context half was covered by T040)
 - [ ] T041 [P] Implement `RunEventStore` with monotonic per-run sequence and strict persist-then-publish ordering in `src/RepoPilot.Infrastructure/Events/RunEventStore.cs`
 - [ ] T042 [P] Integration test that sequences are gap-free and ordered under concurrent writes, in `tests/integration/Events/RunEventSequenceTests.cs`
 - [ ] T043 [P] Wire OpenTelemetry — `ActivitySource("RepoPilot")`, run/stage/capability spans, metrics, OTLP exporter — in `src/RepoPilot.Infrastructure/Observability/`
@@ -132,6 +142,7 @@ other story implemented.
 - [ ] T050 [P] [US1] Implement the `read_file` capability applying the exclusion predicate and size limit in `src/RepoPilot.Agent/Capabilities/ReadFileCapability.cs`
 - [ ] T051 [P] [US1] Implement the `search_code` capability over the hybrid retriever in `src/RepoPilot.Agent/Capabilities/SearchCodeCapability.cs`
 - [ ] T052 [P] [US1] Implement the `search_docs` capability restricted to documentation entries in `src/RepoPilot.Agent/Capabilities/SearchDocsCapability.cs`
+- [ ] T052a [US1] Implement plan production — the agent emits a short human-readable plan, persisted and published as a `plan_produced` event, before any proposal can be created — in `src/RepoPilot.Agent/PlanStage.cs` and `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-010)
 - [ ] T053 [US1] Implement the `propose_patch` capability with no filesystem writer injected, in `src/RepoPilot.Agent/Capabilities/ProposePatchCapability.cs` (FR-014)
 - [ ] T054 [US1] Unit test that the working copy is byte-identical before and after `propose_patch`, in `tests/unit/Agent/ProposePatchWritesNothingTests.cs` (Principle I)
 - [ ] T055 [US1] Implement proposal validation — size caps, binary rejection, empty-proposal rejection, path guard on every entry — in `src/RepoPilot.Application/Proposals/ProposalValidator.cs` (FR-011a, FR-008b)
@@ -146,6 +157,7 @@ other story implemented.
 - [ ] T061 [US1] Integration test that apply without an approval record is refused and no file handle is opened, in `tests/integration/Approval/ApprovalRequiredTests.cs` (Principle I)
 - [ ] T062 [US1] Integration test that a rejected proposal never applies a patch and leaves the workspace unchanged, in `tests/integration/Approval/RejectionAppliesNothingTests.cs` (FR-017)
 - [ ] T063 [US1] Integration test that a hash mismatch between approval and stored proposal refuses the apply, in `tests/integration/Approval/DiffHashMismatchTests.cs` (FR-020a)
+- [ ] T063a [US1] Add a per-run assertion that nothing outside the run's working copy changed — snapshot the fixture directory and the workspace root before and after each run — usable during MVP validation rather than only across the evaluation set, in `tests/integration/Security/PerRunNoOutsideWritesTests.cs` (SC-002)
 - [ ] T064 [US1] Implement `DecideProposalUseCase` recording the decision with actor, timestamp, run, hash, and mode, refusing an already-decided proposal, in `src/RepoPilot.Application/UseCases/DecideProposalUseCase.cs` (FR-018, FR-019)
 
 ### Sandboxed execution
@@ -163,6 +175,7 @@ other story implemented.
 - [ ] T072 [US1] Implement `RunOrchestrator` as resumable segments (retrieve → plan → propose, then apply → test) driving every stage transition through `RunStateMachine`, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-008, Principle IV)
 - [ ] T073 [US1] Implement `RunQueue` with a bounded channel and concurrency limiter that releases the slot on entering `awaiting approval` and re-acquires it at `applying`, in `src/RepoPilot.Application/Runs/RunQueue.cs` (FR-013a, FR-013b)
 - [ ] T074 [US1] Integration test that six runs at a limit of four queue rather than fail, and that a run awaiting approval holds no slot, in `tests/integration/Runs/ConcurrencyTests.cs`
+- [ ] T074a [US1] Measure start-of-run to first `proposal_created` for a single seeded task at or below the concurrency limit and assert it stays under three minutes, in `tests/integration/Runs/SingleRunLatencyTests.cs` (SC-003)
 - [ ] T075 [US1] Implement the revision loop — at most two attempts, each requiring its own approval — in `src/RepoPilot.Application/Runs/RevisionPolicy.cs` (FR-012, FR-013)
 - [ ] T076 [US1] Integration test that the third failure ends the run as failed and that no revision applies without its own approval, in `tests/integration/Runs/RevisionLimitTests.cs`
 - [ ] T077 [US1] Implement the `no change` terminal outcome for both the deliberate no-op and insufficient-context reasons, ensuring no empty proposal is ever offered, in `src/RepoPilot.Application/Runs/NoChangeOutcome.cs` (FR-008b)
@@ -179,8 +192,9 @@ other story implemented.
 ### Review UI
 
 - [ ] T084 [P] [US1] Generate the typed API client from `contracts/rest-api.yaml` into `web/repopilot-ui/src/api/`
-- [ ] T085 [P] [US1] Build the run detail page shell in `web/repopilot-ui/src/pages/RunDetail.tsx`
+- [ ] T085 [P] [US1] Build the run detail page in `web/repopilot-ui/src/pages/RunDetail.tsx`, composing the plan panel, diff viewer, approval bar, and test output, and loading run state from `GET /api/runs/{id}` and `/proposal`
 - [ ] T086 [P] [US1] Build the `DiffViewer` component showing every affected file and the full diff in `web/repopilot-ui/src/components/DiffViewer.tsx` (SC-004)
+- [ ] T086a [P] [US1] Build the `PlanPanel` component displaying the run's short plan above the diff in `web/repopilot-ui/src/components/PlanPanel.tsx` (FR-010)
 - [ ] T087 [US1] Build the `ApprovalBar` component echoing the proposal hash on approve or reject in `web/repopilot-ui/src/components/ApprovalBar.tsx`
 - [ ] T088 [P] [US1] Build the `TestOutput` component in `web/repopilot-ui/src/components/TestOutput.tsx`
 
@@ -188,6 +202,7 @@ other story implemented.
 
 - [ ] T089 [US1] End-to-end test driving a seeded task from creation through approval, apply, test execution, and final result, in `tests/e2e/SeededTaskFlowTests.cs`
 - [ ] T090 [US1] End-to-end test of the rejection path asserting the fixture and workspace are unchanged and the decision is recorded, in `tests/e2e/RejectionFlowTests.cs`
+- [ ] T090a [US1] Test that a `plan_produced` event always precedes `proposal_created` for a run, and that a proposal created without a preceding plan is refused, in `tests/integration/Runs/PlanPrecedesProposalTests.cs` (FR-010)
 
 **Checkpoint**: User Story 1 is fully functional and independently testable. This is the MVP.
 
@@ -212,7 +227,7 @@ ranges — with no agent run involved.
 - [ ] T099 [P] [US2] Contract test the repository endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/RepositoryApiContractTests.cs`
 - [ ] T100 [P] [US2] Build the repository list page with register, index trigger, and status display in `web/repopilot-ui/src/pages/RepositoryList.tsx`
 - [ ] T101 [P] [US2] Build the search panel showing path, line range, and score in `web/repopilot-ui/src/components/SearchPanel.tsx`
-- [ ] T102 [US2] Acceptance test through the API that re-indexing serves the previous index until the swap completes and leaves no duplicates, in `tests/integration/Indexing/AtomicSwapAcceptanceTests.cs` (FR-003a)
+- [ ] T102 [US2] Acceptance test through the API that re-indexing serves the previous index until the swap completes and leaves no duplicates, in `tests/integration/Indexing/AtomicSwapAcceptanceTests.cs` (FR-003a) — the swap mechanism itself is covered by T036; this asserts only the operator-visible behavior
 
 **Checkpoint**: Stories 1 and 2 both work independently.
 
@@ -238,6 +253,7 @@ before the run completes.
 - [ ] T112 [US3] Integration test measuring that 95% of stage transitions and recorded actions reach a subscriber within 2 seconds, in `tests/integration/Events/EventLatencyTests.cs` (SC-013)
 - [ ] T113 [US3] Reconstructability test rebuilding a completed run's stage sequence, action history, diff, and test output from stored data alone, with the service stopped and the working copy deleted, in `tests/integration/Events/ReconstructabilityTests.cs` (FR-029, SC-008)
 - [ ] T114 [US3] Implement the `Accept: application/json` variant of the events endpoint returning the persisted list, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs`
+- [ ] T114a [P] [US3] Contract test the events endpoint — SSE frame shape, `id` as sequence, and the JSON variant — against `contracts/rest-api.yaml` and `contracts/run-events.md`, in `tests/integration/Contracts/RunEventContractTests.cs`
 
 **Checkpoint**: Stories 1, 2, and 3 all work independently.
 
@@ -252,7 +268,12 @@ retrieval-only baseline compared against the tool-enabled agent.
 metrics are consistent and derived only from committed task definitions.
 
 - [ ] T115 [P] [US4] Implement the evaluation task loader with schema validation in `src/RepoPilot.Evals/Tasks/EvaluationTaskLoader.cs` (FR-031)
-- [ ] T116 [US4] Author at least 30 committed tasks across the five categories under `evals/tasks/`, each with relevant files, baseline and success commands, and a machine-checkable success condition (FR-031, SC-011)
+- [ ] T116 [US4] Author 8 bug-fix tasks under `evals/tasks/`, each with relevant files, baseline and success commands, and a machine-checkable success condition (FR-031, SC-011)
+- [ ] T116a [P] [US4] Author 6 input-validation tasks under `evals/tasks/` to the same standard
+- [ ] T116b [P] [US4] Author 6 API-behavior-change tasks under `evals/tasks/` to the same standard
+- [ ] T116c [P] [US4] Author 5 refactor tasks with unchanged tests under `evals/tasks/` to the same standard
+- [ ] T116d [P] [US4] Author 5 test-generation and test-fix tasks under `evals/tasks/` to the same standard
+- [ ] T116e [US4] Assert the committed set holds at least 30 tasks and that every success condition is machine-checkable, in `tests/unit/Evals/TaskSetCompletenessTests.cs` (SC-011)
 - [ ] T117 [P] [US4] Add reference patches under `evals/tasks/_reference/`, outside every fixture root, and assert in test that no run resolves a path there (FR-035)
 - [ ] T118 [US4] Build the evaluation CLI host reusing `RunOrchestrator` rather than a parallel path, in `src/RepoPilot.Evals/Program.cs` (FR-034)
 - [ ] T119 [US4] Implement programmatic approval that still writes a real decision record bound to the diff hash and is available only to evaluation runs, in `src/RepoPilot.Application/Approval/ProgrammaticApproval.cs` (FR-015b)
@@ -264,6 +285,7 @@ metrics are consistent and derived only from committed task definitions.
 - [ ] T125 [US4] Ensure an evaluation never triggers re-indexing, so repeat runs read identical vectors, in `src/RepoPilot.Evals/Program.cs` (SC-007)
 - [ ] T126 [US4] Integration test that two consecutive evaluations over unchanged fixtures produce identical retrieval metrics, in `tests/integration/Evals/DeterminismTests.cs`
 - [ ] T127 [US4] Implement `POST /api/evaluations` and `GET /api/evaluations/{id}` delegating to the same library, in `src/RepoPilot.Api/Endpoints/EvaluationEndpoints.cs`
+- [ ] T127a [P] [US4] Contract test the evaluation endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/EvaluationApiContractTests.cs`
 - [ ] T128 [US4] Write the committed JSON report to `evals/results/` in `src/RepoPilot.Evals/Reporting/ReportWriter.cs`
 - [ ] T129 [P] [US4] Add an adversarial fixture whose content attempts to instruct the agent to skip approval or read outside the workspace, under `evals/fixtures/adversarial-content/`
 - [ ] T130 [US4] Integration test that no control is bypassed by repository content — no unapproved write, no out-of-workspace access, no command outside the allow-list, no secret reaching model context, in `tests/integration/Security/ContentAsInstructionTests.cs` (FR-026d, SC-014)
@@ -276,10 +298,10 @@ metrics are consistent and derived only from committed task definitions.
 
 **Purpose**: Release-gate verification and work that spans stories.
 
-- [ ] T131 [P] Implement the SC-002 verification harness comparing every fixture directory and every path outside the working copy before and after each run, in `tests/integration/Security/NoOutsideWritesTests.cs`
+- [ ] T131 [P] Extend the per-run check from T063a into a full-evaluation-set sweep, asserting zero modifications outside any run's working copy across every task in the committed set, in `tests/integration/Security/EvaluationSetNoOutsideWritesTests.cs` (SC-002)
 - [ ] T132 [P] Implement the SC-010 refusal report counting every refused out-of-workspace attempt across the evaluation set, in `src/RepoPilot.Evals/Metrics/RefusalReport.cs`
 - [ ] T133 [P] Add the SC-015 check asserting every decision record carries an actor and a hash, in `tests/integration/Approval/DecisionRecordCompletenessTests.cs`
-- [ ] T134 [P] Verify SC-003 — start of run to reviewable diff under three minutes at or below the concurrency limit — in `tests/integration/Runs/LatencyBudgetTests.cs`
+- [ ] T134 [P] Extend the single-run measurement from T074a to the full committed task set, reporting the distribution rather than a single sample, in `tests/integration/Runs/LatencyBudgetTests.cs` (SC-003)
 - [ ] T135 [P] Accessibility pass over the review view (keyboard operation of approve and reject, focus order, contrast) in `web/repopilot-ui/src/components/`
 - [ ] T136 [P] Author the capability contract and fixture authoring guide in `docs/`
 - [ ] T137 Replace the target values in `README.md` with measured values from the first complete evaluation, keeping unmeasured figures labelled as targets (Principle V)
@@ -300,6 +322,9 @@ metrics are consistent and derived only from committed task definitions.
   useful once US1 produces runs worth watching.
 - **User Story 4 (Phase 6)**: Depends on Foundational and on US1, because evaluation drives the same
   orchestrator that US1 builds.
+- **US1 does not depend on US4.** T011a seeds one evaluation task in Phase 1 precisely so that US1's
+  end-to-end test and the `quickstart.md` walkthrough can run before the full committed set is
+  authored in T116–T116d. Without that seed the claimed independence would be false.
 - **Polish (Phase 7)**: Depends on the stories whose criteria it verifies.
 
 ### Why the indexing pipeline is foundational rather than part of US2
@@ -320,14 +345,15 @@ registration, allowed-set enforcement, exclusion reporting, the search endpoint,
 
 ### Parallel Opportunities
 
-- Phase 1: T002–T012 are all `[P]`.
-- Phase 2: the twelve domain tasks (T013–T024) are all `[P]` and independent of persistence; T029–T031
-  and T039–T045 are `[P]` once persistence exists.
-- Phase 3: the four read capabilities (T049–T052) are `[P]`; the UI components (T084–T086, T088) are
-  `[P]` once the typed client exists.
+- Phase 1: T002–T012 are all `[P]`, including T007a and T011a.
+- Phase 2: the domain tasks (T013–T024, plus T017a and T017b) are all `[P]` and independent of
+  persistence; T029–T031a and T039–T045 are `[P]` once persistence exists.
+- Phase 3: the four read capabilities (T049–T052) are `[P]`; the UI components (T084–T086a, T088)
+  are `[P]` once the typed client exists.
 - Phase 4: T091, T092, T099, T100, T101 are `[P]`.
-- Phase 5: T110 and T111 are `[P]`.
-- Phase 6: T115, T117, T123, T129 are `[P]`.
+- Phase 5: T110, T111, and T114a are `[P]`.
+- Phase 6: T115, T116a–T116d, T117, T123, T127a, T129 are `[P]` — the four task-authoring batches are
+  independent of each other and are the largest parallel opportunity in the phase.
 - Once Phase 2 completes, US1, US2, and US3 can be staffed in parallel.
 
 ---
@@ -391,9 +417,20 @@ After Phase 2 completes:
 ## Notes
 
 - `[P]` means a different file with no dependency on incomplete work.
-- The governance tests are not ordinary coverage: T054, T061, T062, T063, T066, T070, and T130 are
-  the executable form of Principles I and II. A change that makes any of them fail is a release
-  blocker, not a bug to triage.
+- The governance tests are not ordinary coverage: T054, T061, T062, T063, T063a, T066, T070, T017b,
+  and T130 are the executable form of Principles I and II. A change that makes any of them fail is a
+  release blocker, not a bug to triage.
+- **Constitution mandatory-test mapping.** The Development Workflow section names eleven areas; each
+  maps to a task here so none can be silently skipped: path allow-list → T017; file-size and
+  context-size limits → T040, T040a; run-state transitions → T015; approval required before apply →
+  T061; rejected approval never applies → T062; tool-call audit records → T040; retrieval filtering →
+  T036; **proposal parsing and validation including the change-content hash → T019, T055, T056**;
+  allowed test-command enforcement → T070; sandbox timeout behavior → T068; evaluation metric
+  calculation → T123. The emphasised area was reworded by constitution amendment 1.0.1 because this
+  design carries full replacement content per file rather than model-authored diff hunks, so no diff
+  parser exists to test.
+- **SC-005 and SC-006 are reported, not gated.** Metrics tasks compute and publish them; no task
+  fails a build on the value. The release gate is SC-001 (approval coverage), which T124 enforces.
 - Commit after each task or logical group; stop at any checkpoint to validate a story on its own.
 - Do not begin stretch-goal work (identity, RBAC, GitHub App, checkpoint/resume, reviewer agent, MCP
   exposure, provider comparison) until the MVP acceptance criteria in `README.md` are met.

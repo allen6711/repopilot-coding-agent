@@ -1,0 +1,32 @@
+# Sandbox image for .NET repository fixtures.
+#
+# Principle II: this container runs with --network none, a read-only root
+# filesystem, all capabilities dropped, and a non-root user. Nothing can be
+# fetched at test time, so every dependency must already be present in the
+# image. A fixture whose tests need a network fetch is not a valid fixture.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+# Non-root. The working copy is bind-mounted at /workspace and is the only
+# writable path the test process is given.
+RUN useradd --uid 1000 --create-home --shell /bin/bash runner
+
+# Warm the NuGet cache with the packages the sample fixtures need, so
+# `dotnet test --no-restore` succeeds with no network.
+COPY sandbox/nuget-warmup/ /tmp/warmup/
+RUN if [ -f /tmp/warmup/warmup.csproj ]; then \
+        dotnet restore /tmp/warmup/warmup.csproj --packages /home/runner/.nuget/packages; \
+    fi && \
+    chown -R runner:runner /home/runner/.nuget && \
+    rm -rf /tmp/warmup
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    NUGET_PACKAGES=/home/runner/.nuget/packages
+
+USER runner
+WORKDIR /workspace
+
+# No ENTRYPOINT: the command comes from the fixture's committed allow-list as an
+# argument vector (FR-022a), never from a shell string and never from the model.

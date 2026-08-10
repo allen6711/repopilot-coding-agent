@@ -1,0 +1,31 @@
+{
+  "$schema": "https://repopilot.dev/schemas/fixture-config.schema.json",
+  "slug": "sample-dotnet-api",
+  "displayName": "Sample Orders Service",
+  "description": "Small .NET library used as an evaluation fixture. Contains a deliberate null-reference defect in the order lookup path.",
+  "sandbox": {
+    "image": "repopilot/fixture-dotnet:1",
+    "workdir": "/workspace",
+    "timeoutSeconds": 300,
+    "memoryMegabytes": 2048,
+    "cpuCount": 2,
+    "pidsLimit": 256
+  },
+  "commands": [
+    {
+      "name": "unit",
+      "argv": ["dotnet", "test", "tests/Orders.Tests/Orders.Tests.csproj", "--no-restore"],
+      "purpose": "verify"
+    },
+    {
+      "name": "build",
+      "argv": ["dotnet", "build", "src/Orders/Orders.csproj", "--no-restore"],
+      "purpose": "baseline"
+    }
+  ],
+  "indexing": {
+    "additionalExcludedGlobs": ["**/TestResults/**"],
+    "documentationGlobs": ["README.md", "docs/**"],
+    "maxFileBytes": 262144
+  }
+}

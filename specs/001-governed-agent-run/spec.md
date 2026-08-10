@@ -395,9 +395,13 @@ renumbered.
 - **SC-004**: A reviewer can decide on a proposal without leaving the review view — the affected
   file list and full diff are visible before deciding, in 100% of proposals.
 - **SC-005**: A relevant file appears in the top five retrieved results for at least 80% of tasks
-  in the committed set.
+  in the committed set. This is a reported development target, not a release gate: a measured value
+  below 80% is published as measured and triggers a retrieval review, and never blocks release or
+  is presented as if it had been met. Contrast SC-001, which does block release.
 - **SC-006**: The tool-enabled agent completes a measurably higher share of tasks than the
-  retrieval-only baseline on the same task set, with both figures reported.
+  retrieval-only baseline on the same task set, with both figures reported. Like SC-005 this is
+  reported rather than gated; the requirement that blocks release is that both figures are measured
+  and published, not that the gap reaches any particular size.
 - **SC-007**: Repeating an evaluation on unchanged fixtures reproduces identical retrieval metrics.
 - **SC-008**: 100% of completed runs can be reconstructed — stage sequence, actions taken, diff,
   and test output — from recorded data alone, with no reliance on live state.

@@ -5,6 +5,10 @@
 The MVP exposes exactly seven capabilities — no more. Each declares a permission class that is
 enforced at the call site inside `ToolInvoker`, never by prompt instruction (Principle III).
 
+**Terminology**: "capability" is the formal term used in the specification and in these contracts.
+"Tool" is an accepted alias, used in the constitution and README and in anything the model sees,
+because that is the word the agent runtime uses. The two always refer to the same seven things.
+
 ## Permission classes
 
 | Class | Meaning | Enforcement point |
@@ -256,7 +260,9 @@ that accepts a command string — the shape of the schema is itself part of the 
 **Returns**: `{ passed, exit_code, output, duration_ms, timed_out }` — `output` is redacted for
 secrets before it is stored, displayed, or supplied to the agent for a revision attempt (FR-025b).
 **Errors**: `command_not_allowed`, `image_unavailable`, `sandbox_unavailable`,
-`sandbox_not_terminable`
+`sandbox_not_terminable` — the latter two map to the run outcome reasons
+`isolated_env_unavailable` and `isolated_env_not_terminable` (FR-008c). The capability error names
+stay runtime-flavoured; the recorded run reason does not.
 
 ---
 

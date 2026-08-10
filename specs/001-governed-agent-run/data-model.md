@@ -95,7 +95,7 @@ One task execution against one repository.
 | `seeded_task_id` | text NULL | Set when started from the committed task set |
 | `stage` | enum NOT NULL | See state machine below |
 | `terminal_outcome` | enum NULL | `succeeded` \| `failed` \| `rejected` \| `cancelled` \| `no_change` |
-| `outcome_reason` | enum NULL | Normative set (FR-008c), stored as a PostgreSQL enum so an undocumented reason cannot be persisted: `revision_limit_reached`, `deliberate_no_op`, `insufficient_context`, `proposal_rejected`, `abandoned_by_user`, `provider_unavailable`, `sandbox_unavailable`, `sandbox_not_terminable`, `service_restarted` |
+| `outcome_reason` | enum NULL | Normative set (FR-008c), stored as a PostgreSQL enum so an undocumented reason cannot be persisted: `revision_limit_reached`, `deliberate_no_op`, `insufficient_context`, `proposal_rejected`, `abandoned_by_user`, `provider_unavailable`, `isolated_env_unavailable`, `isolated_env_not_terminable`, `service_restarted` — named to match the FR-008c vocabulary rather than the runtime that happens to implement isolation |
 | `failure_stage` | enum NULL | Stage at which a non-success outcome occurred (FR-030) |
 | `revision_attempt` | int NOT NULL DEFAULT 0 | Capped at 2 (FR-012) |
 | `tools_enabled` | boolean NOT NULL DEFAULT true | `false` for the retrieval-only baseline |

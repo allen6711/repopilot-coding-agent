@@ -1,0 +1,72 @@
+name: CI
+
+# The constitution requires CI to block merge on failing tests.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  backend:
+    name: Backend (build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -warnaserror
+
+      - name: Unit tests
+        run: dotnet test tests/unit --no-build --verbosity normal
+
+      # A Docker daemon is available on ubuntu-latest, so the Testcontainers and
+      # sandbox-runner tests that skip locally must run for real here. If they
+      # skip in CI, the governance controls are unverified — fail instead.
+      - name: Integration tests
+        run: dotnet test tests/integration --no-build --verbosity normal
+
+      - name: End-to-end tests
+        run: dotnet test tests/e2e --no-build --verbosity normal
+
+      - name: Assert no governance test was skipped
+        run: |
+          dotnet test tests/integration --no-build --logger "trx;LogFileName=integration.trx" || true
+          if grep -q 'outcome="NotExecuted"' **/TestResults/integration.trx 2>/dev/null; then
+            echo "::error::A test was skipped in CI. Docker-gated tests must execute here."
+            exit 1
+          fi
+
+  frontend:
+    name: Frontend (build + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/repopilot-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: web/repopilot-ui/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test --run

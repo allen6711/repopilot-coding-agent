@@ -7,6 +7,10 @@
   "additionalProperties": false,
   "required": ["slug", "displayName", "sandbox", "commands"],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Editor hint only. Declared so additionalProperties:false does not reject it — the strictness exists to catch smuggled configuration keys such as a shell override, not standard tooling metadata."
+    },
     "slug": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$",

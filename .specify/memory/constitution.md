@@ -14,6 +14,20 @@ Sync Impact Report
   - [SECTION_3_NAME] → Development Workflow and Quality Gates
 - Removed sections: none
 - Deferred TODOs: none
+
+Amendment 1.0.0 → 1.0.1 (2026-08-10)
+- Bump rationale: PATCH — wording clarification, no change to any principle or governance rule.
+- Change: the mandatory test area "diff parsing and validation" is reworded to "proposal parsing
+  and validation including the change-content hash".
+- Why: the design settled on change proposals carrying full replacement content per file rather
+  than model-authored unified-diff hunks (see specs/001-governed-agent-run/research.md, decision 7).
+  There is consequently no diff parser in the system, and the original wording named a component
+  that does not exist — leaving a mandated test area with nothing to bind to. The reworded area
+  covers the same risk: that a proposed change is parsed, validated, and hash-bound before any
+  human sees it or any file is written.
+- Artifacts requiring follow-up: specs/001-governed-agent-run/tasks.md maps this area to its
+  validation and hashing tasks. No migration plan is required — Principles I, II, and V are
+  untouched.
 -->
 
 # RepoPilot Constitution
@@ -104,8 +118,9 @@ this project from a demo.
 - The following MUST have automated tests before the related feature is considered complete: path
   allow-list validation, file-size and context-size limits, run-state transitions, approval
   required before `apply_patch`, rejected approval never applying a patch, tool-call audit
-  records, retrieval filtering, diff parsing and validation, allowed test-command enforcement,
-  Docker sandbox timeout behavior, and evaluation metric calculation.
+  records, retrieval filtering, proposal parsing and validation including the change-content hash,
+  allowed test-command enforcement, Docker sandbox timeout behavior, and evaluation metric
+  calculation.
 - Integration tests MUST cover PostgreSQL/pgvector and the sandbox runner. At least one end-to-end
   test MUST run a seeded task from creation through approval, patch application, test execution,
   and final result.
@@ -143,4 +158,4 @@ be recorded in the pull request with an expiry condition — undocumented deviat
 Runtime development guidance for agents lives in the Spec Kit templates under `.specify/`; those
 templates read this constitution and MUST NOT contradict it.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-09 | **Last Amended**: 2026-08-09
+**Version**: 1.0.1 | **Ratified**: 2026-08-09 | **Last Amended**: 2026-08-10

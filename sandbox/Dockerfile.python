@@ -1,0 +1,19 @@
+# Sandbox image for Python repository fixtures.
+# See Dockerfile.dotnet for the isolation contract — identical here.
+
+FROM python:3.13-slim-bookworm
+
+RUN useradd --uid 1000 --create-home --shell /bin/bash runner
+
+# Install fixture dependencies at build time; the sandbox has no network.
+COPY sandbox/python-warmup/requirements.txt /tmp/requirements.txt
+RUN if [ -s /tmp/requirements.txt ]; then \
+        pip install --no-cache-dir -r /tmp/requirements.txt; \
+    fi && \
+    rm -f /tmp/requirements.txt
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+USER runner
+WORKDIR /workspace
