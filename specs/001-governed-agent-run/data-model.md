@@ -95,7 +95,7 @@ One task execution against one repository.
 | `seeded_task_id` | text NULL | Set when started from the committed task set |
 | `stage` | enum NOT NULL | See state machine below |
 | `terminal_outcome` | enum NULL | `succeeded` \| `failed` \| `rejected` \| `cancelled` \| `no_change` |
-| `outcome_reason` | text NULL | e.g. `tests_failed`, `revision_limit_reached`, `deliberate_no_op`, `insufficient_context`, `provider_unavailable`, `service_restarted`, `abandoned_by_user` |
+| `outcome_reason` | enum NULL | Normative set (FR-008c), stored as a PostgreSQL enum so an undocumented reason cannot be persisted: `revision_limit_reached`, `deliberate_no_op`, `insufficient_context`, `proposal_rejected`, `abandoned_by_user`, `provider_unavailable`, `sandbox_unavailable`, `sandbox_not_terminable`, `service_restarted` |
 | `failure_stage` | enum NULL | Stage at which a non-success outcome occurred (FR-030) |
 | `revision_attempt` | int NOT NULL DEFAULT 0 | Capped at 2 (FR-012) |
 | `tools_enabled` | boolean NOT NULL DEFAULT true | `false` for the retrieval-only baseline |
@@ -210,8 +210,16 @@ A human decision on one proposal. Append-only; there is no update path.
 **Validation rules**
 
 - The UNIQUE constraint on `proposal_id` is the enforcement point for FR-018: a second decision — of
-  either kind, in either order — fails at the database, not in a race-prone service check.
-- `diff_hash` must equal the proposal's `diff_hash` at insert time.
+  either kind, in either order, by the same or a different actor — fails at the database, not in a
+  race-prone service check.
+- `diff_hash` must equal the proposal's `diff_hash` at insert time, and the request must carry it
+  back explicitly (FR-020a).
+- `decided_by` must be non-empty; a decision with no actor identity is refused (FR-015a, SC-015).
+  The value is attributable, not verified — the deployment supplies it and this feature does not
+  authenticate it.
+- `mode = programmatic` is accepted only for runs belonging to an evaluation run (FR-015b).
+- Append-only: the table has no update or delete path, and rows outlive nothing shorter than the run
+  they belong to (FR-019b).
 - A `reject` decision performs no filesystem operation whatsoever (FR-017).
 
 ## 7. WorkingCopy
@@ -228,7 +236,9 @@ A disposable copy of a fixture created for one run.
 
 **Validation rules**
 
-- Created lazily on entering `applying`; a run that ends before that never allocates one.
+- Created on entering `retrieving`, before the run's first file access. Every agent file read and
+  every applied write resolves against this directory and nothing else, which is what makes "the
+  repository workspace" a single unambiguous root for the whole run (FR-024a).
 - Destroyed when the run reaches any terminal outcome, including `cancelled` and `rejected`
   (FR-026a).
 - Startup sweep deletes any directory under `{workspaceRoot}/runs/` whose run id is unknown or
@@ -247,7 +257,7 @@ Outcome of one sandboxed execution.
 | `command_name` | text NOT NULL | Name from the fixture allow-list, not a shell string |
 | `passed` | boolean NOT NULL | |
 | `exit_code` | int NULL | `NULL` when terminated by timeout |
-| `output` | text NOT NULL | Combined stdout/stderr, truncated to a configured cap with a marker |
+| `output` | text NOT NULL | Combined stdout/stderr, redacted for secrets before storage, display, or re-entry into model context (FR-025b), then truncated to a configured cap with a marker |
 | `duration_ms` | int NOT NULL | |
 | `timed_out` | boolean NOT NULL DEFAULT false | FR-023, SC-009 |
 | `created_at` | timestamptz NOT NULL | |
@@ -334,3 +344,13 @@ These are the invariants the mandatory test list in the constitution targets dir
 6. **Reconstructability.** Given `run_events`, `change_proposals`, and `test_results` for a run id,
    the full stage sequence, action history, final diff, and test output are recoverable with no
    reference to the working copy or to live process state.
+7. **One workspace root per run.** The working copy exists for the whole run, from `retrieving`
+   onward, so there is exactly one meaning of "inside the workspace" at every stage. The registered
+   fixture is opened for reading only — by the indexer and by the copy that creates the working
+   copy — and by no code path for writing (FR-016a).
+8. **Atomic application.** Applying a proposal stages every file and commits them together; an
+   interruption part-way leaves the working copy in its pre-apply state, and a restart destroys it
+   regardless (FR-016b, FR-030a).
+9. **No decision without an actor and a hash.** Both columns are `NOT NULL` and the hash is compared
+   against the stored proposal before insert, so SC-015 is a schema property rather than a runtime
+   check that could be skipped.

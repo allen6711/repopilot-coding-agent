@@ -36,7 +36,14 @@ Every invocation, whoever calls it:
 3. Charges its returned content against the run's retrieved-context budget; exceeding it fails the
    call with `context_budget_exceeded` rather than silently truncating.
 4. Resolves every caller-supplied path through `PathGuard.Resolve(workspaceRoot, candidate)`, which
-   canonicalizes, follows no symlink out of the root, and rejects before any I/O (FR-024, SC-010).
+   canonicalizes, rejects any path resolving outside the root through a symbolic link — including
+   links already present in the fixture — and refuses before any I/O. A refusal is recorded as a
+   failed action so it can be counted (FR-024, FR-024b, FR-024c, SC-010).
+5. Resolves paths against exactly one root: the run's own disposable working copy, which is created
+   on entering `retrieving` and therefore exists before the first read of the run (FR-024a). The
+   registered fixture is never opened for writing on any path (FR-016a).
+6. Treats repository content as data, never as instruction. No text read from the repository can
+   relax a permission class, a path check, a size limit, or the approval requirement (FR-026d).
 
 ---
 
@@ -246,8 +253,10 @@ that accepts a command string — the shape of the schema is itself part of the 
 | Environment | none inherited from the host; no credentials of any kind |
 | Timeout | from the fixture config; enforced by container kill, reported as `timed_out` (FR-023) |
 
-**Returns**: `{ passed, exit_code, output, duration_ms, timed_out }`
-**Errors**: `command_not_allowed`, `image_unavailable`, `sandbox_unavailable`
+**Returns**: `{ passed, exit_code, output, duration_ms, timed_out }` — `output` is redacted for
+secrets before it is stored, displayed, or supplied to the agent for a revision attempt (FR-025b).
+**Errors**: `command_not_allowed`, `image_unavailable`, `sandbox_unavailable`,
+`sandbox_not_terminable`
 
 ---
 

@@ -95,6 +95,14 @@ written. No gate regressed. The data model adds no entity that stores a secret; 
 exposes no endpoint that writes without an approval; the tool contract pins each permission class to
 a documented enforcement point. **PASS.**
 
+**Post-checklist re-check (2026-08-10)**: after the governance checklist remediation added 30
+requirements and 2 success criteria, every gate was re-evaluated. Three controls that had existed
+only as design decisions in this plan are now traceable to requirements — network isolation
+(FR-021a), resource limits (FR-021b), and the seven-capability set with its permission classes
+(FR-026c) — which strengthens Gates II and III rather than changing them. One conflict was resolved:
+the working copy is now created on entering `retrieving`, giving a single unambiguous workspace root
+for the whole run (FR-024a). **PASS.**
+
 ## Project Structure
 
 ### Documentation (this feature)
@@ -132,7 +140,8 @@ src/
 ├── RepoPilot.Agent/               # Microsoft Agent Framework host, prompt assembly,
 │                                  # ToolInvoker, tool schema registration.
 ├── RepoPilot.Api/                 # Minimal API endpoints, SSE stream, DI composition root,
-│                                  # startup orphan-workspace sweep.
+│                                  # startup recovery: fail non-terminal runs, sweep orphaned
+│                                  # working copies and containers (FR-030a).
 └── RepoPilot.Evals/               # Console CLI: runs the committed task set, computes metrics,
                                    # writes results to evals/results/ and to the database.
 

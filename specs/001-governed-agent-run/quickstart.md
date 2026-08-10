@@ -125,11 +125,12 @@ curl -s localhost:8080/api/runs/$RUN/proposal
 without leaving the review view (FR-011, SC-004). At this moment the fixture directory and the
 working copy are both unchanged (acceptance scenario 1, Principle I).
 
-Verify that nothing was written:
+Verify that nothing was written. The working copy exists from the start of the run (FR-024a), so the
+check is that it still matches the fixture, not that it is absent:
 
 ```bash
-git status --porcelain evals/fixtures/sample-dotnet-api   # expect empty
-ls .workspace/runs/                                        # expect no directory for $RUN yet
+git status --porcelain evals/fixtures/sample-dotnet-api    # fixture untouched — expect empty
+diff -r evals/fixtures/sample-dotnet-api .workspace/runs/$RUN   # expect no differences
 ```
 
 ```bash
@@ -164,9 +165,15 @@ Start a second run, wait for `awaiting_approval`, then reject.
 |---|---|
 | `POST /approval` twice for the same proposal | Second call returns `409` — the change is applied at most once (FR-018) |
 | Approve, then reject the same proposal | `409`; the earlier decision stands |
-| `POST /approval` with a `diffHash` that does not match the stored proposal | `422`, nothing applied (FR-020) |
+| A second reviewer decides an already-decided proposal | `409`; the single-reviewer assumption is enforced, not assumed (FR-018) |
+| `POST /approval` with a `diffHash` that does not match the stored proposal | `422`, nothing applied (FR-020a) |
+| `POST /approval` or `POST /cancel` with no `X-Actor` header | `422`; no decision record is written (FR-015a, SC-015) |
+| `POST /approval` requesting programmatic mode on an interactive run | `422` (FR-015b) |
 | Directly invoking apply for a proposal with no approval row (integration test) | Refused with `approval_required`; no file handle is opened (FR-014) |
-| A proposal entry whose path escapes the working copy | Rejected before any file is touched, and the run reports the violation rather than skipping it (FR-024, SC-010) |
+| A proposal entry whose path escapes the working copy | Rejected before any file is touched, recorded as a refused action, and the run reports the violation rather than skipping it (FR-024, FR-024c, SC-010) |
+| A fixture containing a symlink pointing outside the workspace | Reads through it are refused (FR-024b) |
+| A proposal exceeding the configured size caps | Refused at creation, so no proposal reaches a reviewer that cannot be displayed in full (FR-011a, SC-004) |
+| A fixture seeded with content instructing the agent to skip approval | No control is relaxed; the change still requires an approval record (FR-026d, SC-014) |
 
 ---
 
@@ -176,12 +183,15 @@ Start a second run, wait for `awaiting_approval`, then reject.
 |---|---|
 | Tests fail after approval | A new proposal is presented for its own approval; nothing is applied without it (FR-013, acceptance scenario 4) |
 | Tests still fail after 2 revision attempts | Run ends `failed` with `outcomeReason: revision_limit_reached`, last diff and last output retained |
-| Tests exceed the fixture timeout | Container killed at the limit; `timedOut: true`; run reports a timeout (FR-023, SC-009) |
+| Tests exceed the fixture timeout | Container killed at the limit; `timedOut: true`; run reports a timeout. Clean finishes and forced terminations are counted separately (FR-023, SC-009) |
+| Timeout expires but the container cannot be killed | Run ends `failed` with `sandbox_not_terminable` rather than waiting indefinitely (FR-023b) |
+| Container runtime unavailable | Run ends `failed` with `sandbox_unavailable`; there is no unisolated fallback path (Assumptions) |
+| Cancelled mid-apply | No partially applied change survives — application is atomic, and the working copy is destroyed (FR-016b, FR-026a) |
 | Agent concludes nothing should change | Run ends `no_change` with `deliberate_no_op`; no empty diff is offered for approval (FR-008b) |
 | Task too vague to locate code | Run ends `no_change` with `insufficient_context` |
 | Reviewer never responds | Run stays `awaiting_approval` indefinitely and holds no concurrency slot; `POST /cancel` ends it as `cancelled` (FR-008a, FR-013b) |
 | Model provider unavailable mid-run | Run ends `failed` at its current stage with the reason recorded; no partial change applied (FR-030) |
-| Service restarted mid-run | Run ends `failed` with `service_restarted`; its working copy is swept at startup (SC-012) |
+| Service restarted mid-run | Run ends `failed` with `service_restarted`; the working copy is swept and any container it owned is removed, so no partial change and no orphaned resource survives (FR-030a, FR-026e, SC-012) |
 
 ---
 
@@ -261,6 +271,20 @@ The mandatory coverage areas from the constitution, and where each is verified:
 | Docker sandbox timeout behavior | `tests/integration` — sandbox runner |
 | Evaluation metric calculation | `tests/unit` |
 | End-to-end seeded task | `tests/e2e` |
+
+Added by the governance checklist remediation:
+
+| Area | Location |
+|---|---|
+| Symlink escape from inside a fixture | `tests/integration` — path guard |
+| Refused access recorded as a countable failed action | `tests/integration` |
+| Actor identity required on decisions and cancellations | `tests/integration` |
+| Programmatic approval refused on interactive runs | `tests/integration` |
+| Secret redaction of sandbox output before storage, display, and model context | `tests/unit` + `tests/integration` |
+| Proposal size caps refused at creation | `tests/unit` |
+| Atomic apply — interruption leaves the pre-apply state | `tests/integration` |
+| Restart recovery — non-terminal runs failed, copies and containers swept | `tests/integration` |
+| Repository content treated as data, not instruction | `tests/integration` — adversarial fixture |
 
 ---
 

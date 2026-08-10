@@ -320,7 +320,9 @@ paths:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
         "422":
-          description: diffHash does not match the stored proposal (FR-020)
+          description: >-
+            diffHash does not match the stored proposal (FR-020a), X-Actor is absent or empty
+            (FR-015a), or programmatic mode was requested for an interactive run (FR-015b)
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
@@ -409,11 +411,12 @@ components:
     Actor:
       name: X-Actor
       in: header
-      required: false
+      required: true
       description: >-
-        Identity recorded on the decision. Supplied by the deployment; formal identity is a
-        stretch goal and out of scope for this feature.
-      schema: { type: string }
+        Identity recorded on the decision or cancellation. Required and non-empty — a request
+        without it is refused (FR-015a, SC-015). Supplied by the deployment and recorded as
+        attributable but not verified; authentication is out of scope for this feature.
+      schema: { type: string, minLength: 1 }
 
   responses:
     NotFound:

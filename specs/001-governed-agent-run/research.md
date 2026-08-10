@@ -138,9 +138,14 @@ the principle is named.
 ## 9. Working copy lifecycle
 
 - **Decision**: One directory per run at `{workspaceRoot}/runs/{runId}`, created by recursive copy of
-  the fixture directory honoring the same exclusion rules as indexing. Destroyed by
+  the fixture directory honoring the same exclusion rules as indexing. Created **on entering
+  `retrieving`**, before the run's first file access, so that "the workspace" has one meaning for
+  the whole run and every read and write resolves against the same root (FR-024a). Destroyed by
   `WorkingCopyManager` when the run reaches any terminal outcome. A startup hosted service sweeps
   `{workspaceRoot}/runs/` and deletes any directory whose run id is absent or terminal (FR-026a).
+- **Application is atomic**: entries are written to temporary files inside the working copy and moved
+  into place together, so an interruption part-way leaves the pre-apply state rather than a partial
+  change (FR-016b).
 - **Rationale**: Fixtures are committed subdirectories of this repository, not independent git
   repositories, so a copy is the honest primitive. Naming the directory after the run id makes the
   orphan sweep a set difference against the database rather than a heuristic.
@@ -257,9 +262,11 @@ the principle is named.
   known token shapes and high-entropy strings, which excludes the whole file. Indexing reports
   included and excluded counts by reason (FR-003).
 - **Rationale**: Principle II requires that credentials and secrets never enter model context. Because
-  the only content the agent can read is an indexed chunk or a `read_file` of a path inside the
-  working copy, and both go through the same exclusion set, exclusion at index time plus the same
-  predicate in `read_file` covers every path to the model.
+  the only content the agent can read is an indexed chunk, a `read_file` of a path inside the
+  working copy, or **test output returned during a revision attempt**, all three go through the same
+  redaction predicate: exclusion at index time, the same predicate in `read_file`, and a redaction
+  pass over sandbox output before it is stored, displayed, or returned to the agent (FR-025a,
+  FR-025b). Recorded action arguments pass through the same predicate (FR-027a).
 - **Alternatives considered**: Redacting secrets in-place rather than excluding the file — rejected;
   partial redaction is a detection problem with false negatives, and excluding is cheap at fixture
   scale. Excluding only at retrieval time — rejected; the secret would still sit in the database.

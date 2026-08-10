@@ -170,6 +170,11 @@ reported metrics are consistent and derived only from committed task definitions
 
 ### Functional Requirements
 
+Requirement identifiers are stable and never reused. A requirement added after the original
+numbering carries a lower-case suffix on the requirement it refines (FR-008a refines FR-008), so
+that existing references stay valid across amendments. Suffixes are assigned in order and are never
+renumbered.
+
 **Repository and retrieval**
 
 - **FR-001**: System MUST allow an operator to register a repository fixture from a configured
@@ -178,16 +183,21 @@ reported metrics are consistent and derived only from committed task definitions
   exclude binaries, build artifacts, dependency directories, secrets, and files exceeding
   configured size limits.
 - **FR-003**: System MUST report, after indexing, how many files were included and how many were
-  excluded.
+  excluded, broken down by exclusion reason.
 - **FR-003a**: Re-indexing a repository MUST rebuild its index in full and replace the previous
   index atomically, leaving no duplicated or stale entries. Searches issued during a rebuild MUST
   continue to return results from the previous index until the replacement completes.
+- **FR-003b**: The exclusion reasons behind FR-002 are normative and MUST be at least: binary
+  content, file size above the configured limit, excluded directory, secret-bearing filename, and
+  secret-bearing content. A repository fixture MAY narrow what is indexed; it MUST NOT widen
+  indexing to include a category excluded by FR-002.
 - **FR-004**: System MUST return search results that each identify a repository-relative path, the
   matching content, its start and end line, and a relevance score.
 - **FR-005**: System MUST support both exact-identifier lookup and meaning-based search over
   indexed content.
 - **FR-006**: System MUST enforce a limit on how much retrieved content is supplied to the agent
-  in a single run.
+  in a single run, and MUST refuse the retrieval that would exceed it rather than silently
+  truncating content.
 
 **Run lifecycle**
 
@@ -198,14 +208,24 @@ reported metrics are consistent and derived only from committed task definitions
   outcome drawn from: succeeded, failed, rejected, cancelled, or no change.
 - **FR-008a**: System MUST end a run as cancelled when a human explicitly abandons it from any
   non-terminal stage, including while awaiting approval, and MUST record who abandoned it and when.
+  A cancellation request carrying no actor identity MUST be refused.
 - **FR-008b**: System MUST end a run as no change when the agent proposes no modification, and MUST
   record a reason distinguishing a deliberate no-op from insufficient retrieved context. A
   no-change run MUST NOT present an empty diff for approval.
+- **FR-008c**: Every terminal outcome MUST carry a recorded reason drawn from a normative,
+  documented set. That set MUST at minimum distinguish: tests still failing after the allowed
+  revision attempts, deliberate no-op, insufficient retrieved context, proposal rejected, abandoned
+  by a human, model provider unavailable, isolated execution environment unavailable, and service
+  restarted. A reason outside the documented set MUST NOT be recordable.
 - **FR-009**: System MUST reject any stage transition that is not permitted from the run's current
   stage, and MUST record the rejection rather than continuing.
 - **FR-010**: System MUST produce a short human-readable plan before proposing any change.
 - **FR-011**: System MUST present proposed changes as a reviewable diff listing every affected
   file.
+- **FR-011a**: System MUST enforce configured limits on proposal size — the number of affected
+  files, the content size per file, and the total content size — and MUST refuse a proposal that
+  exceeds them at creation time. This guarantees that every proposal reaching a reviewer is one that
+  can be shown in full, so SC-004 holds without a display-truncation exception.
 - **FR-012**: System MUST allow at most two revision attempts after a failed test run, and MUST
   end the run as failed once that limit is reached.
 - **FR-013**: Each revision attempt MUST require its own separate approval before being applied.
@@ -219,28 +239,73 @@ reported metrics are consistent and derived only from committed task definitions
 
 - **FR-014**: System MUST NOT modify any file until a human approval decision for that specific
   proposed change has been recorded.
+- **FR-014a**: An approval does not expire. A proposal is immutable once created and a run's working
+  copy is owned exclusively by that run, so a decision recorded after any delay remains a valid
+  decision on the exact content it names.
 - **FR-015**: Users MUST be able to approve or reject a proposed change, and MUST be able to see
   the full diff before deciding.
+- **FR-015a**: System MUST record an actor identity on every approval, rejection, and cancellation,
+  and MUST refuse the decision when no actor identity is supplied. Because authentication is out of
+  scope for this feature, the recorded identity is only as trustworthy as the deployment supplying
+  it, and the system MUST NOT present it as verified.
+- **FR-015b**: Programmatic approval MUST be available only to evaluation runs. An interactive run
+  MUST NOT be approvable by any means other than a recorded human decision.
 - **FR-016**: System MUST apply approved changes only to a disposable working copy, never to the
   registered repository fixture.
+- **FR-016a**: System MUST NOT open the registered repository fixture for writing on any code path.
+  The fixture is a read-only source, used only for indexing and for creating a working copy.
+- **FR-016b**: System MUST apply an approved change atomically — either every affected file is
+  updated or none is — so that an interruption during application cannot leave a partially applied
+  change.
 - **FR-017**: System MUST leave the workspace unchanged when a proposal is rejected.
 - **FR-018**: System MUST refuse a second decision on a proposal that has already been decided.
 - **FR-019**: System MUST record every approval and rejection with the deciding user, timestamp,
   the run it belongs to, and an identifier of the exact change decided upon.
+- **FR-019a**: That identifier MUST be a collision-resistant hash of the exact change content, so
+  that two different changes cannot share a decision record.
+- **FR-019b**: Approval and rejection records MUST be append-only — never updated, never deleted —
+  and MUST be retained for at least as long as the run they belong to.
 - **FR-020**: System MUST refuse to apply a change whose content differs from what was shown to
   the approver.
+- **FR-020a**: "What was shown to the approver" means the change content identified by the hash
+  presented alongside the diff. The decision request MUST carry that hash back, and the system MUST
+  refuse the decision when it does not match the stored proposal.
 
 **Execution and safety**
 
 - **FR-021**: System MUST execute all tests in an isolated environment with no access to
   credentials, secrets, or the host filesystem outside the working copy.
+- **FR-021a**: That isolated environment MUST have no network access.
+- **FR-021b**: System MUST enforce configured limits on the isolated environment's memory, processor
+  share, and process count, so that a runaway or hostile test cannot exhaust the host.
 - **FR-022**: System MUST run only test commands drawn from repository configuration, and MUST
   refuse any command not present in that configuration.
+- **FR-022a**: Allowed test commands MUST be expressed as argument vectors, never as strings
+  interpreted by a shell, so that no command separator, redirection, or substitution can be
+  introduced through configuration or through model output.
+- **FR-022b**: A fixture's test configuration MUST be committed alongside the fixture and MUST be
+  changed only through the same review path as source code.
 - **FR-023**: System MUST terminate test execution at a configured time limit and report the run
   as timed out.
+- **FR-023a**: The configured time limit MUST fall within documented lower and upper bounds, so that
+  a misconfiguration cannot disable the limit in practice.
+- **FR-023b**: When the time limit expires and the isolated environment cannot be terminated, the
+  run MUST fail with that reason recorded rather than waiting indefinitely.
 - **FR-024**: System MUST reject any file access resolving outside the repository workspace before
   performing the access.
+- **FR-024a**: For all agent file access, "the repository workspace" means the run's own disposable
+  working copy. System MUST create that working copy before the run's first file access and MUST
+  resolve every path against it.
+- **FR-024b**: System MUST reject a path that resolves outside the workspace through a symbolic
+  link, including links present in the fixture itself.
+- **FR-024c**: System MUST record every refused access attempt as a failed action with its reason,
+  so that refusals are countable rather than silent.
 - **FR-025**: System MUST NOT expose repository credentials or secrets to the model.
+- **FR-025a**: For FR-025, secrets are at minimum: credential and key files, environment files, and
+  file content matching known credential formats. This definition is normative and MUST be applied
+  identically at indexing time and at file-read time.
+- **FR-025b**: System MUST redact secrets from test output before that output is supplied to the
+  agent for a revision attempt and before it is displayed to a reviewer.
 - **FR-026**: System MUST NOT permit the agent to execute arbitrary commands; only the defined
   capability set is available.
 - **FR-026a**: System MUST destroy a run's disposable working copy as soon as that run reaches any
@@ -249,11 +314,23 @@ reported metrics are consistent and derived only from committed task definitions
 - **FR-026b**: System MUST persist a run's final diff, test output, and events in storage
   independent of the working copy, so that no completed run depends on the working copy still
   existing in order to be inspected or reconstructed.
+- **FR-026c**: The defined capability set MUST consist of exactly seven capabilities: list files,
+  search code, read a bounded file, search documentation, propose a change, apply an approved
+  change, and run an allow-listed test command. Each capability MUST declare exactly one permission
+  class — read, propose-only, write-requiring-approval, or isolated-execution — and that class MUST
+  be enforced where the capability is invoked, not by any instruction given to the model.
+- **FR-026d**: Repository content MUST NOT be treated as instruction. Every control in this
+  specification MUST be enforced at the point of action regardless of what any indexed or read
+  content asks for.
+- **FR-026e**: System MUST remove isolated execution environments left running by a service restart
+  or crash.
 
 **Visibility**
 
 - **FR-027**: System MUST record every agent action with its name, the run it belongs to, start
   and end time, and success or failure status.
+- **FR-027a**: Recorded action arguments MUST be summarized and redacted — never full file contents
+  and never secret values — because they are persisted and shown to reviewers.
 - **FR-028**: Users MUST be able to view a run's current stage, action history, proposed and final
   diff, and test output.
 - **FR-028a**: For a run in progress, stage transitions and newly recorded actions MUST become
@@ -261,6 +338,10 @@ reported metrics are consistent and derived only from committed task definitions
   reviewer taking any action to refresh.
 - **FR-029**: System MUST make a completed run reconstructable from its recorded events alone.
 - **FR-030**: System MUST report the reason and stage of failure for any run that does not succeed.
+- **FR-030a**: On service start, System MUST end every run left in a non-terminal stage as failed
+  with the restart recorded as the reason, destroy its working copy, and remove any isolated
+  execution environment it owned — so that no partially applied change and no orphaned resource
+  survives a restart.
 
 **Evaluation**
 
@@ -301,10 +382,13 @@ reported metrics are consistent and derived only from committed task definitions
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% of applied changes across all runs and evaluations have a recorded human
-  approval matching the exact change applied. Any value below 100% blocks release.
+- **SC-001**: 100% of applied changes across all runs and evaluations have a recorded approval
+  decision whose change hash matches the change applied. Interactive and programmatic approvals are
+  reported separately, so that a programmatic decision is never presented as a human one. Any value
+  below 100% blocks release.
 - **SC-002**: Zero file modifications occur outside a disposable working copy, verified across the
-  full evaluation set.
+  full evaluation set by comparing every registered fixture directory and every path outside the
+  run's working copy before and after each run.
 - **SC-003**: A reviewer can go from starting a run to seeing a reviewable diff in under 3 minutes
   for a task in the committed set, measured while the system is at or below its configured
   concurrent-execution limit.
@@ -318,25 +402,46 @@ reported metrics are consistent and derived only from committed task definitions
 - **SC-008**: 100% of completed runs can be reconstructed — stage sequence, actions taken, diff,
   and test output — from recorded data alone, with no reliance on live state.
 - **SC-009**: 100% of test executions terminate within the configured time limit, either by
-  finishing or by being stopped and reported as timed out.
+  finishing on their own or by being stopped and reported as timed out; the two are counted and
+  reported separately.
 - **SC-010**: Every attempt to access a path outside the repository workspace is refused, with
-  zero successful escapes across the evaluation set.
+  zero successful escapes across the evaluation set. An attempt is counted at the point the path is
+  resolved, before any file operation, and is recorded as a refused action.
 - **SC-011**: The committed task set contains at least 30 tasks, each with a defined success
   condition that can be checked without human judgment.
 - **SC-012**: Zero working copies remain in storage for runs that have reached a terminal outcome,
-  verified across the full evaluation set and after a service restart.
+  observed after each run's cleanup completes and again after a service restart, across the full
+  evaluation set.
 - **SC-013**: For a run in progress, 95% of stage transitions and recorded actions become visible
   to a watching reviewer within 2 seconds, with no manual refresh.
+- **SC-014**: No control in this specification is bypassed by repository content, verified against
+  fixtures deliberately seeded with content that attempts to instruct the agent — zero cases in
+  which such content causes an unapproved write, an out-of-workspace access, a command outside the
+  allow-list, or a secret reaching model context.
+- **SC-015**: 100% of decision records — approvals, rejections, and cancellations — carry an actor
+  identity and a change hash, with zero records written without them.
 
 ## Assumptions
 
 - Repository fixtures are small, self-contained, and come from a pre-approved set committed to the
   project; arbitrary user-supplied repositories are out of scope for this feature.
 - A single reviewer decides each proposal. Multi-reviewer approval, delegation, and approval
-  policies are out of scope.
+  policies are out of scope. A second reviewer attempting a decision on an already-decided proposal
+  is refused by FR-018, so the single-reviewer assumption is enforced rather than merely assumed.
 - Authentication and role-based access control are out of scope for this feature; the reviewer
-  identity recorded on an approval comes from whatever identity the deployment supplies. Formal
-  identity is a stretch goal in the project README.
+  identity recorded on an approval comes from whatever identity the deployment supplies. The
+  consequence is explicit: the recorded actor is attributable but not verified, and a deployment
+  that does not authenticate its callers cannot prove who approved a change. Formal identity is a
+  stretch goal in the project README.
+- Separation of duties is not enforced: the person who starts a run may approve that run's own
+  proposal. Enforcing it requires the identity stretch goal; until then, the audit record makes
+  self-approval visible rather than preventing it.
+- The system depends on an isolated execution runtime being available to the service. When it is
+  unavailable, runs fail at the testing stage with that reason recorded rather than falling back to
+  an unisolated execution path.
+- Repository fixtures ship with their dependencies already available to the isolated environment.
+  Because that environment has no network access (FR-021a), a fixture whose tests require fetching
+  anything at execution time is not a valid fixture.
 - Each repository fixture ships with its own test configuration, including which commands are
   permitted and the time limit for execution.
 - Runs are single-repository and single-task; cross-repository changes and batched tasks are out
