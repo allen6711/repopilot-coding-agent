@@ -67,20 +67,20 @@ Story 1's independent test requires a pre-indexed fixture.
 
 ### Domain primitives
 
-- [ ] T013 [P] Define `RunStage`, `RunTrigger`, `TerminalOutcome`, and the normative `OutcomeReason` set (FR-008c) in `src/RepoPilot.Domain/Runs/`
-- [ ] T014 [P] Implement `RunStateMachine` as a static transition table with `TryTransition` and `IllegalTransitionException` in `src/RepoPilot.Domain/Runs/RunStateMachine.cs`
-- [ ] T015 [P] Unit test every (stage, trigger) pair exhaustively, asserting legal transitions succeed and illegal ones throw, in `tests/unit/Domain/RunStateMachineTests.cs` (FR-009)
-- [ ] T016 [P] Implement `PathGuard.Resolve(root, candidate)` with canonicalization and symlink-escape rejection in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-024, FR-024b)
-- [ ] T017 [P] Unit test `PathGuard` for `..` traversal, absolute paths, URL-encoded traversal, and symlinks present in the fixture, in `tests/unit/Domain/PathGuardTests.cs` (SC-010)
-- [ ] T017a [P] Extend `PathGuard` with a read-only root concept and register the fixture root as read-only, so a write resolution against it is refused at the guard rather than only being avoided by convention, in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-016a)
-- [ ] T017b [P] Unit test that every write-intent resolution against the fixture root is refused on all code paths, in `tests/unit/Domain/FixtureIsReadOnlyTests.cs` (FR-016a)
-- [ ] T018 [P] Implement `DiffHash` canonical serialization (entries sorted by path, `path\noperation\nsha256(content)`, joined and hashed) in `src/RepoPilot.Domain/Proposals/DiffHash.cs` (FR-019a)
-- [ ] T019 [P] Unit test `DiffHash` for entry-order independence, content sensitivity, and stability across diff-rendering changes, in `tests/unit/Domain/DiffHashTests.cs` (FR-020a)
-- [ ] T020 [P] Define the four permission classes and the `CapabilityDescriptor` that binds a capability to exactly one class in `src/RepoPilot.Domain/Capabilities/` (FR-026c)
-- [ ] T021 [P] Implement the shared `SecretRedactor` predicate covering credential/key files, environment files, and known credential content formats in `src/RepoPilot.Domain/Security/SecretRedactor.cs` (FR-025a)
-- [ ] T022 [P] Unit test `SecretRedactor` against known token shapes and high-entropy strings in `tests/unit/Domain/SecretRedactorTests.cs`
-- [ ] T023 [P] Implement `IndexingExclusionPolicy` returning one of the five normative reasons in `src/RepoPilot.Domain/Indexing/IndexingExclusionPolicy.cs` (FR-002, FR-003b)
-- [ ] T024 [P] Unit test the exclusion policy, including that a fixture override may narrow but never widen indexing, in `tests/unit/Domain/IndexingExclusionPolicyTests.cs` (FR-003b)
+- [X] T013 [P] Define `RunStage`, `RunTrigger`, `TerminalOutcome`, and the normative `OutcomeReason` set (FR-008c) in `src/RepoPilot.Domain/Runs/`
+- [X] T014 [P] Implement `RunStateMachine` as a static transition table with `TryTransition` and `IllegalTransitionException` in `src/RepoPilot.Domain/Runs/RunStateMachine.cs`
+- [X] T015 [P] Unit test every (stage, trigger) pair exhaustively, asserting legal transitions succeed and illegal ones throw, in `tests/unit/Domain/RunStateMachineTests.cs` (FR-009)
+- [X] T016 [P] Implement `PathGuard.Resolve(root, candidate)` with canonicalization and symlink-escape rejection in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-024, FR-024b)
+- [X] T017 [P] Unit test `PathGuard` for `..` traversal, absolute paths, URL-encoded traversal, and symlinks present in the fixture, in `tests/unit/Domain/PathGuardTests.cs` (SC-010)
+- [X] T017a [P] Extend `PathGuard` with a read-only root concept and register the fixture root as read-only, so a write resolution against it is refused at the guard rather than only being avoided by convention, in `src/RepoPilot.Domain/Workspace/PathGuard.cs` (FR-016a)
+- [X] T017b [P] Unit test that every write-intent resolution against the fixture root is refused on all code paths, in `tests/unit/Domain/FixtureIsReadOnlyTests.cs` (FR-016a)
+- [X] T018 [P] Implement `DiffHash` canonical serialization (entries sorted by path, `path\noperation\nsha256(content)`, joined and hashed) in `src/RepoPilot.Domain/Proposals/DiffHash.cs` (FR-019a)
+- [X] T019 [P] Unit test `DiffHash` for entry-order independence, content sensitivity, and stability across diff-rendering changes, in `tests/unit/Domain/DiffHashTests.cs` (FR-020a)
+- [X] T020 [P] Define the four permission classes and the `CapabilityDescriptor` that binds a capability to exactly one class in `src/RepoPilot.Domain/Capabilities/` (FR-026c)
+- [X] T021 [P] Implement the shared `SecretRedactor` predicate covering credential/key files, environment files, and known credential content formats in `src/RepoPilot.Domain/Security/SecretRedactor.cs` (FR-025a)
+- [X] T022 [P] Unit test `SecretRedactor` against known token shapes and high-entropy strings in `tests/unit/Domain/SecretRedactorTests.cs`
+- [X] T023 [P] Implement `IndexingExclusionPolicy` returning one of the five normative reasons in `src/RepoPilot.Domain/Indexing/IndexingExclusionPolicy.cs` (FR-002, FR-003b)
+- [X] T024 [P] Unit test the exclusion policy, including that a fixture override may narrow but never widen indexing, in `tests/unit/Domain/IndexingExclusionPolicyTests.cs` (FR-003b)
 
 ### Persistence
 
