@@ -84,11 +84,11 @@ Story 1's independent test requires a pre-indexed fixture.
 
 ### Persistence
 
-- [ ] T025 Implement `RepoPilotDbContext` with entity configurations for all ten entities from data-model.md in `src/RepoPilot.Infrastructure/Persistence/`
-- [ ] T026 Create the initial migration enabling pgvector, creating the PostgreSQL enums, HNSW/GIN/trigram indexes, and the UNIQUE constraints on `approval_decisions.proposal_id` and `(run_id, sequence)` in `src/RepoPilot.Infrastructure/Migrations/`
-- [ ] T027 Integration test that the database itself refuses a second decision on a decided proposal and refuses a decision with a null actor or hash, in `tests/integration/Persistence/ApprovalConstraintTests.cs` (FR-018, SC-015)
-- [ ] T027a Configure decision records as append-only — no update or delete path in the model configuration, enforced by database grants — and integration test that an update or delete attempt fails and that records outlive their run, in `src/RepoPilot.Infrastructure/Persistence/AuditConfiguration.cs` and `tests/integration/Persistence/AuditImmutabilityTests.cs` (FR-019b)
-- [ ] T028 [P] Define repository port interfaces in `src/RepoPilot.Application/Ports/` and their EF Core implementations in `src/RepoPilot.Infrastructure/Persistence/Repositories/`
+- [X] T025 Implement `RepoPilotDbContext` with entity configurations for all ten entities from data-model.md in `src/RepoPilot.Infrastructure/Persistence/`
+- [X] T026 Create the initial migration enabling pgvector, creating the PostgreSQL enums, HNSW/GIN/trigram indexes, and the UNIQUE constraints on `approval_decisions.proposal_id` and `(run_id, sequence)` in `src/RepoPilot.Infrastructure/Migrations/`
+- [X] T027 Integration test that the database itself refuses a second decision on a decided proposal and refuses a decision with a null actor or hash, in `tests/integration/Persistence/ApprovalConstraintTests.cs` (FR-018, SC-015)
+- [X] T027a Configure decision records as append-only — no update or delete path in the model configuration, enforced by database grants — and integration test that an update or delete attempt fails and that records outlive their run, in `src/RepoPilot.Infrastructure/Persistence/AuditConfiguration.cs` and `tests/integration/Persistence/AuditImmutabilityTests.cs` (FR-019b)
+- [X] T028 [P] Define repository port interfaces in `src/RepoPilot.Application/Ports/` and their EF Core implementations in `src/RepoPilot.Infrastructure/Persistence/Repositories/`
 
 ### Provider adapters
 
