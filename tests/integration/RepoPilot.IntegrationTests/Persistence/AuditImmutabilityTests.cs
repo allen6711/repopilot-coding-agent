@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using RepoPilot.Domain.Entities;
 using RepoPilot.Domain.Runs;
 using RepoPilot.Infrastructure.Persistence;
@@ -143,13 +144,30 @@ public sealed class AuditImmutabilityTests(PostgresFixture postgres)
         // The foreign key from a decision to its proposal is Restrict, not
         // Cascade: deleting a proposal must not be able to take the evidence
         // that it was approved with it.
-        await using var db = postgres.CreateContext();
-        var (_, proposalId, _) = await SeedDecidedAsync(db);
+        //
+        // Deliberately performed through a second context, where the decision is
+        // not tracked. In the seeding context EF's change tracker rejects the
+        // delete before any SQL is sent, which is a fine safety net but proves
+        // only that this process behaves. Forcing the DELETE to reach PostgreSQL
+        // proves the constraint is in the schema, where a different process, a
+        // migration, or a psql session cannot get around it.
+        await using var seedDb = postgres.CreateContext();
+        var (_, proposalId, decisionId) = await SeedDecidedAsync(seedDb);
 
+        await using var db = postgres.CreateContext();
         var proposal = await db.ChangeProposals.FirstAsync(p => p.Id == proposalId);
         db.ChangeProposals.Remove(proposal);
 
-        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        var ex = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        Assert.IsType<PostgresException>(ex.InnerException);
+        Assert.Equal(
+            PostgresErrorCodes.ForeignKeyViolation,
+            ((PostgresException)ex.InnerException!).SqlState);
+
+        // The evidence is still there.
+        await using var verifyDb = postgres.CreateContext();
+        Assert.NotNull(await verifyDb.ApprovalDecisions.FirstOrDefaultAsync(a => a.Id == decisionId));
+        Assert.NotNull(await verifyDb.ChangeProposals.FirstOrDefaultAsync(p => p.Id == proposalId));
     }
 
     [RequiresDockerFact]
