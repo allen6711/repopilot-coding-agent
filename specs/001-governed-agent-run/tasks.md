@@ -151,14 +151,14 @@ other story implemented.
 
 ### Working copy and approval gate
 
-- [ ] T058 [US1] Implement `WorkingCopyManager` — create on entering `retrieving`, stage-and-commit atomic apply, destroy on any terminal outcome — in `src/RepoPilot.Infrastructure/Workspace/WorkingCopyManager.cs` (FR-024a, FR-016b, FR-026a)
-- [ ] T059 [US1] Integration test that an interruption mid-apply leaves the working copy in its pre-apply state, in `tests/integration/Workspace/AtomicApplyTests.cs` (FR-016b)
-- [ ] T060 [US1] Implement the `apply_patch` capability enforcing, in order, approval exists → hash matches → paths inside workspace → stage is `applying`, in `src/RepoPilot.Agent/Capabilities/ApplyPatchCapability.cs` (FR-014, FR-020, FR-024)
-- [ ] T061 [US1] Integration test that apply without an approval record is refused and no file handle is opened, in `tests/integration/Approval/ApprovalRequiredTests.cs` (Principle I)
-- [ ] T062 [US1] Integration test that a rejected proposal never applies a patch and leaves the workspace unchanged, in `tests/integration/Approval/RejectionAppliesNothingTests.cs` (FR-017)
-- [ ] T063 [US1] Integration test that a hash mismatch between approval and stored proposal refuses the apply, in `tests/integration/Approval/DiffHashMismatchTests.cs` (FR-020a)
-- [ ] T063a [US1] Add a per-run assertion that nothing outside the run's working copy changed — snapshot the fixture directory and the workspace root before and after each run — usable during MVP validation rather than only across the evaluation set, in `tests/integration/Security/PerRunNoOutsideWritesTests.cs` (SC-002)
-- [ ] T064 [US1] Implement `DecideProposalUseCase` recording the decision with actor, timestamp, run, hash, and mode, refusing an already-decided proposal, in `src/RepoPilot.Application/UseCases/DecideProposalUseCase.cs` (FR-018, FR-019)
+- [X] T058 [US1] Implement `WorkingCopyManager` — create on entering `retrieving`, stage-and-commit atomic apply, destroy on any terminal outcome — in `src/RepoPilot.Infrastructure/Workspace/WorkingCopyManager.cs` (FR-024a, FR-016b, FR-026a)
+- [X] T059 [US1] Integration test that an interruption mid-apply leaves the working copy in its pre-apply state, in `tests/integration/Workspace/AtomicApplyTests.cs` (FR-016b)
+- [X] T060 [US1] Implement the `apply_patch` capability enforcing, in order, approval exists → hash matches → paths inside workspace → stage is `applying`, in `src/RepoPilot.Agent/Capabilities/ApplyPatchCapability.cs` (FR-014, FR-020, FR-024)
+- [X] T061 [US1] Integration test that apply without an approval record is refused and no file handle is opened, in `tests/integration/Approval/ApprovalRequiredTests.cs` (Principle I)
+- [X] T062 [US1] Integration test that a rejected proposal never applies a patch and leaves the workspace unchanged, in `tests/integration/Approval/RejectionAppliesNothingTests.cs` (FR-017)
+- [X] T063 [US1] Integration test that a hash mismatch between approval and stored proposal refuses the apply, in `tests/integration/Approval/DiffHashMismatchTests.cs` (FR-020a)
+- [X] T063a [US1] Add a per-run assertion that nothing outside the run's working copy changed — snapshot the fixture directory and the workspace root before and after each run — usable during MVP validation rather than only across the evaluation set, in `tests/integration/Security/PerRunNoOutsideWritesTests.cs` (SC-002)
+- [X] T064 [US1] Implement `DecideProposalUseCase` recording the decision with actor, timestamp, run, hash, and mode, refusing an already-decided proposal, in `src/RepoPilot.Application/UseCases/DecideProposalUseCase.cs` (FR-018, FR-019)
 
 ### Sandboxed execution
 
