@@ -99,13 +99,13 @@ Story 1's independent test requires a pre-indexed fixture.
 
 ### Retrieval pipeline
 
-- [ ] T032 [P] Implement `LineWindowChunker` (~60 lines, 15 overlap, never crossing files) in `src/RepoPilot.Infrastructure/Indexing/LineWindowChunker.cs`
-- [ ] T033 [P] Unit test chunk boundaries and that reported start/end lines match the source exactly, in `tests/unit/Infrastructure/LineWindowChunkerTests.cs` (FR-004)
-- [ ] T034 Implement `IndexingService` — walk, exclude with reasons, chunk, embed, write at `index_version = active + 1` — in `src/RepoPilot.Infrastructure/Indexing/IndexingService.cs`
-- [ ] T035 Implement the atomic index swap as a single transaction flipping `active_index_version` and deleting the prior version, in `src/RepoPilot.Infrastructure/Indexing/IndexSwap.cs` (FR-003a)
-- [ ] T036 Integration test against pgvector that excluded content is never indexed, a rebuild leaves no duplicates, and searches during a rebuild still serve the previous index, in `tests/integration/Indexing/IndexRebuildTests.cs`
-- [ ] T037 Implement `HybridRetriever` fusing pgvector cosine with tsvector and trigram results via RRF (k=60) in `src/RepoPilot.Infrastructure/Retrieval/HybridRetriever.cs` (FR-005)
-- [ ] T038 Integration test that an exact identifier query returns its defining file with a correct line range and score, in `tests/integration/Retrieval/HybridRetrieverTests.cs`
+- [X] T032 [P] Implement `LineWindowChunker` (~60 lines, 15 overlap, never crossing files) in `src/RepoPilot.Infrastructure/Indexing/LineWindowChunker.cs`
+- [X] T033 [P] Unit test chunk boundaries and that reported start/end lines match the source exactly, in `tests/unit/Infrastructure/LineWindowChunkerTests.cs` (FR-004)
+- [X] T034 Implement `IndexingService` — walk, exclude with reasons, chunk, embed, write at `index_version = active + 1` — in `src/RepoPilot.Infrastructure/Indexing/IndexingService.cs`
+- [X] T035 Implement the atomic index swap as a single transaction flipping `active_index_version` and deleting the prior version, in `src/RepoPilot.Infrastructure/Indexing/IndexSwap.cs` (FR-003a)
+- [X] T036 Integration test against pgvector that excluded content is never indexed, a rebuild leaves no duplicates, and searches during a rebuild still serve the previous index, in `tests/integration/Indexing/IndexRebuildTests.cs`
+- [X] T037 Implement `HybridRetriever` fusing pgvector cosine with tsvector and trigram results via RRF (k=60) in `src/RepoPilot.Infrastructure/Retrieval/HybridRetriever.cs` (FR-005)
+- [X] T038 Integration test that an exact identifier query returns its defining file with a correct line range and score, in `tests/integration/Retrieval/HybridRetrieverTests.cs`
 
 ### Cross-cutting infrastructure
 
