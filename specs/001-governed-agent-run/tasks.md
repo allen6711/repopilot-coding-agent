@@ -109,17 +109,17 @@ Story 1's independent test requires a pre-indexed fixture.
 
 ### Cross-cutting infrastructure
 
-- [ ] T039 [P] Implement `ToolInvoker` enforcing permission class, path guard, size and context budgets, and writing the audit record in a `finally` block, in `src/RepoPilot.Agent/Invocation/ToolInvoker.cs` (FR-027)
-- [ ] T040 [P] Unit test that a throwing capability still produces a `failed` audit record and that exceeding the context budget refuses rather than truncates, in `tests/unit/Agent/ToolInvokerTests.cs` (FR-006)
-- [ ] T040a [P] Unit test the per-file size limit at both enforcement points — indexing exclusion and bounded file read — in `tests/unit/Agent/FileSizeLimitTests.cs`, closing the constitution's "file-size and context-size limits" test area (only the context half was covered by T040)
-- [ ] T041 [P] Implement `RunEventStore` with monotonic per-run sequence and strict persist-then-publish ordering in `src/RepoPilot.Infrastructure/Events/RunEventStore.cs`
-- [ ] T042 [P] Integration test that sequences are gap-free and ordered under concurrent writes, in `tests/integration/Events/RunEventSequenceTests.cs`
-- [ ] T043 [P] Wire OpenTelemetry — `ActivitySource("RepoPilot")`, run/stage/capability spans, metrics, OTLP exporter — in `src/RepoPilot.Infrastructure/Observability/`
-- [ ] T044 [P] Create the API host with Minimal APIs, RFC 9457 problem details, and `X-Actor` binding that refuses an absent or empty value, in `src/RepoPilot.Api/Program.cs` and `src/RepoPilot.Api/Middleware/` (FR-015a)
-- [ ] T045 [P] Implement the startup recovery hosted service — fail non-terminal runs with `service_restarted`, destroy their working copies, remove orphaned containers — in `src/RepoPilot.Api/Hosting/StartupRecoveryService.cs` (FR-030a, FR-026e)
-- [ ] T046 Integration test startup recovery leaves no non-terminal run, no working copy, and no container behind, in `tests/integration/Hosting/StartupRecoveryTests.cs` (SC-012)
-- [ ] T047 [P] Create the agent host — single Agent Framework agent, prompt assembly, read-capability registration — in `src/RepoPilot.Agent/RepoPilotAgent.cs`
-- [ ] T048 [P] Add a developer seed command that registers and indexes a fixture so User Story 1 can run against a pre-indexed repository, in `src/RepoPilot.Api/Seed/SeedCommand.cs`
+- [X] T039 [P] Implement `ToolInvoker` enforcing permission class, path guard, size and context budgets, and writing the audit record in a `finally` block, in `src/RepoPilot.Agent/Invocation/ToolInvoker.cs` (FR-027)
+- [X] T040 [P] Unit test that a throwing capability still produces a `failed` audit record and that exceeding the context budget refuses rather than truncates, in `tests/unit/Agent/ToolInvokerTests.cs` (FR-006)
+- [X] T040a [P] Unit test the per-file size limit at both enforcement points — indexing exclusion and bounded file read — in `tests/unit/Agent/FileSizeLimitTests.cs`, closing the constitution's "file-size and context-size limits" test area (only the context half was covered by T040)
+- [X] T041 [P] Implement `RunEventStore` with monotonic per-run sequence and strict persist-then-publish ordering in `src/RepoPilot.Infrastructure/Events/RunEventStore.cs`
+- [X] T042 [P] Integration test that sequences are gap-free and ordered under concurrent writes, in `tests/integration/Events/RunEventSequenceTests.cs`
+- [X] T043 [P] Wire OpenTelemetry — `ActivitySource("RepoPilot")`, run/stage/capability spans, metrics, OTLP exporter — in `src/RepoPilot.Infrastructure/Observability/`
+- [X] T044 [P] Create the API host with Minimal APIs, RFC 9457 problem details, and `X-Actor` binding that refuses an absent or empty value, in `src/RepoPilot.Api/Program.cs` and `src/RepoPilot.Api/Middleware/` (FR-015a)
+- [X] T045 [P] Implement the startup recovery hosted service — fail non-terminal runs with `service_restarted`, destroy their working copies, remove orphaned containers — in `src/RepoPilot.Api/Hosting/StartupRecoveryService.cs` (FR-030a, FR-026e)
+- [X] T046 Integration test startup recovery leaves no non-terminal run, no working copy, and no container behind, in `tests/integration/Hosting/StartupRecoveryTests.cs` (SC-012)
+- [X] T047 [P] Create the agent host — single Agent Framework agent, prompt assembly, read-capability registration — in `src/RepoPilot.Agent/RepoPilotAgent.cs`
+- [X] T048 [P] Add a developer seed command that registers and indexes a fixture so User Story 1 can run against a pre-indexed repository, in `src/RepoPilot.Api/Seed/SeedCommand.cs`
 
 **Checkpoint**: Governance primitives, persistence, retrieval, and audit infrastructure exist and are
 tested. User story work can begin.

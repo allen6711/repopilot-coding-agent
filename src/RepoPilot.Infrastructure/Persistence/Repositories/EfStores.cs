@@ -86,33 +86,36 @@ public sealed class EfRunEventStore(RepoPilotDbContext db) : IRunEventStore
     {
         ArgumentNullException.ThrowIfNull(runEvent);
 
-        // The sequence must be gap-free per run because it is the SSE frame id
-        // and the replay cursor. Reading the current maximum and writing the
-        // next one is safe only because the unique index on (RunId, Sequence)
-        // rejects a duplicate — a lost race fails loudly and is retried rather
-        // than silently producing two events with the same id.
-        for (var attempt = 0; attempt < 5; attempt++)
-        {
-            var current = await db.RunEvents
-                .Where(e => e.RunId == runEvent.RunId)
-                .MaxAsync(e => (long?)e.Sequence, ct) ?? 0;
+        // The sequence is the SSE frame id and the replay cursor, so it must be
+        // gap-free per run.
+        //
+        // Read-the-max-then-insert with optimistic retry was tried first and is
+        // not good enough: under concurrent capability invocations the retries
+        // are exhausted and the append fails outright. A transaction-scoped
+        // advisory lock keyed on the run serialises appends for that run only —
+        // different runs never contend — and the lock releases on commit or
+        // rollback, so a crash mid-append cannot strand it.
+        //
+        // The unique index on (RunId, Sequence) stays as the backstop: it is
+        // what guarantees correctness if this code path is ever bypassed.
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
-            runEvent.Sequence = current + 1;
-            db.RunEvents.Add(runEvent);
+        await db.Database.ExecuteSqlRawAsync(
+            "SELECT pg_advisory_xact_lock(hashtext({0}))",
+            [runEvent.RunId.ToString()],
+            ct);
 
-            try
-            {
-                await db.SaveChangesAsync(ct);
-                return runEvent;
-            }
-            catch (DbUpdateException ex) when (IsUniqueViolation(ex))
-            {
-                db.Entry(runEvent).State = EntityState.Detached;
-            }
-        }
+        var current = await db.RunEvents
+            .Where(e => e.RunId == runEvent.RunId)
+            .MaxAsync(e => (long?)e.Sequence, ct) ?? 0;
 
-        throw new InvalidOperationException(
-            $"Could not assign a run event sequence for run {runEvent.RunId} after 5 attempts.");
+        runEvent.Sequence = current + 1;
+        db.RunEvents.Add(runEvent);
+
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+
+        return runEvent;
     }
 
     public async Task<IReadOnlyList<RunEvent>> ListAsync(

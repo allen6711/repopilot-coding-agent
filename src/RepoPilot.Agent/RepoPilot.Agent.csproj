@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RepoPilot.Application\RepoPilot.Application.csproj" />
+    <ProjectReference Include="..\RepoPilot.Infrastructure\RepoPilot.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,5 +14,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The argument summariser is an implementation detail of ToolInvoker, but
+         FR-027a makes its redaction and bounding a governance property worth
+         testing directly. Exposing it to the test assembly beats widening it to
+         public and inviting callers to bypass the invoker. -->
+    <InternalsVisibleTo Include="RepoPilot.UnitTests" />
+  </ItemGroup>
 
 </Project>
