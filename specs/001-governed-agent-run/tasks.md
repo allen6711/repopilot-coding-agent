@@ -138,16 +138,16 @@ other story implemented.
 
 ### Read and propose capabilities
 
-- [ ] T049 [P] [US1] Implement the `list_files` capability with its read permission class in `src/RepoPilot.Agent/Capabilities/ListFilesCapability.cs`
-- [ ] T050 [P] [US1] Implement the `read_file` capability applying the exclusion predicate and size limit in `src/RepoPilot.Agent/Capabilities/ReadFileCapability.cs`
-- [ ] T051 [P] [US1] Implement the `search_code` capability over the hybrid retriever in `src/RepoPilot.Agent/Capabilities/SearchCodeCapability.cs`
-- [ ] T052 [P] [US1] Implement the `search_docs` capability restricted to documentation entries in `src/RepoPilot.Agent/Capabilities/SearchDocsCapability.cs`
-- [ ] T052a [US1] Implement plan production — the agent emits a short human-readable plan, persisted and published as a `plan_produced` event, before any proposal can be created — in `src/RepoPilot.Agent/PlanStage.cs` and `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-010)
-- [ ] T053 [US1] Implement the `propose_patch` capability with no filesystem writer injected, in `src/RepoPilot.Agent/Capabilities/ProposePatchCapability.cs` (FR-014)
-- [ ] T054 [US1] Unit test that the working copy is byte-identical before and after `propose_patch`, in `tests/unit/Agent/ProposePatchWritesNothingTests.cs` (Principle I)
-- [ ] T055 [US1] Implement proposal validation — size caps, binary rejection, empty-proposal rejection, path guard on every entry — in `src/RepoPilot.Application/Proposals/ProposalValidator.cs` (FR-011a, FR-008b)
-- [ ] T056 [US1] Unit test that a proposal exceeding any configured cap is refused at creation, in `tests/unit/Application/ProposalCapTests.cs` (SC-004)
-- [ ] T057 [US1] Implement unified-diff rendering with DiffPlex and the affected-path list in `src/RepoPilot.Application/Proposals/DiffRenderer.cs` (FR-011)
+- [X] T049 [P] [US1] Implement the `list_files` capability with its read permission class in `src/RepoPilot.Agent/Capabilities/ListFilesCapability.cs`
+- [X] T050 [P] [US1] Implement the `read_file` capability applying the exclusion predicate and size limit in `src/RepoPilot.Agent/Capabilities/ReadFileCapability.cs`
+- [X] T051 [P] [US1] Implement the `search_code` capability over the hybrid retriever in `src/RepoPilot.Agent/Capabilities/SearchCodeCapability.cs`
+- [X] T052 [P] [US1] Implement the `search_docs` capability restricted to documentation entries in `src/RepoPilot.Agent/Capabilities/SearchDocsCapability.cs`
+- [X] T052a [US1] Implement plan production — the agent emits a short human-readable plan, persisted and published as a `plan_produced` event, before any proposal can be created — in `src/RepoPilot.Agent/PlanStage.cs` and `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-010)
+- [X] T053 [US1] Implement the `propose_patch` capability with no filesystem writer injected, in `src/RepoPilot.Agent/Capabilities/ProposePatchCapability.cs` (FR-014)
+- [X] T054 [US1] Unit test that the working copy is byte-identical before and after `propose_patch`, in `tests/unit/Agent/ProposePatchWritesNothingTests.cs` (Principle I)
+- [X] T055 [US1] Implement proposal validation — size caps, binary rejection, empty-proposal rejection, path guard on every entry — in `src/RepoPilot.Application/Proposals/ProposalValidator.cs` (FR-011a, FR-008b)
+- [X] T056 [US1] Unit test that a proposal exceeding any configured cap is refused at creation, in `tests/unit/Application/ProposalCapTests.cs` (SC-004)
+- [X] T057 [US1] Implement unified-diff rendering with DiffPlex and the affected-path list in `src/RepoPilot.Application/Proposals/DiffRenderer.cs` (FR-011)
 
 ### Working copy and approval gate
 
