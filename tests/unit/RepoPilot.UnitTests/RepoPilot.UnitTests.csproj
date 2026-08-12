@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\src\RepoPilot.Domain\RepoPilot.Domain.csproj" />
     <ProjectReference Include="..\..\..\src\RepoPilot.Application\RepoPilot.Application.csproj" />
     <ProjectReference Include="..\..\..\src\RepoPilot.Agent\RepoPilot.Agent.csproj" />
+    <ProjectReference Include="..\..\..\src\RepoPilot.Infrastructure\RepoPilot.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

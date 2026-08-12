@@ -92,10 +92,10 @@ Story 1's independent test requires a pre-indexed fixture.
 
 ### Provider adapters
 
-- [ ] T029 [P] Define `IChatProviderAdapter` in `src/RepoPilot.Application/Ports/IChatProviderAdapter.cs` and implement it over the Anthropic SDK with `claude-opus-5`, adaptive thinking, and per-stage effort in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs`
-- [ ] T030 [P] Define `IEmbeddingProviderAdapter` and implement the local ONNX generator, pinning model id and dimensions per repository, in `src/RepoPilot.Infrastructure/Providers/OnnxEmbeddingAdapter.cs`
-- [ ] T031 [P] Architecture test asserting no provider or SDK type is referenced from `RepoPilot.Application` or `RepoPilot.Domain`, in `tests/unit/Architecture/LayeringTests.cs`
-- [ ] T031a [P] Capture token and cost metadata from provider responses in the adapter and attach it to the run and stage spans and to a cost metric, in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs` and `src/RepoPilot.Infrastructure/Observability/` — the constitution requires traces to cover token and cost metadata where the provider exposes it, and T043 alone does not name it (Principle IV)
+- [X] T029 [P] Define `IChatProviderAdapter` in `src/RepoPilot.Application/Ports/IChatProviderAdapter.cs` and implement it over the Anthropic SDK with `claude-opus-5`, adaptive thinking, and per-stage effort in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs`
+- [X] T030 [P] Define `IEmbeddingProviderAdapter` and implement the local ONNX generator, pinning model id and dimensions per repository, in `src/RepoPilot.Infrastructure/Providers/OnnxEmbeddingAdapter.cs`
+- [X] T031 [P] Architecture test asserting no provider or SDK type is referenced from `RepoPilot.Application` or `RepoPilot.Domain`, in `tests/unit/Architecture/LayeringTests.cs`
+- [X] T031a [P] Capture token and cost metadata from provider responses in the adapter and attach it to the run and stage spans and to a cost metric, in `src/RepoPilot.Infrastructure/Providers/AnthropicChatAdapter.cs` and `src/RepoPilot.Infrastructure/Observability/` — the constitution requires traces to cover token and cost metadata where the provider exposes it, and T043 alone does not name it (Principle IV)
 
 ### Retrieval pipeline
 
