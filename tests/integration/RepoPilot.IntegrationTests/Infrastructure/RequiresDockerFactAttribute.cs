@@ -105,6 +105,16 @@ public sealed class RequiresDockerTheoryAttribute : TheoryAttribute
     }
 }
 
+/// <summary>Whether a model-provider credential is configured.</summary>
+internal static class ProviderCredential
+{
+    public static string? UnavailableReason =>
+        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY")) ||
+        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN"))
+            ? null
+            : "no ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN.";
+}
+
 /// <summary>
 /// A test that needs a model-provider credential. Compilation and unit coverage
 /// do not, but anything driving a real completion does.
@@ -114,13 +124,34 @@ public sealed class RequiresProviderKeyFactAttribute : FactAttribute
 {
     public RequiresProviderKeyFactAttribute()
     {
-        var configured =
-            !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY")) ||
-            !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN"));
-
-        if (!configured)
+        var reason = ProviderCredential.UnavailableReason;
+        if (reason is not null)
         {
-            Skip = "Requires a model-provider credential (ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN).";
+            Skip = $"Requires a model-provider credential: {reason}";
+        }
+    }
+}
+
+/// <summary>
+/// A test that needs both a daemon and a credential — an end-to-end measurement
+/// against a real model over a real index.
+/// <para>
+/// The skip reason names every missing piece rather than the first one found. A
+/// developer who sets a key and re-runs should not then discover they also
+/// needed Docker.
+/// </para>
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class RequiresLiveStackFactAttribute : FactAttribute
+{
+    public RequiresLiveStackFactAttribute()
+    {
+        string?[] reasons = [DockerAvailability.UnavailableReason, ProviderCredential.UnavailableReason];
+        var missing = reasons.Where(r => r is not null).ToArray();
+
+        if (missing.Length > 0)
+        {
+            Skip = $"Requires a live stack: {string.Join(" Also: ", missing)}";
         }
     }
 }

@@ -20,7 +20,7 @@ namespace RepoPilot.Infrastructure.Workspace;
 public sealed class WorkingCopyManager(
     IWorkingCopyStore store,
     WorkspaceOptions options,
-    ILogger<WorkingCopyManager> logger)
+    ILogger<WorkingCopyManager> logger) : IWorkspaceProvisioner
 {
     /// <summary>
     /// Directories not copied into a working copy. Version control metadata and

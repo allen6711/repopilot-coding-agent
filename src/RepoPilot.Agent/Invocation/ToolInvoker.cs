@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using RepoPilot.Application.Capabilities;
+using RepoPilot.Application.Ports;
 using RepoPilot.Application.Runs;
 using RepoPilot.Domain.Capabilities;
 using RepoPilot.Domain.Entities;
@@ -7,11 +8,6 @@ using RepoPilot.Domain.Security;
 using RepoPilot.Infrastructure.Observability;
 
 namespace RepoPilot.Agent.Invocation;
-
-/// <summary>The result of an invocation that the caller sees.</summary>
-/// <param name="Content">What the capability returned.</param>
-/// <param name="DurationMs">How long it took.</param>
-public sealed record CapabilityOutcome(string Content, int DurationMs);
 
 /// <summary>
 /// The single point every capability invocation passes through.
@@ -31,7 +27,7 @@ public sealed record CapabilityOutcome(string Content, int DurationMs);
 /// </summary>
 public sealed class ToolInvoker(
     IEnumerable<ICapability> capabilities,
-    RunEventRecorder recorder)
+    RunEventRecorder recorder) : ICapabilityInvoker
 {
     private readonly Dictionary<string, ICapability> _capabilities =
         capabilities.ToDictionary(c => c.Name, StringComparer.Ordinal);

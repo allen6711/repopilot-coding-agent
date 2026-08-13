@@ -1,0 +1,246 @@
+using System.Diagnostics;
+using Docker.DotNet;
+using Docker.DotNet.Models;
+using Microsoft.Extensions.Logging;
+using RepoPilot.Application.Ports;
+
+namespace RepoPilot.Infrastructure.Sandbox;
+
+/// <summary>
+/// Runs allow-listed commands in a Docker container (Principle II).
+/// <para>
+/// The isolation controls are not configurable per run. They are applied to
+/// every container this type creates, because a control that a caller can turn
+/// off is a control that will eventually be turned off — and the value of the
+/// sandbox is that reasoning about it does not depend on the caller.
+/// </para>
+/// </summary>
+public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
+{
+    /// <summary>
+    /// Stamped on every container this type creates. It is what makes an orphan
+    /// identifiable: startup recovery can find containers this process left
+    /// behind without needing a record of them (FR-026e).
+    /// </summary>
+    public const string OwnerLabel = "repopilot.sandbox";
+
+    private readonly DockerClient _client;
+    private readonly ILogger<DockerSandboxRunner> _logger;
+
+    public DockerSandboxRunner(ILogger<DockerSandboxRunner> logger)
+    {
+        _logger = logger;
+
+        try
+        {
+            // Endpoint and transport are resolved from the ambient Docker
+            // configuration. Testcontainers resolves the same way, so the tests
+            // and the service talk to the same daemon.
+            _client = new DockerClientBuilder().Build();
+        }
+        catch (Exception ex)
+        {
+            throw new SandboxUnavailableException(
+                "Could not connect to a container runtime. There is no unisolated fallback: a run " +
+                "that cannot execute tests in isolation fails rather than executing them without it.",
+                ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<SandboxResult> RunAsync(SandboxRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (request.Argv.Count == 0)
+        {
+            throw new ArgumentException("An empty argument vector is not executable.", nameof(request));
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        string? containerId = null;
+
+        try
+        {
+            containerId = await CreateAsync(request, ct);
+            await _client.Containers.StartContainerAsync(containerId, new ContainerStartParameters(), ct);
+
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            deadline.CancelAfter(request.Timeout);
+
+            long? exitCode = null;
+            var timedOut = false;
+
+            try
+            {
+                var wait = await _client.Containers.WaitContainerAsync(containerId, deadline.Token);
+                exitCode = wait.StatusCode;
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                // The limit expired rather than the caller cancelling.
+                timedOut = true;
+                await KillAsync(containerId);
+            }
+
+            stopwatch.Stop();
+
+            var output = await ReadLogsAsync(containerId, timedOut);
+
+            return new SandboxResult(
+                Passed: !timedOut && exitCode == 0,
+                ExitCode: timedOut ? null : (int?)exitCode,
+                Output: output,
+                Duration: stopwatch.Elapsed,
+                TimedOut: timedOut);
+        }
+        catch (DockerApiException ex)
+        {
+            throw new SandboxUnavailableException(
+                $"The container runtime refused the request: {ex.Message}", ex);
+        }
+        finally
+        {
+            if (containerId is not null)
+            {
+                await RemoveAsync(containerId);
+            }
+        }
+    }
+
+    private async Task<string> CreateAsync(SandboxRequest request, CancellationToken ct)
+    {
+        var parameters = new CreateContainerParameters
+        {
+            Image = request.Image,
+
+            // The allow-listed argument vector, passed directly. No shell is
+            // involved, so operators such as && or | are literal arguments with
+            // no special meaning (FR-022a).
+            Cmd = [.. request.Argv],
+
+            WorkingDir = request.WorkDir,
+
+            Labels = new Dictionary<string, string> { [OwnerLabel] = "1" },
+
+            // Nothing from the host environment. A credential exported into the
+            // service's process must not become visible to test code (FR-025).
+            Env = [],
+
+            AttachStdout = true,
+            AttachStderr = true,
+            NetworkDisabled = true,
+
+            // Non-root. The working copy is the only writable path the process
+            // is given.
+            User = "1000:1000",
+
+            HostConfig = new HostConfig
+            {
+                // FR-021a. Belt and braces with NetworkDisabled above: one sets
+                // the container's network mode, the other detaches it entirely.
+                NetworkMode = "none",
+
+                ReadonlyRootfs = true,
+
+                // A read-only root would break most toolchains without somewhere
+                // to write scratch data. noexec stops that becoming a way to
+                // stage and run a binary.
+                Tmpfs = new Dictionary<string, string>
+                {
+                    ["/tmp"] = "rw,noexec,nosuid,size=64m",
+                },
+
+                Binds = [$"{request.WorkingCopyPath}:{request.WorkDir}:rw"],
+
+                // FR-021b: a runaway or hostile test cannot exhaust the host.
+                Memory = (long)request.MemoryMegabytes * 1024 * 1024,
+                NanoCPUs = (long)(request.CpuCount * 1_000_000_000),
+                PidsLimit = request.PidsLimit,
+
+                CapDrop = ["ALL"],
+                SecurityOpt = ["no-new-privileges"],
+
+                AutoRemove = false,
+            },
+        };
+
+        try
+        {
+            var created = await _client.Containers.CreateContainerAsync(parameters, ct);
+            return created.ID;
+        }
+        catch (DockerImageNotFoundException ex)
+        {
+            throw new SandboxUnavailableException(
+                $"Image '{request.Image}' is not available. Fixture images are pre-baked because " +
+                "the sandbox has no network and nothing can be fetched at test time.", ex);
+        }
+    }
+
+    private async Task<string> ReadLogsAsync(string containerId, bool timedOut)
+    {
+        try
+        {
+            using var stream = await _client.Containers.GetContainerLogsAsync(
+                containerId,
+                new ContainerLogsParameters { ShowStdout = true, ShowStderr = true },
+                CancellationToken.None);
+
+            var (stdout, stderr) = await stream.ReadOutputToEndAsync(CancellationToken.None);
+
+            // FR-025b: redacted before it is stored, displayed, or returned to
+            // the agent for a revision attempt. Test output is one of the places
+            // content reaches model context, and the only one where it arrives
+            // from a process the model influenced.
+            return OutputRedaction.Prepare(stdout, stderr, timedOut);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not read container logs for {ContainerId}.", containerId);
+            return "[output unavailable]";
+        }
+    }
+
+    private async Task KillAsync(string containerId)
+    {
+        try
+        {
+            await _client.Containers.KillContainerAsync(
+                containerId, new ContainerKillParameters(), CancellationToken.None);
+        }
+        catch (DockerContainerNotFoundException)
+        {
+            // Already gone; the timeout still stands.
+        }
+        catch (Exception ex)
+        {
+            // FR-023b: the limit expired and the environment will not stop. The
+            // run fails with that recorded rather than waiting indefinitely for
+            // something that is not going to happen.
+            throw new SandboxNotTerminableException(
+                $"The execution time limit expired but container {containerId} could not be " +
+                "terminated.", ex);
+        }
+    }
+
+    private async Task RemoveAsync(string containerId)
+    {
+        try
+        {
+            await _client.Containers.RemoveContainerAsync(
+                containerId,
+                new ContainerRemoveParameters { Force = true, RemoveVolumes = true },
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            // Logged, not thrown: a leaked container is a real problem but the
+            // caller needs the execution result, and startup recovery sweeps
+            // what is left behind (FR-026e).
+            _logger.LogError(ex, "Could not remove container {ContainerId}.", containerId);
+        }
+    }
+
+    public void Dispose() => _client.Dispose();
+}

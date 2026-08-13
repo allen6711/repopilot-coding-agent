@@ -15,7 +15,7 @@ namespace RepoPilot.Agent;
 /// next.
 /// </para>
 /// </summary>
-public sealed class RepoPilotAgent(IChatProviderAdapter provider)
+public sealed class RepoPilotAgent(IChatProviderAdapter provider) : IAgentTurnRunner
 {
     /// <summary>
     /// Which capabilities to offer. Stage-scoped, because apply and test are

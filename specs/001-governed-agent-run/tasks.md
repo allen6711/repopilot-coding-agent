@@ -162,24 +162,24 @@ other story implemented.
 
 ### Sandboxed execution
 
-- [ ] T065 [US1] Implement `DockerSandboxRunner` with no network, read-only root, tmpfs `/tmp`, non-root user, all capabilities dropped, no-new-privileges, memory/CPU/PID limits, and no inherited environment, in `src/RepoPilot.Infrastructure/Sandbox/DockerSandboxRunner.cs` (FR-021, FR-021a, FR-021b)
-- [ ] T066 [US1] Integration test asserting each isolation control is actually in effect inside the container, in `tests/integration/Sandbox/IsolationTests.cs`
-- [ ] T067 [US1] Implement timeout enforcement by container kill, plus the non-terminable path failing the run, in `src/RepoPilot.Infrastructure/Sandbox/SandboxTimeout.cs` (FR-023, FR-023b)
-- [ ] T068 [US1] Integration test timeout behavior, reporting clean finishes and forced terminations separately, in `tests/integration/Sandbox/TimeoutTests.cs` (SC-009)
-- [ ] T069 [US1] Implement the `run_tests` capability resolving `command_name` against the fixture allow-list before any container is created, in `src/RepoPilot.Agent/Capabilities/RunTestsCapability.cs` (FR-022)
-- [ ] T070 [US1] Integration test that a command absent from the allow-list is refused before container creation, and that argument vectors reject shell operators, in `tests/integration/Sandbox/AllowedCommandTests.cs` (FR-022a)
-- [ ] T071 [US1] Apply secret redaction to sandbox output before storage, display, and re-entry into model context, in `src/RepoPilot.Infrastructure/Sandbox/OutputRedaction.cs` (FR-025b)
+- [X] T065 [US1] Implement `DockerSandboxRunner` with no network, read-only root, tmpfs `/tmp`, non-root user, all capabilities dropped, no-new-privileges, memory/CPU/PID limits, and no inherited environment, in `src/RepoPilot.Infrastructure/Sandbox/DockerSandboxRunner.cs` (FR-021, FR-021a, FR-021b)
+- [X] T066 [US1] Integration test asserting each isolation control is actually in effect inside the container, in `tests/integration/Sandbox/IsolationTests.cs`
+- [X] T067 [US1] Implement timeout enforcement by container kill, plus the non-terminable path failing the run, in `src/RepoPilot.Infrastructure/Sandbox/SandboxTimeout.cs` (FR-023, FR-023b)
+- [X] T068 [US1] Integration test timeout behavior, reporting clean finishes and forced terminations separately, in `tests/integration/Sandbox/TimeoutTests.cs` (SC-009)
+- [X] T069 [US1] Implement the `run_tests` capability resolving `command_name` against the fixture allow-list before any container is created, in `src/RepoPilot.Agent/Capabilities/RunTestsCapability.cs` (FR-022)
+- [X] T070 [US1] Integration test that a command absent from the allow-list is refused before container creation, and that argument vectors reject shell operators, in `tests/integration/Sandbox/AllowedCommandTests.cs` (FR-022a)
+- [X] T071 [US1] Apply secret redaction to sandbox output before storage, display, and re-entry into model context, in `src/RepoPilot.Infrastructure/Sandbox/OutputRedaction.cs` (FR-025b)
 
 ### Orchestration
 
-- [ ] T072 [US1] Implement `RunOrchestrator` as resumable segments (retrieve → plan → propose, then apply → test) driving every stage transition through `RunStateMachine`, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-008, Principle IV)
-- [ ] T073 [US1] Implement `RunQueue` with a bounded channel and concurrency limiter that releases the slot on entering `awaiting approval` and re-acquires it at `applying`, in `src/RepoPilot.Application/Runs/RunQueue.cs` (FR-013a, FR-013b)
-- [ ] T074 [US1] Integration test that six runs at a limit of four queue rather than fail, and that a run awaiting approval holds no slot, in `tests/integration/Runs/ConcurrencyTests.cs`
-- [ ] T074a [US1] Measure start-of-run to first `proposal_created` for a single seeded task at or below the concurrency limit and assert it stays under three minutes, in `tests/integration/Runs/SingleRunLatencyTests.cs` (SC-003)
-- [ ] T075 [US1] Implement the revision loop — at most two attempts, each requiring its own approval — in `src/RepoPilot.Application/Runs/RevisionPolicy.cs` (FR-012, FR-013)
-- [ ] T076 [US1] Integration test that the third failure ends the run as failed and that no revision applies without its own approval, in `tests/integration/Runs/RevisionLimitTests.cs`
-- [ ] T077 [US1] Implement the `no change` terminal outcome for both the deliberate no-op and insufficient-context reasons, ensuring no empty proposal is ever offered, in `src/RepoPilot.Application/Runs/NoChangeOutcome.cs` (FR-008b)
-- [ ] T078 [US1] Implement `CancelRunUseCase` requiring an actor and ending the run as cancelled from any non-terminal stage, in `src/RepoPilot.Application/UseCases/CancelRunUseCase.cs` (FR-008a)
+- [X] T072 [US1] Implement `RunOrchestrator` as resumable segments (retrieve → plan → propose, then apply → test) driving every stage transition through `RunStateMachine`, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-008, Principle IV)
+- [X] T073 [US1] Implement `RunQueue` with a bounded channel and concurrency limiter that releases the slot on entering `awaiting approval` and re-acquires it at `applying`, in `src/RepoPilot.Application/Runs/RunQueue.cs` (FR-013a, FR-013b)
+- [X] T074 [US1] Integration test that six runs at a limit of four queue rather than fail, and that a run awaiting approval holds no slot, in `tests/integration/Runs/ConcurrencyTests.cs`
+- [X] T074a [US1] Measure start-of-run to first `proposal_created` for a single seeded task at or below the concurrency limit and assert it stays under three minutes, in `tests/integration/Runs/SingleRunLatencyTests.cs` (SC-003)
+- [X] T075 [US1] Implement the revision loop — at most two attempts, each requiring its own approval — in `src/RepoPilot.Application/Runs/RevisionPolicy.cs` (FR-012, FR-013)
+- [X] T076 [US1] Integration test that the third failure ends the run as failed and that no revision applies without its own approval, in `tests/integration/Runs/RevisionLimitTests.cs`
+- [X] T077 [US1] Implement the `no change` terminal outcome for both the deliberate no-op and insufficient-context reasons, ensuring no empty proposal is ever offered, in `src/RepoPilot.Application/Runs/NoChangeOutcome.cs` (FR-008b)
+- [X] T078 [US1] Implement `CancelRunUseCase` requiring an actor and ending the run as cancelled from any non-terminal stage, in `src/RepoPilot.Application/UseCases/CancelRunUseCase.cs` (FR-008a)
 
 ### API endpoints
 

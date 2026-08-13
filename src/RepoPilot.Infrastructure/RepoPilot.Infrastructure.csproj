@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Anthropic" Version="12.40.0" />
     <PackageReference Include="DiffPlex" Version="1.9.0" />
-    <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+    <PackageReference Include="Docker.DotNet.Enhanced" Version="4.3.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
