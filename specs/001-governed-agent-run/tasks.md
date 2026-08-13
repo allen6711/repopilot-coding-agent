@@ -183,11 +183,11 @@ other story implemented.
 
 ### API endpoints
 
-- [ ] T079 [US1] Implement `POST /api/runs` accepting a free-text or seeded task and queueing the run, in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-007)
-- [ ] T080 [US1] Implement `GET /api/runs/{id}`, `/proposal`, `/diff`, and `/tests` in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-028)
-- [ ] T081 [US1] Implement `POST /api/runs/{id}/approval` requiring the echoed hash and returning 409 on a decided proposal, 422 on mismatch or missing actor, in `src/RepoPilot.Api/Endpoints/ApprovalEndpoints.cs` (FR-020a, FR-015a)
-- [ ] T082 [US1] Implement `POST /api/runs/{id}/cancel` in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-008a)
-- [ ] T083 [US1] Contract test the run and approval endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/RunApiContractTests.cs`
+- [X] T079 [US1] Implement `POST /api/runs` accepting a free-text or seeded task and queueing the run, in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-007)
+- [X] T080 [US1] Implement `GET /api/runs/{id}`, `/proposal`, `/diff`, and `/tests` in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-028)
+- [X] T081 [US1] Implement `POST /api/runs/{id}/approval` requiring the echoed hash and returning 409 on a decided proposal, 422 on mismatch or missing actor, in `src/RepoPilot.Api/Endpoints/ApprovalEndpoints.cs` (FR-020a, FR-015a)
+- [X] T082 [US1] Implement `POST /api/runs/{id}/cancel` in `src/RepoPilot.Api/Endpoints/RunEndpoints.cs` (FR-008a)
+- [X] T083 [US1] Contract test the run and approval endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/RunApiContractTests.cs`
 
 ### Review UI
 

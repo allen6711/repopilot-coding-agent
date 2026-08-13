@@ -1,14 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RepoPilot.Agent;
+using RepoPilot.Agent.Capabilities;
+using RepoPilot.Agent.Invocation;
+using RepoPilot.Api.Endpoints;
 using RepoPilot.Api.Hosting;
+using RepoPilot.Application.Capabilities;
+using RepoPilot.Application.Proposals;
+using RepoPilot.Application.UseCases;
 using RepoPilot.Application.Configuration;
 using RepoPilot.Application.Ports;
 using RepoPilot.Application.Runs;
 using RepoPilot.Infrastructure.Events;
+using RepoPilot.Infrastructure.Indexing;
 using RepoPilot.Infrastructure.Observability;
 using RepoPilot.Infrastructure.Persistence;
 using RepoPilot.Infrastructure.Persistence.Repositories;
+using RepoPilot.Infrastructure.Proposals;
 using RepoPilot.Infrastructure.Providers;
+using RepoPilot.Infrastructure.Retrieval;
+using RepoPilot.Infrastructure.Sandbox;
+using RepoPilot.Infrastructure.Workspace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +74,57 @@ builder.Services.AddSingleton<IChatProviderAdapter, AnthropicChatAdapter>();
 builder.Services.AddSingleton<IEmbeddingProviderAdapter>(
     _ => new DeterministicEmbeddingAdapter(indexing.EmbeddingDimensions));
 builder.Services.AddScoped<RepoPilotAgent>();
+builder.Services.AddScoped<IAgentTurnRunner>(sp => sp.GetRequiredService<RepoPilotAgent>());
+
+// Retrieval and workspace ---------------------------------------------------
+builder.Services.AddScoped<HybridRetriever>();
+builder.Services.AddScoped<IndexingService>();
+builder.Services.AddScoped<WorkingCopyManager>();
+builder.Services.AddScoped<IWorkspaceProvisioner>(
+    sp => sp.GetRequiredService<WorkingCopyManager>());
+
+// Proposals -----------------------------------------------------------------
+builder.Services.AddSingleton<DiffRenderer>();
+builder.Services.AddScoped<ProposalValidator>();
+
+// Sandbox -------------------------------------------------------------------
+// Singleton: the client holds a connection to the daemon, and there is no
+// per-request state. A run that cannot get an isolated environment fails; there
+// is deliberately no unisolated fallback registration.
+builder.Services.AddSingleton<ISandboxRunner, DockerSandboxRunner>();
+
+// Capabilities --------------------------------------------------------------
+// Registered as the closed set the registry names. The invoker applies the
+// permission class and the audit record around whichever one is selected, so
+// adding an implementation here cannot bypass those (FR-026c).
+builder.Services.AddScoped<ICapability, ListFilesCapability>();
+builder.Services.AddScoped<ICapability, ReadFileCapability>();
+builder.Services.AddScoped<ICapability, SearchCodeCapability>();
+builder.Services.AddScoped<ICapability, SearchDocsCapability>();
+builder.Services.AddScoped<ICapability, ProposePatchCapability>();
+builder.Services.AddScoped<ICapability, ApplyPatchCapability>();
+builder.Services.AddScoped<ICapability>(sp => new RunTestsCapability(
+    sp.GetRequiredService<ISandboxRunner>(),
+    sp.GetRequiredService<IRepositoryFixtureStore>(),
+    sp.GetRequiredService<ITestResultStore>(),
+    sp.GetRequiredService<IRunStore>(),
+    sp.GetRequiredService<WorkingCopyManager>().PathFor));
+
+builder.Services.AddScoped<ToolInvoker>();
+builder.Services.AddScoped<ICapabilityInvoker>(sp => sp.GetRequiredService<ToolInvoker>());
+
+// Orchestration -------------------------------------------------------------
+// The queue is a singleton because its limiter is the process-wide bound; the
+// orchestrator is scoped because it works through a scoped DbContext.
+builder.Services.AddSingleton<RunQueue>();
+builder.Services.AddScoped<RunOrchestrator>();
+builder.Services.AddScoped<DecideProposalUseCase>();
+builder.Services.AddScoped<CancelRunUseCase>();
+builder.Services.AddHostedService<RunExecutionService>();
+
+// Options the orchestrator reads through IOptions ---------------------------
+builder.Services.AddSingleton(Options.Create(concurrency));
+builder.Services.AddSingleton(Options.Create(retrieval));
 
 // Recovery ------------------------------------------------------------------
 builder.Services.AddScoped<StartupRecoveryService>();
@@ -95,6 +158,9 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+app.MapRunEndpoints();
+app.MapApprovalEndpoints();
 
 app.Run();
 

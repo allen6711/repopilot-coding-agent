@@ -65,6 +65,16 @@ public interface IProposalStore
     /// <summary>The most recent proposal for a run, or null when none exists.</summary>
     Task<ChangeProposal?> FindCurrentForRunAsync(Guid runId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Every proposal a run produced, oldest first.
+    /// <para>
+    /// A superseded proposal stays readable. Each one was separately approved,
+    /// and the record of what a reviewer authorised has to outlive the revision
+    /// that replaced it (FR-019b).
+    /// </para>
+    /// </summary>
+    Task<IReadOnlyList<ChangeProposal>> ListForRunAsync(Guid runId, CancellationToken ct = default);
+
     Task AddAsync(ChangeProposal proposal, CancellationToken ct = default);
 
     Task UpdateStatusAsync(

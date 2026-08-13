@@ -144,6 +144,14 @@ public sealed class EfProposalStore(RepoPilotDbContext db) : IProposalStore
             .ThenByDescending(p => p.CreatedAt)
             .FirstOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<ChangeProposal>> ListForRunAsync(
+        Guid runId, CancellationToken ct = default) =>
+        await db.ChangeProposals
+            .Where(p => p.RunId == runId)
+            .OrderBy(p => p.RevisionAttempt)
+            .ThenBy(p => p.CreatedAt)
+            .ToListAsync(ct);
+
     public async Task AddAsync(ChangeProposal proposal, CancellationToken ct = default)
     {
         db.ChangeProposals.Add(proposal);

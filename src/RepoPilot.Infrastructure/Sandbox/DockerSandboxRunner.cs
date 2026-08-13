@@ -24,27 +24,38 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
     /// </summary>
     public const string OwnerLabel = "repopilot.sandbox";
 
-    private readonly DockerClient _client;
+    private readonly Lazy<DockerClient> _client;
     private readonly ILogger<DockerSandboxRunner> _logger;
 
     public DockerSandboxRunner(ILogger<DockerSandboxRunner> logger)
     {
         _logger = logger;
 
-        try
-        {
-            // Endpoint and transport are resolved from the ambient Docker
-            // configuration. Testcontainers resolves the same way, so the tests
-            // and the service talk to the same daemon.
-            _client = new DockerClientBuilder().Build();
-        }
-        catch (Exception ex)
-        {
-            throw new SandboxUnavailableException(
-                "Could not connect to a container runtime. There is no unisolated fallback: a run " +
-                "that cannot execute tests in isolation fails rather than executing them without it.",
-                ex);
-        }
+        // Lazy on purpose. Constructing this type must not require a daemon, or
+        // the whole service would refuse to start without one — and the endpoints
+        // that read a finished run's diff and test output have no need of it.
+        // A missing daemon fails the run that needs the sandbox, at the point it
+        // needs it, which is where the failure is meaningful.
+        _client = new Lazy<DockerClient>(
+            () =>
+            {
+                try
+                {
+                    // Endpoint and transport come from the ambient Docker
+                    // configuration, the same way Testcontainers resolves them,
+                    // so the tests and the service talk to one daemon.
+                    return new DockerClientBuilder().Build();
+                }
+                catch (Exception ex)
+                {
+                    throw new SandboxUnavailableException(
+                        "Could not connect to a container runtime. There is no unisolated " +
+                        "fallback: a run that cannot execute tests in isolation fails rather " +
+                        "than executing them without it.",
+                        ex);
+                }
+            },
+            LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     /// <inheritdoc />
@@ -63,7 +74,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
         try
         {
             containerId = await CreateAsync(request, ct);
-            await _client.Containers.StartContainerAsync(containerId, new ContainerStartParameters(), ct);
+            await _client.Value.Containers.StartContainerAsync(containerId, new ContainerStartParameters(), ct);
 
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
             deadline.CancelAfter(request.Timeout);
@@ -73,7 +84,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
 
             try
             {
-                var wait = await _client.Containers.WaitContainerAsync(containerId, deadline.Token);
+                var wait = await _client.Value.Containers.WaitContainerAsync(containerId, deadline.Token);
                 exitCode = wait.StatusCode;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
@@ -167,7 +178,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
 
         try
         {
-            var created = await _client.Containers.CreateContainerAsync(parameters, ct);
+            var created = await _client.Value.Containers.CreateContainerAsync(parameters, ct);
             return created.ID;
         }
         catch (DockerImageNotFoundException ex)
@@ -182,7 +193,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
     {
         try
         {
-            using var stream = await _client.Containers.GetContainerLogsAsync(
+            using var stream = await _client.Value.Containers.GetContainerLogsAsync(
                 containerId,
                 new ContainerLogsParameters { ShowStdout = true, ShowStderr = true },
                 CancellationToken.None);
@@ -206,7 +217,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
     {
         try
         {
-            await _client.Containers.KillContainerAsync(
+            await _client.Value.Containers.KillContainerAsync(
                 containerId, new ContainerKillParameters(), CancellationToken.None);
         }
         catch (DockerContainerNotFoundException)
@@ -228,7 +239,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
     {
         try
         {
-            await _client.Containers.RemoveContainerAsync(
+            await _client.Value.Containers.RemoveContainerAsync(
                 containerId,
                 new ContainerRemoveParameters { Force = true, RemoveVolumes = true },
                 CancellationToken.None);
@@ -242,5 +253,11 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
         }
     }
 
-    public void Dispose() => _client.Dispose();
+    public void Dispose()
+    {
+        if (_client.IsValueCreated)
+        {
+            _client.Value.Dispose();
+        }
+    }
 }

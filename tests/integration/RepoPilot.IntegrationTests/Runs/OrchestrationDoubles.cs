@@ -81,6 +81,10 @@ internal sealed class InMemoryProposalStore : IProposalStore
     public Task<ChangeProposal?> FindCurrentForRunAsync(Guid runId, CancellationToken ct = default) =>
         Task.FromResult(_proposals.LastOrDefault(p => p.RunId == runId));
 
+    public Task<IReadOnlyList<ChangeProposal>> ListForRunAsync(
+        Guid runId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<ChangeProposal>>([.. _proposals.Where(p => p.RunId == runId)]);
+
     public Task AddAsync(ChangeProposal proposal, CancellationToken ct = default)
     {
         _proposals.Add(proposal);

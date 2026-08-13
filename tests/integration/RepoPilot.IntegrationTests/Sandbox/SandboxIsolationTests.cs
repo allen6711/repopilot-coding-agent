@@ -18,13 +18,12 @@ namespace RepoPilot.IntegrationTests.Sandbox;
 [Collection(SandboxCollection.Name)]
 public sealed class SandboxIsolationTests : IDisposable
 {
-    private const string Image = "alpine:3";
 
     private readonly DockerSandboxRunner _runner = new(NullLogger<DockerSandboxRunner>.Instance);
     private readonly string _workingCopy = Directory.CreateTempSubdirectory("repopilot-sandbox-").FullName;
 
     private SandboxRequest Request(params string[] argv) => new(
-        Image: Image,
+        Image: SandboxImageFixture.Image,
         Argv: argv,
         WorkingCopyPath: _workingCopy,
         WorkDir: "/workspace",

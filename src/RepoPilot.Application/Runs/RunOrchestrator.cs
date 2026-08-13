@@ -112,6 +112,29 @@ public sealed class RunOrchestrator(
     }
 
     /// <summary>
+    /// Ends a run whose proposal was rejected (FR-008).
+    /// <para>
+    /// Separate from <see cref="DecideProposalUseCase"/> because that type's job
+    /// is to record the decision, and this one's is to move the run. Keeping the
+    /// stage change here means every transition in the system goes through the
+    /// same table, rather than one of them living beside the audit write.
+    /// </para>
+    /// </summary>
+    public async Task<RunStage> RecordRejectionAsync(Guid runId, CancellationToken ct = default)
+    {
+        var run = await RequireRunAsync(runId, ct);
+
+        await TransitionAsync(run, RunTrigger.Rejected, ct, OutcomeReason.ProposalRejected);
+
+        // FR-026a: a rejected run's working copy goes too. Nothing was written to
+        // it, but leaving it would make rejection the one terminal outcome that
+        // accumulates directories.
+        await workspaces.DestroyAsync(runId, ct);
+
+        return run.Stage;
+    }
+
+    /// <summary>
     /// Runs the post-approval segment: apply, then test.
     /// <para>
     /// Entered only after a recorded approval, and it re-checks that rather than

@@ -17,7 +17,7 @@ public sealed class SandboxTimeoutTests : IDisposable
     private readonly string _workingCopy = Directory.CreateTempSubdirectory("repopilot-timeout-").FullName;
 
     private SandboxRequest Request(TimeSpan timeout, params string[] argv) => new(
-        Image: "alpine:3",
+        Image: SandboxImageFixture.Image,
         Argv: argv,
         WorkingCopyPath: _workingCopy,
         WorkDir: "/workspace",
