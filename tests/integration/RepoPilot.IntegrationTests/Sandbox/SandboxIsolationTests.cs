@@ -165,7 +165,7 @@ public sealed class SandboxIsolationTests : IDisposable
         // so the assertion is about our cleanup and not about whatever else
         // happens to be on the machine.
         var survivors = await DockerCli.RunAsync(
-            $"ps -aq --filter label={DockerSandboxRunner.OwnerLabel}");
+            $"ps -aq --filter label={DockerSandboxRunner.OwnerLabel}={_runner.InstanceId}");
 
         Assert.True(
             survivors.Trim().Length == 0,

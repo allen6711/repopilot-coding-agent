@@ -200,9 +200,9 @@ other story implemented.
 
 ### End-to-end
 
-- [ ] T089 [US1] End-to-end test driving a seeded task from creation through approval, apply, test execution, and final result, in `tests/e2e/SeededTaskFlowTests.cs`
-- [ ] T090 [US1] End-to-end test of the rejection path asserting the fixture and workspace are unchanged and the decision is recorded, in `tests/e2e/RejectionFlowTests.cs`
-- [ ] T090a [US1] Test that a `plan_produced` event always precedes `proposal_created` for a run, and that a proposal created without a preceding plan is refused, in `tests/integration/Runs/PlanPrecedesProposalTests.cs` (FR-010)
+- [X] T089 [US1] End-to-end test driving a seeded task from creation through approval, apply, test execution, and final result, in `tests/e2e/SeededTaskFlowTests.cs`
+- [X] T090 [US1] End-to-end test of the rejection path asserting the fixture and workspace are unchanged and the decision is recorded, in `tests/e2e/RejectionFlowTests.cs`
+- [X] T090a [US1] Test that a `plan_produced` event always precedes `proposal_created` for a run, and that a proposal created without a preceding plan is refused, in `tests/integration/Runs/PlanPrecedesProposalTests.cs` (FR-010)
 
 **Checkpoint**: User Story 1 is fully functional and independently testable. This is the MVP.
 

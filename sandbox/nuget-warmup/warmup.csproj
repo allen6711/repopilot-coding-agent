@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Not a project anyone builds. Its only job is to name the packages the .NET
+    fixtures need, so `dotnet restore` pulls them into the image at build time.
+
+    The sandbox runs with no network (Principle II), so a package missing here
+    is a fixture whose tests cannot run at all: a restore-less `dotnet test`
+    fails with a restore error rather than a test failure, which is a confusing
+    way to discover a build-time omission. Versions must match the fixtures'
+    project files exactly; NuGet restores the version asked for, not a nearby
+    one.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!-- Nothing here is compiled; the fixture sources live in the working copy. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- evals/fixtures/sample-dotnet-api/tests/Orders.Tests/Orders.Tests.csproj -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>

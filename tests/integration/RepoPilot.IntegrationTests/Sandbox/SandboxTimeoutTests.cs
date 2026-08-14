@@ -90,7 +90,7 @@ public sealed class SandboxTimeoutTests : IDisposable
         await _runner.RunAsync(Request(TimeSpan.FromSeconds(3), "sleep", "120"));
 
         var survivors = await DockerCli.RunAsync(
-            $"ps -aq --filter label={DockerSandboxRunner.OwnerLabel}");
+            $"ps -aq --filter label={DockerSandboxRunner.OwnerLabel}={_runner.InstanceId}");
 
         Assert.True(
             survivors.Trim().Length == 0,

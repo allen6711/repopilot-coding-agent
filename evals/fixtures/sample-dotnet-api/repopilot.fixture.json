@@ -14,18 +14,31 @@
   "commands": [
     {
       "name": "unit",
-      "argv": ["dotnet", "test", "tests/Orders.Tests/Orders.Tests.csproj", "--no-restore"],
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj"
+      ],
       "purpose": "verify"
     },
     {
       "name": "build",
-      "argv": ["dotnet", "build", "src/Orders/Orders.csproj", "--no-restore"],
+      "argv": [
+        "dotnet",
+        "build",
+        "src/Orders/Orders.csproj"
+      ],
       "purpose": "baseline"
     }
   ],
   "indexing": {
-    "additionalExcludedGlobs": ["**/TestResults/**"],
-    "documentationGlobs": ["README.md", "docs/**"],
+    "additionalExcludedGlobs": [
+      "**/TestResults/**"
+    ],
+    "documentationGlobs": [
+      "README.md",
+      "docs/**"
+    ],
     "maxFileBytes": 262144
   }
 }

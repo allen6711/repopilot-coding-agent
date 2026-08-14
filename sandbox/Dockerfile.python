@@ -3,7 +3,19 @@
 
 FROM python:3.13-slim-bookworm
 
-RUN useradd --uid 1000 --create-home --shell /bin/bash runner
+# The sandbox runs as UID 1000 -- DockerSandboxRunner passes User="1000:1000"
+# unconditionally, so the image must have a usable home for that UID. Several
+# official base images already ship a user there (the SDK image, node), so
+# creating one blindly fails the build. Adopt whoever holds it, or create one.
+RUN if id -u 1000 >/dev/null 2>&1; then \
+        existing="$(id -un 1000)"; \
+    else \
+        useradd --uid 1000 --create-home --shell /bin/bash runner; \
+        existing=runner; \
+    fi && \
+    mkdir -p /home/runner && \
+    chown -R 1000:1000 /home/runner && \
+    usermod --home /home/runner "$existing"
 
 # Install fixture dependencies at build time; the sandbox has no network.
 COPY sandbox/python-warmup/requirements.txt /tmp/requirements.txt
@@ -15,5 +27,5 @@ RUN if [ -s /tmp/requirements.txt ]; then \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-USER runner
+USER 1000:1000
 WORKDIR /workspace

@@ -24,6 +24,18 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
     /// </summary>
     public const string OwnerLabel = "repopilot.sandbox";
 
+    /// <summary>
+    /// The label's value: unique per runner instance.
+    /// <para>
+    /// A sweep for orphans filters on the key alone and so still finds
+    /// containers from any previous process. The value narrows the other
+    /// direction — it lets a caller ask about containers <em>this</em> runner
+    /// created, without a query over one daemon accidentally answering for
+    /// every process sharing it.
+    /// </para>
+    /// </summary>
+    public string InstanceId { get; } = Guid.CreateVersion7().ToString("N");
+
     private readonly Lazy<DockerClient> _client;
     private readonly ILogger<DockerSandboxRunner> _logger;
 
@@ -132,7 +144,7 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
 
             WorkingDir = request.WorkDir,
 
-            Labels = new Dictionary<string, string> { [OwnerLabel] = "1" },
+            Labels = new Dictionary<string, string> { [OwnerLabel] = InstanceId },
 
             // Nothing from the host environment. A credential exported into the
             // service's process must not become visible to test code (FR-025).
@@ -157,9 +169,14 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
                 // A read-only root would break most toolchains without somewhere
                 // to write scratch data. noexec stops that becoming a way to
                 // stage and run a binary.
+                //
+                // 256MB rather than a token amount: a real toolchain writes
+                // package extraction and build scratch here, and 64MB was not
+                // enough for a .NET restore. It is still a bound, and it is
+                // still non-executable.
                 Tmpfs = new Dictionary<string, string>
                 {
-                    ["/tmp"] = "rw,noexec,nosuid,size=64m",
+                    ["/tmp"] = "rw,noexec,nosuid,size=256m",
                 },
 
                 Binds = [$"{request.WorkingCopyPath}:{request.WorkDir}:rw"],
