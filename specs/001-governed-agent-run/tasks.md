@@ -191,12 +191,12 @@ other story implemented.
 
 ### Review UI
 
-- [ ] T084 [P] [US1] Generate the typed API client from `contracts/rest-api.yaml` into `web/repopilot-ui/src/api/`
-- [ ] T085 [P] [US1] Build the run detail page in `web/repopilot-ui/src/pages/RunDetail.tsx`, composing the plan panel, diff viewer, approval bar, and test output, and loading run state from `GET /api/runs/{id}` and `/proposal`
-- [ ] T086 [P] [US1] Build the `DiffViewer` component showing every affected file and the full diff in `web/repopilot-ui/src/components/DiffViewer.tsx` (SC-004)
-- [ ] T086a [P] [US1] Build the `PlanPanel` component displaying the run's short plan above the diff in `web/repopilot-ui/src/components/PlanPanel.tsx` (FR-010)
-- [ ] T087 [US1] Build the `ApprovalBar` component echoing the proposal hash on approve or reject in `web/repopilot-ui/src/components/ApprovalBar.tsx`
-- [ ] T088 [P] [US1] Build the `TestOutput` component in `web/repopilot-ui/src/components/TestOutput.tsx`
+- [X] T084 [P] [US1] Generate the typed API client from `contracts/rest-api.yaml` into `web/repopilot-ui/src/api/`
+- [X] T085 [P] [US1] Build the run detail page in `web/repopilot-ui/src/pages/RunDetail.tsx`, composing the plan panel, diff viewer, approval bar, and test output, and loading run state from `GET /api/runs/{id}` and `/proposal`
+- [X] T086 [P] [US1] Build the `DiffViewer` component showing every affected file and the full diff in `web/repopilot-ui/src/components/DiffViewer.tsx` (SC-004)
+- [X] T086a [P] [US1] Build the `PlanPanel` component displaying the run's short plan above the diff in `web/repopilot-ui/src/components/PlanPanel.tsx` (FR-010)
+- [X] T087 [US1] Build the `ApprovalBar` component echoing the proposal hash on approve or reject in `web/repopilot-ui/src/components/ApprovalBar.tsx`
+- [X] T088 [P] [US1] Build the `TestOutput` component in `web/repopilot-ui/src/components/TestOutput.tsx`
 
 ### End-to-end
 

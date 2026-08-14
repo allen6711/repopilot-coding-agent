@@ -491,6 +491,7 @@ components:
 
     RunSummary:
       type: object
+      required: [id, repositoryId, taskDescription, stage, createdAt]
       properties:
         id: { type: string, format: uuid }
         repositoryId: { type: string, format: uuid }
@@ -506,6 +507,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/RunSummary"
         - type: object
+          required: [revisionAttempt, toolsEnabled]
           properties:
             outcomeReason: { type: [string, "null"] }
             failureStage:

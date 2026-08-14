@@ -1,184 +1,341 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+:root {
+  --surface: #ffffff;
+  --surface-sunken: #f6f7f9;
+  --border: #d8dce2;
+  --text: #14161a;
+  --text-muted: #5b6270;
+  --added: #1a7f37;
+  --added-bg: #e6f6ea;
+  --removed: #b3261e;
+  --removed-bg: #fdeceb;
+  --accent: #1f5fd6;
+  --warn: #8a5a00;
+  --warn-bg: #fdf3e0;
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+  color-scheme: light;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+body {
+  margin: 0;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  line-height: 1.5;
 }
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.85rem;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+.app {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+.app__empty,
+.run-detail__loading {
+  color: var(--text-muted);
 }
 
-#next-steps ul {
+/* Run header ------------------------------------------------------------- */
+
+.run-detail__header {
+  margin-bottom: 1.5rem;
+}
+
+.run-detail__header h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.run-detail__stage {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.run-detail__stage[data-stage='awaiting_approval'] {
+  color: var(--warn);
+}
+
+.run-detail__stage[data-stage='succeeded'] {
+  color: var(--added);
+}
+
+.run-detail__stage[data-stage='failed'],
+.run-detail__stage[data-stage='rejected'] {
+  color: var(--removed);
+}
+
+.run-detail__reason {
+  font-weight: 400;
+}
+
+.run-detail__cancel {
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.run-detail__cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.run-detail__error,
+.approval-bar__error {
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.75rem 0 0;
+}
+
+.run-detail__no-proposal {
+  color: var(--text-muted);
+  padding: 1rem 0;
+}
+
+/* Panels ------------------------------------------------------------------ */
+
+.plan-panel,
+.diff-viewer,
+.approval-bar,
+.test-output {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.plan-panel h2,
+.diff-viewer h2,
+.test-output h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.plan-panel__text {
+  margin: 0 0 0.5rem;
+}
+
+.plan-panel__missing {
+  color: var(--warn);
+  margin: 0;
+}
+
+/* Diff -------------------------------------------------------------------- */
+
+.diff-viewer__paths {
   list-style: none;
+  margin: 0 0 0.9rem;
   padding: 0;
   display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.diff-viewer__paths code {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
 }
 
-.ticks {
-  position: relative;
+.diff-viewer__diff {
+  margin: 0;
+  /* Scrolls sideways rather than wrapping. A wrapped diff line changes where
+     the change appears to be, which is the one thing the reviewer is reading
+     for. */
+  overflow-x: auto;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 0;
+}
+
+.diff-line {
+  display: block;
+  padding: 0 0.75rem;
+  white-space: pre;
+}
+
+.diff-line--added {
+  background: var(--added-bg);
+  color: var(--added);
+}
+
+.diff-line--removed {
+  background: var(--removed-bg);
+  color: var(--removed);
+}
+
+.diff-line--meta,
+.diff-line--hunk {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.diff-viewer__footer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+}
+
+.diff-viewer__hash-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.diff-viewer__hash {
+  word-break: break-all;
+}
+
+/* Approval ---------------------------------------------------------------- */
+
+.approval-bar {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.approval-bar--decided {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.approval-bar__actor label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.approval-bar__actor input {
   width: 100%;
+  max-width: 22rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+.approval-bar__actor-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+.approval-bar__actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.approval-bar__approve,
+.approval-bar__reject {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approval-bar__approve {
+  background: var(--added);
+  color: #fff;
+}
+
+.approval-bar__reject {
+  background: var(--surface);
+  border-color: var(--removed);
+  color: var(--removed);
+}
+
+.approval-bar__approve:disabled,
+.approval-bar__reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approval-bar__binding {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.approval-bar__decided {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* Tests ------------------------------------------------------------------- */
+
+.test-output__result {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.test-output__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.test-output__outcome {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.test-output__result--pass .test-output__outcome {
+  color: var(--added);
+}
+
+.test-output__result--fail .test-output__outcome {
+  color: var(--removed);
+}
+
+/* A timeout is not a failure. SC-009 counts them apart, so they read apart. */
+.test-output__result--timeout .test-output__outcome {
+  color: var(--warn);
+}
+
+.test-output__exit,
+.test-output__duration,
+.test-output__attempt {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.test-output__log {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+  max-height: 24rem;
+  overflow-y: auto;
 }
