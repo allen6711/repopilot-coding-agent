@@ -267,15 +267,39 @@ internal sealed class ScriptedAgent : IAgentTurnRunner
         default,
         "scripted"));
 
+    /// <summary>What the last turn was offered. Null until a turn has run.</summary>
+    public OfferedCapabilities? LastOffered { get; private set; }
+
     public Task<ChatCompletion> TurnAsync(
         string repositorySlug,
         IReadOnlyList<ChatMessage> conversation,
         EffortLevel effort,
         int maxOutputTokens,
+        OfferedCapabilities offered = OfferedCapabilities.All,
         CancellationToken ct = default)
     {
         TurnCount++;
+        LastOffered = offered;
         return Task.FromResult(_script(TurnCount));
+    }
+}
+
+/// <summary>
+/// Stands in for retrieval in the baseline condition. Returns whatever the test
+/// asked for, and records that it was consulted.
+/// </summary>
+internal sealed class ScriptedBaselineContext(string context = "") : IBaselineContextProvider
+{
+    public int Calls { get; private set; }
+
+    public Task<string> RetrieveAsync(
+        Guid repositoryId,
+        string taskDescription,
+        int maxCharacters,
+        CancellationToken ct = default)
+    {
+        Calls++;
+        return Task.FromResult(context);
     }
 }
 

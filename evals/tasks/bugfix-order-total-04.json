@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-order-total-04",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "bug_fix",
+  "description": "Order totals are coming out short by the value of whatever the last line on the order happens to be, and an order with a single line totals nothing at all.",
+  "relevantFiles": [
+    "src/Orders/OrderTotals.cs"
+  ],
+  "baselineTestCommand": "unit-order-totals",
+  "successTestCommand": "unit-order-totals",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderTotals.cs"
+  ],
+  "referencePatch": "_reference/bugfix-order-total-04.md"
+}

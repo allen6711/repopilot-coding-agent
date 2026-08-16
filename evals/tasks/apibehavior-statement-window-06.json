@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-statement-window-06",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "api_behavior",
+  "description": "Transactions dated on the last day of a statement period are being pushed onto the next statement, and every statement reports covering one day fewer than it does. A statement period is meant to include both the day it starts and the day it ends.",
+  "relevantFiles": [
+    "src/Billing/StatementPeriod.cs"
+  ],
+  "baselineTestCommand": "unit-statement-period",
+  "successTestCommand": "unit-statement-period",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/StatementPeriod.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-statement-window-06.md"
+}

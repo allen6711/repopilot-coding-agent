@@ -1,0 +1,21 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "testwork-credit-limit-boundary-05",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "test_work",
+  "description": "The credit limit check has no test for a charge that lands exactly on the limit, which is the case the documentation calls out and the one most likely to regress under a one-character edit. Add test coverage for it. The behaviour itself is correct and must not change.",
+  "relevantFiles": [
+    "src/Billing/CreditLimit.cs",
+    "tests/Billing.Tests/CreditLimitTests.cs"
+  ],
+  "baselineTestCommand": "unit-credit-limit",
+  "successTestCommand": "unit-credit-limit",
+  "successCondition": {
+    "type": "output_matches",
+    "pattern": "Failed:\\s+0,\\s+Passed:\\s+(?:[3-9]|\\d{2,}),"
+  },
+  "expectedChangedFiles": [
+    "tests/Billing.Tests/CreditLimitTests.cs"
+  ],
+  "referencePatch": "_reference/testwork-credit-limit-boundary-05.md"
+}

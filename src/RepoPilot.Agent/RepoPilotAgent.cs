@@ -61,7 +61,8 @@ public sealed class RepoPilotAgent(IChatProviderAdapter provider) : IAgentTurnRu
     /// boundary actually lives.
     /// </para>
     /// </summary>
-    public static string BuildSystemPrompt(string repositorySlug)
+    public static string BuildSystemPrompt(
+        string repositorySlug, OfferedCapabilities offered = OfferedCapabilities.All)
     {
         var prompt = new StringBuilder();
 
@@ -70,7 +71,15 @@ public sealed class RepoPilotAgent(IChatProviderAdapter provider) : IAgentTurnRu
         prompt.AppendLine();
         prompt.AppendLine("How this works:");
         prompt.AppendLine(
-            "- Find the relevant code first. Search before reading, and read before proposing.");
+            offered == OfferedCapabilities.All
+                ? "- Find the relevant code first. Search before reading, and read before proposing."
+
+                // The baseline has no way to look anything up, so telling it to
+                // search would be an instruction it cannot follow. It is told what
+                // it has instead — which is the honest description of its
+                // situation, and the thing the comparison is measuring.
+                : "- The repository excerpts below are everything you have. There is no way to "
+                  + "look at anything else.");
         prompt.AppendLine(
             "- Produce a short plan before proposing any change. Two or three sentences is enough.");
         prompt.AppendLine(
@@ -98,9 +107,16 @@ public sealed class RepoPilotAgent(IChatProviderAdapter provider) : IAgentTurnRu
     /// <summary>
     /// The capabilities offered to the model, as provider-neutral definitions.
     /// </summary>
-    public static IReadOnlyList<ToolDefinition> ModelCapabilities() =>
+    /// <param name="offered">
+    /// Narrows the set for the retrieval-only baseline. The registry is still the
+    /// only source of names — this filters what is offered from it, and cannot
+    /// introduce anything it does not contain.
+    /// </param>
+    public static IReadOnlyList<ToolDefinition> ModelCapabilities(
+        OfferedCapabilities offered = OfferedCapabilities.All) =>
     [
         .. CapabilityRegistry.ForSurface(InvocationSurface.Model)
+            .Where(c => offered == OfferedCapabilities.All || c.Name == "propose_patch")
             .Select(c => new ToolDefinition(c.Name, Descriptions[c.Name], SchemaFor(c.Name)))
     ];
 
@@ -110,12 +126,13 @@ public sealed class RepoPilotAgent(IChatProviderAdapter provider) : IAgentTurnRu
         IReadOnlyList<ChatMessage> conversation,
         EffortLevel effort,
         int maxOutputTokens,
+        OfferedCapabilities offered = OfferedCapabilities.All,
         CancellationToken ct = default) =>
         provider.CompleteAsync(
             new ChatRequest(
-                BuildSystemPrompt(repositorySlug),
+                BuildSystemPrompt(repositorySlug, offered),
                 conversation,
-                ModelCapabilities(),
+                ModelCapabilities(offered),
                 effort,
                 maxOutputTokens),
             ct);

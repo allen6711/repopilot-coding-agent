@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "refactor-duplicate-projection-01",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "refactor",
+  "description": "The order projection is written out twice, once for the detail screen and once inside the loop that builds the list. The two copies have already drifted apart once. Remove the duplication. Nothing either surface produces may change.",
+  "relevantFiles": [
+    "src/Orders/OrderProjection.cs"
+  ],
+  "baselineTestCommand": "unit-order-projection",
+  "successTestCommand": "unit-order-projection",
+  "successCondition": {
+    "type": "tests_pass"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderProjection.cs"
+  ],
+  "referencePatch": "_reference/refactor-duplicate-projection-01.md"
+}

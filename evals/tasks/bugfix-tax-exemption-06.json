@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-tax-exemption-06",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "bug_fix",
+  "description": "Customers holding a tax exemption certificate are being charged tax anyway. The exemption is recorded on the account and reaches the calculation, but the amount comes out the same either way.",
+  "relevantFiles": [
+    "src/Billing/TaxCalculator.cs"
+  ],
+  "baselineTestCommand": "unit-tax",
+  "successTestCommand": "unit-tax",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/TaxCalculator.cs"
+  ],
+  "referencePatch": "_reference/bugfix-tax-exemption-06.md"
+}

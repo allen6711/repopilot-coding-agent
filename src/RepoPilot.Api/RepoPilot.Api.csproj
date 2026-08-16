@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RepoPilot.Infrastructure\RepoPilot.Infrastructure.csproj" />
     <ProjectReference Include="..\RepoPilot.Agent\RepoPilot.Agent.csproj" />
+    <ProjectReference Include="..\RepoPilot.Evals\RepoPilot.Evals.csproj" />
   </ItemGroup>
 
   <ItemGroup>

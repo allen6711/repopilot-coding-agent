@@ -1,0 +1,20 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "testwork-billing-cycle-expectation-04",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "test_work",
+  "description": "The billing cycle test for a short month fails. February 2026 has twenty-eight days and the code bills on the twenty-eighth, which is what the documented fallback describes; the test expects the twenty-seventh. Correct the test, not the code.",
+  "relevantFiles": [
+    "tests/Billing.Tests/BillingCycleTests.cs",
+    "src/Billing/BillingCycle.cs"
+  ],
+  "baselineTestCommand": "unit-billing-cycle",
+  "successTestCommand": "unit-billing-cycle",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "tests/Billing.Tests/BillingCycleTests.cs"
+  ],
+  "referencePatch": "_reference/testwork-billing-cycle-expectation-04.md"
+}

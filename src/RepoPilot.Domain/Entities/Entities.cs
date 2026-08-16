@@ -168,6 +168,18 @@ public sealed class Run
     /// <summary>False runs the retrieval-only baseline (FR-033).</summary>
     public bool ToolsEnabled { get; set; } = true;
 
+    /// <summary>
+    /// The allow-listed command this run is verified against, or null to use the
+    /// fixture's default.
+    /// <para>
+    /// Set from the evaluation task's success command. It is stored on the run
+    /// rather than resolved at test time so that the record says which command
+    /// decided the run, and so a task definition changing later cannot rewrite
+    /// what an earlier run was graded on (FR-031).
+    /// </para>
+    /// </summary>
+    public string? VerifyCommandName { get; set; }
+
     public ApprovalMode ApprovalMode { get; set; } = ApprovalMode.Interactive;
 
     public Guid? EvaluationRunId { get; set; }

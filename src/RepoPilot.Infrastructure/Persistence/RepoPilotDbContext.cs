@@ -157,6 +157,11 @@ public class RepoPilotDbContext(DbContextOptions<RepoPilotDbContext> options) : 
 
             e.Property(x => x.TaskDescription).IsRequired();
             e.Property(x => x.SeededTaskId).HasMaxLength(64);
+
+            // Bounded by the fixture-config schema's command-name pattern, which
+            // caps a name at 41 characters. A value that does not fit was never a
+            // command the allow-list could contain.
+            e.Property(x => x.VerifyCommandName).HasMaxLength(64);
             e.Property(x => x.Stage).HasConversion<string>().HasMaxLength(32).IsRequired();
             e.Property(x => x.TerminalOutcome).HasConversion<string>().HasMaxLength(32);
 

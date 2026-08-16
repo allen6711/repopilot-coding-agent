@@ -72,7 +72,8 @@ public sealed class ReconstructabilityTests(PostgresFixture postgres) : IDisposa
             new ScriptedCapabilities(proposals, testsPass, events),
             events,
             Options.Create(new RunConcurrencyOptions { MaxRevisionAttempts = 0 }),
-            Options.Create(new RetrievalOptions()));
+            Options.Create(new RetrievalOptions()),
+            new ScriptedBaselineContext());
 
         await orchestrator.ExecuteUntilApprovalAsync(run.Id);
 
@@ -267,7 +268,8 @@ public sealed class ReconstructabilityTests(PostgresFixture postgres) : IDisposa
             new ScriptedCapabilities(new EfProposalStore(db), testsPass: true, recorder),
             recorder,
             Options.Create(new RunConcurrencyOptions()),
-            Options.Create(new RetrievalOptions()));
+            Options.Create(new RetrievalOptions()),
+            new ScriptedBaselineContext());
 
         await Assert.ThrowsAsync<IllegalTransitionException>(
             () => orchestrator.RecordRejectionAsync(run.Id));

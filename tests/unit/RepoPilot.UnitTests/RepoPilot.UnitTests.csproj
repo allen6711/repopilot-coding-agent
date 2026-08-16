@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\..\src\RepoPilot.Application\RepoPilot.Application.csproj" />
     <ProjectReference Include="..\..\..\src\RepoPilot.Agent\RepoPilot.Agent.csproj" />
     <ProjectReference Include="..\..\..\src\RepoPilot.Infrastructure\RepoPilot.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\RepoPilot.Evals\RepoPilot.Evals.csproj" />
   </ItemGroup>
 
 </Project>

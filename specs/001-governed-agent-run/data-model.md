@@ -99,6 +99,7 @@ One task execution against one repository.
 | `failure_stage` | enum NULL | Stage at which a non-success outcome occurred (FR-030) |
 | `revision_attempt` | int NOT NULL DEFAULT 0 | Capped at 2 (FR-012) |
 | `tools_enabled` | boolean NOT NULL DEFAULT true | `false` for the retrieval-only baseline |
+| `verify_command_name` | varchar(64) NULL | Allow-listed command this run is verified against; null uses the fixture's default. Set from an evaluation task's success command, and stored rather than resolved at test time so the record says which command decided the run and a later task edit cannot rewrite it |
 | `approval_mode` | enum NOT NULL | `interactive` \| `programmatic` |
 | `evaluation_run_id` | uuid NULL FK → EvaluationRun | |
 | `created_at` / `started_at` / `ended_at` | timestamptz | |

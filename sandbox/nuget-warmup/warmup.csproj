@@ -20,7 +20,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- evals/fixtures/sample-dotnet-api/tests/Orders.Tests/Orders.Tests.csproj -->
+    <!--
+      evals/fixtures/sample-dotnet-api/tests/Orders.Tests/Orders.Tests.csproj
+      evals/fixtures/sample-dotnet-billing/tests/Billing.Tests/Billing.Tests.csproj
+
+      Both fixtures pin the same versions deliberately. A fixture that moved to a
+      different version would need its own entry here, and forgetting one is the
+      failure this comment exists to prevent.
+    -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />

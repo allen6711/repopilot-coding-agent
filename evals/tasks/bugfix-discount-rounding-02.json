@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-discount-rounding-02",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "bug_fix",
+  "description": "A 50 percent discount on an order of 10.05 is billed as 5.02 rather than 5.03. Finance has traced a month of one-cent shortfalls to the discount path: a half cent is meant to round in the customer's favour, and it is rounding to even instead.",
+  "relevantFiles": [
+    "src/Orders/DiscountCalculator.cs"
+  ],
+  "baselineTestCommand": "unit-discount",
+  "successTestCommand": "unit-discount",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/DiscountCalculator.cs"
+  ],
+  "referencePatch": "_reference/bugfix-discount-rounding-02.md"
+}

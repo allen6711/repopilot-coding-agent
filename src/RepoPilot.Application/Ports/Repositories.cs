@@ -133,3 +133,27 @@ public interface ITestResultStore
 
     Task<IReadOnlyList<TestResult>> ListForRunAsync(Guid runId, CancellationToken ct = default);
 }
+
+/// <summary>
+/// Evaluation runs and their per-task results.
+/// <para>
+/// Persisted rather than held in the harness process, because an evaluation is
+/// the evidence Principle III requires before the tool surface may grow. A
+/// figure that only ever existed in a console log cannot be cited.
+/// </para>
+/// </summary>
+public interface IEvaluationStore
+{
+    Task<EvaluationRun?> FindAsync(Guid id, CancellationToken ct = default);
+
+    Task<IReadOnlyList<EvaluationRun>> ListAsync(CancellationToken ct = default);
+
+    Task AddAsync(EvaluationRun evaluation, CancellationToken ct = default);
+
+    Task UpdateAsync(EvaluationRun evaluation, CancellationToken ct = default);
+
+    Task AddResultAsync(EvaluationTaskResult result, CancellationToken ct = default);
+
+    Task<IReadOnlyList<EvaluationTaskResult>> ListResultsAsync(
+        Guid evaluationRunId, CancellationToken ct = default);
+}

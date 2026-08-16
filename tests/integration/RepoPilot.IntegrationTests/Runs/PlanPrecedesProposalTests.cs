@@ -60,7 +60,8 @@ public sealed class PlanPrecedesProposalTests : IDisposable
         new ScriptedCapabilities(_proposals, testsPass: true),
         _events,
         Options.Create(new RunConcurrencyOptions()),
-        Options.Create(new RetrievalOptions()));
+        Options.Create(new RetrievalOptions()),
+        new ScriptedBaselineContext());
 
     private Run SeedRun()
     {

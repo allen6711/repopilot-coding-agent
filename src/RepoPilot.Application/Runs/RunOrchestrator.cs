@@ -39,7 +39,8 @@ public sealed class RunOrchestrator(
     ICapabilityInvoker capabilities,
     RunEventRecorder events,
     IOptions<RunConcurrencyOptions> concurrency,
-    IOptions<RetrievalOptions> retrieval)
+    IOptions<RetrievalOptions> retrieval,
+    IBaselineContextProvider baselineContext)
 {
     /// <summary>
     /// Turns the agent may take within one segment before the orchestrator gives
@@ -88,6 +89,16 @@ public sealed class RunOrchestrator(
             {
                 new(ChatRole.User, run.TaskDescription),
             };
+
+            if (!run.ToolsEnabled)
+            {
+                // FR-033. The baseline cannot search, so its context is retrieved
+                // for it, once, and charged against the same budget the
+                // tool-enabled condition spends — otherwise the comparison would
+                // be between two different context allowances rather than between
+                // retrieval and retrieval plus tools.
+                await SeedBaselineContextAsync(run, context, conversation, ct);
+            }
 
             var proposal = await DriveAgentAsync(run, fixture, context, conversation, ct);
 
@@ -187,7 +198,7 @@ public sealed class RunOrchestrator(
 
             await TransitionAsync(run, RunTrigger.PatchApplied, ct);
 
-            var passed = await RunTestsAsync(context, fixture, ct);
+            var passed = await RunTestsAsync(run, context, fixture, ct);
 
             if (passed)
             {
@@ -253,11 +264,15 @@ public sealed class RunOrchestrator(
     {
         var planText = run.Plan;
 
+        var offered = run.ToolsEnabled
+            ? OfferedCapabilities.All
+            : OfferedCapabilities.ProposeOnly;
+
         for (var turn = 0; turn < MaxTurnsPerSegment; turn++)
         {
             var effort = run.Stage == RunStage.Proposing ? EffortLevel.High : EffortLevel.Medium;
             var completion = await agent.TurnAsync(
-                fixture.Slug, conversation, effort, MaxOutputTokens, ct);
+                fixture.Slug, conversation, effort, MaxOutputTokens, offered, ct);
 
             if (completion.Text.Length > 0)
             {
@@ -335,10 +350,45 @@ public sealed class RunOrchestrator(
             $"Run {run.Id} reached {MaxTurnsPerSegment} turns without proposing or declining.");
     }
 
-    private async Task<bool> RunTestsAsync(
-        CapabilityContext context, RepositoryFixture fixture, CancellationToken ct)
+    /// <summary>
+    /// Retrieves the baseline's context and puts it in front of the task, then
+    /// records that retrieval happened.
+    /// <para>
+    /// The stage moves here rather than in <see cref="DriveAgentAsync"/> because
+    /// that method infers retrieval from the first tool call, and a baseline run's
+    /// first tool call is the proposal. Without this the run would reach a
+    /// proposal having never been recorded as having retrieved anything.
+    /// </para>
+    /// </summary>
+    private async Task SeedBaselineContextAsync(
+        Run run,
+        CapabilityContext context,
+        List<ChatMessage> conversation,
+        CancellationToken ct)
     {
-        var command = FirstVerifyCommand(fixture.TestConfigJson)
+        var retrieved = await baselineContext.RetrieveAsync(
+            run.RepositoryId, run.TaskDescription, context.Budget.Remaining, ct);
+
+        if (retrieved.Length > 0 && context.Budget.TryCharge(retrieved.Length))
+        {
+            conversation.Insert(0, new ChatMessage(ChatRole.User, retrieved));
+        }
+
+        // Recorded even when nothing came back. "Retrieval ran and found nothing"
+        // is a different outcome from "retrieval never ran", and the no-change
+        // reason the run ends with depends on telling them apart.
+        await TransitionAsync(run, RunTrigger.ContextRetrieved, ct);
+    }
+
+    private async Task<bool> RunTestsAsync(
+        Run run, CapabilityContext context, RepositoryFixture fixture, CancellationToken ct)
+    {
+        // The run's own command wins when it has one. An evaluation task names the
+        // command that decides it, and grading every task against the fixture's
+        // default would grade each one against every other task's outstanding
+        // defect.
+        var command = run.VerifyCommandName
+            ?? FirstVerifyCommand(fixture.TestConfigJson)
             ?? throw new InvalidOperationException(
                 $"Fixture '{fixture.Slug}' defines no test command to verify against.");
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-postal-code-02",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "input_validation",
+  "description": "Shipments are failing at hand-off to the carrier because addresses with unusable postal codes were stored days earlier. The accepted format is written down; only whether something was supplied is checked.",
+  "relevantFiles": [
+    "src/Orders/AddressValidator.cs"
+  ],
+  "baselineTestCommand": "unit-address",
+  "successTestCommand": "unit-address",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/AddressValidator.cs"
+  ],
+  "referencePatch": "_reference/validation-postal-code-02.md"
+}

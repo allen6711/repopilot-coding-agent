@@ -267,28 +267,28 @@ retrieval-only baseline compared against the tool-enabled agent.
 **Independent Test**: Execute the evaluation set twice on unchanged fixtures and confirm the reported
 metrics are consistent and derived only from committed task definitions.
 
-- [ ] T115 [P] [US4] Implement the evaluation task loader with schema validation in `src/RepoPilot.Evals/Tasks/EvaluationTaskLoader.cs` (FR-031)
-- [ ] T116 [US4] Author 8 bug-fix tasks under `evals/tasks/`, each with relevant files, baseline and success commands, and a machine-checkable success condition (FR-031, SC-011)
-- [ ] T116a [P] [US4] Author 6 input-validation tasks under `evals/tasks/` to the same standard
-- [ ] T116b [P] [US4] Author 6 API-behavior-change tasks under `evals/tasks/` to the same standard
-- [ ] T116c [P] [US4] Author 5 refactor tasks with unchanged tests under `evals/tasks/` to the same standard
-- [ ] T116d [P] [US4] Author 5 test-generation and test-fix tasks under `evals/tasks/` to the same standard
-- [ ] T116e [US4] Assert the committed set holds at least 30 tasks and that every success condition is machine-checkable, in `tests/unit/Evals/TaskSetCompletenessTests.cs` (SC-011)
-- [ ] T117 [P] [US4] Add reference patches under `evals/tasks/_reference/`, outside every fixture root, and assert in test that no run resolves a path there (FR-035)
-- [ ] T118 [US4] Build the evaluation CLI host reusing `RunOrchestrator` rather than a parallel path, in `src/RepoPilot.Evals/Program.cs` (FR-034)
-- [ ] T119 [US4] Implement programmatic approval that still writes a real decision record bound to the diff hash and is available only to evaluation runs, in `src/RepoPilot.Application/Approval/ProgrammaticApproval.cs` (FR-015b)
-- [ ] T120 [US4] Integration test that programmatic approval is refused on an interactive run, in `tests/integration/Approval/ProgrammaticModeScopeTests.cs`
-- [ ] T121 [US4] Implement the retrieval-only baseline mode that disables tool use for the same task set, in `src/RepoPilot.Evals/Modes/BaselineMode.cs` (FR-033)
-- [ ] T122 [US4] Implement metric calculation — Recall@5, completion rate per mode, approval coverage, tool success rate, average tool calls, latency percentiles — in `src/RepoPilot.Evals/Metrics/MetricsCalculator.cs` (FR-032)
-- [ ] T123 [P] [US4] Unit test each metric calculation against fixed inputs in `tests/unit/Evals/MetricsCalculatorTests.cs`
-- [ ] T124 [US4] Flag and fail an evaluation whose approval coverage is below 100% rather than reporting the number, in `src/RepoPilot.Evals/Metrics/ApprovalCoverageGate.cs` (FR-034, SC-001)
-- [ ] T125 [US4] Ensure an evaluation never triggers re-indexing, so repeat runs read identical vectors, in `src/RepoPilot.Evals/Program.cs` (SC-007)
-- [ ] T126 [US4] Integration test that two consecutive evaluations over unchanged fixtures produce identical retrieval metrics, in `tests/integration/Evals/DeterminismTests.cs`
-- [ ] T127 [US4] Implement `POST /api/evaluations` and `GET /api/evaluations/{id}` delegating to the same library, in `src/RepoPilot.Api/Endpoints/EvaluationEndpoints.cs`
-- [ ] T127a [P] [US4] Contract test the evaluation endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/EvaluationApiContractTests.cs`
-- [ ] T128 [US4] Write the committed JSON report to `evals/results/` in `src/RepoPilot.Evals/Reporting/ReportWriter.cs`
-- [ ] T129 [P] [US4] Add an adversarial fixture whose content attempts to instruct the agent to skip approval or read outside the workspace, under `evals/fixtures/adversarial-content/`
-- [ ] T130 [US4] Integration test that no control is bypassed by repository content — no unapproved write, no out-of-workspace access, no command outside the allow-list, no secret reaching model context, in `tests/integration/Security/ContentAsInstructionTests.cs` (FR-026d, SC-014)
+- [X] T115 [P] [US4] Implement the evaluation task loader with schema validation in `src/RepoPilot.Evals/Tasks/EvaluationTaskLoader.cs` (FR-031)
+- [X] T116 [US4] Author 8 bug-fix tasks under `evals/tasks/`, each with relevant files, baseline and success commands, and a machine-checkable success condition (FR-031, SC-011)
+- [X] T116a [P] [US4] Author 6 input-validation tasks under `evals/tasks/` to the same standard
+- [X] T116b [P] [US4] Author 6 API-behavior-change tasks under `evals/tasks/` to the same standard
+- [X] T116c [P] [US4] Author 5 refactor tasks with unchanged tests under `evals/tasks/` to the same standard
+- [X] T116d [P] [US4] Author 5 test-generation and test-fix tasks under `evals/tasks/` to the same standard
+- [X] T116e [US4] Assert the committed set holds at least 30 tasks and that every success condition is machine-checkable, in `tests/unit/Evals/TaskSetCompletenessTests.cs` (SC-011)
+- [X] T117 [P] [US4] Add reference patches under `evals/tasks/_reference/`, outside every fixture root, and assert in test that no run resolves a path there (FR-035)
+- [X] T118 [US4] Build the evaluation CLI host reusing `RunOrchestrator` rather than a parallel path, in `src/RepoPilot.Evals/Program.cs` (FR-034)
+- [X] T119 [US4] Implement programmatic approval that still writes a real decision record bound to the diff hash and is available only to evaluation runs, in `src/RepoPilot.Application/Approval/ProgrammaticApproval.cs` (FR-015b)
+- [X] T120 [US4] Integration test that programmatic approval is refused on an interactive run, in `tests/integration/Approval/ProgrammaticModeScopeTests.cs`
+- [X] T121 [US4] Implement the retrieval-only baseline mode that disables tool use for the same task set, in `src/RepoPilot.Evals/Modes/BaselineMode.cs` (FR-033)
+- [X] T122 [US4] Implement metric calculation — Recall@5, completion rate per mode, approval coverage, tool success rate, average tool calls, latency percentiles — in `src/RepoPilot.Evals/Metrics/MetricsCalculator.cs` (FR-032)
+- [X] T123 [P] [US4] Unit test each metric calculation against fixed inputs in `tests/unit/Evals/MetricsCalculatorTests.cs`
+- [X] T124 [US4] Flag and fail an evaluation whose approval coverage is below 100% rather than reporting the number, in `src/RepoPilot.Evals/Metrics/ApprovalCoverageGate.cs` (FR-034, SC-001)
+- [X] T125 [US4] Ensure an evaluation never triggers re-indexing, so repeat runs read identical vectors, in `src/RepoPilot.Evals/Program.cs` (SC-007)
+- [X] T126 [US4] Integration test that two consecutive evaluations over unchanged fixtures produce identical retrieval metrics, in `tests/integration/Evals/DeterminismTests.cs`
+- [X] T127 [US4] Implement `POST /api/evaluations` and `GET /api/evaluations/{id}` delegating to the same library, in `src/RepoPilot.Api/Endpoints/EvaluationEndpoints.cs`
+- [X] T127a [P] [US4] Contract test the evaluation endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/EvaluationApiContractTests.cs`
+- [X] T128 [US4] Write the committed JSON report to `evals/results/` in `src/RepoPilot.Evals/Reporting/ReportWriter.cs`
+- [X] T129 [P] [US4] Add an adversarial fixture whose content attempts to instruct the agent to skip approval or read outside the workspace, under `evals/fixtures/adversarial-content/`
+- [X] T130 [US4] Integration test that no control is bypassed by repository content — no unapproved write, no out-of-workspace access, no command outside the allow-list, no secret reaching model context, in `tests/integration/Security/ContentAsInstructionTests.cs` (FR-026d, SC-014)
 
 **Checkpoint**: All four user stories are independently functional.
 

@@ -59,7 +59,8 @@ public sealed class RevisionLimitTests : IDisposable
             capabilities,
             _events,
             Options.Create(new RunConcurrencyOptions { MaxRevisionAttempts = maxRevisions }),
-            Options.Create(new RetrievalOptions()));
+            Options.Create(new RetrievalOptions()),
+            new ScriptedBaselineContext());
 
         return (orchestrator, capabilities);
     }

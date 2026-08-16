@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "refactor-nested-conditionals-02",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "refactor",
+  "description": "The shipping charge rules are a four-deep nest of if and else that nobody can read against the printed rate card, which is how the last pricing change took three attempts. Restructure them so the rules are legible. No charge may change.",
+  "relevantFiles": [
+    "src/Orders/ShippingCostRules.cs"
+  ],
+  "baselineTestCommand": "unit-shipping-cost",
+  "successTestCommand": "unit-shipping-cost",
+  "successCondition": {
+    "type": "tests_pass"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/ShippingCostRules.cs"
+  ],
+  "referencePatch": "_reference/refactor-nested-conditionals-02.md"
+}

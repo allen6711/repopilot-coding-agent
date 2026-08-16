@@ -198,6 +198,26 @@ public sealed class WorkingCopyManager(
         }
     }
 
+    /// <summary>
+    /// Copies a fixture tree the way a run's working copy is built.
+    /// <para>
+    /// Exposed for the evaluation harness's baseline probe, which measures how a
+    /// fixture's command behaves before any change. That measurement is only
+    /// comparable with the run's own result if both are taken against the same
+    /// tree — same skip list, same contents — so the probe reuses this rather
+    /// than copying the fixture its own way.
+    /// </para>
+    /// </summary>
+    public static void CopyFixtureTo(string source, string destination, CancellationToken ct = default)
+    {
+        // Read-only resolution of the source, for the same reason CreateAsync does
+        // it: a copy is a read of the fixture, and the guard is where that is
+        // established rather than assumed (FR-016a).
+        var root = WorkspaceRoot.ReadOnly(Path.GetFullPath(source));
+
+        CopyTree(root.FullPath, destination, ct);
+    }
+
     private static void CopyTree(string source, string destination, CancellationToken ct)
     {
         Directory.CreateDirectory(destination);

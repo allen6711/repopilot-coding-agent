@@ -36,6 +36,28 @@ public interface ICapabilityInvoker
 }
 
 /// <summary>
+/// Which capabilities a turn offers the model.
+/// <para>
+/// The distinction exists for the evaluation baseline (FR-033), which has to be
+/// a genuinely retrieval-only condition rather than a tool-enabled agent that was
+/// asked not to search. Withholding the tools is the only version of that claim
+/// a reader can check.
+/// </para>
+/// </summary>
+public enum OfferedCapabilities
+{
+    /// <summary>Every model-surface capability. The normal agent.</summary>
+    All,
+
+    /// <summary>
+    /// <c>propose_patch</c> alone. Retrieved context is supplied up front instead
+    /// of being searched for, so the run still reaches a proposal and the two
+    /// conditions stay comparable on the same task set.
+    /// </summary>
+    ProposeOnly,
+}
+
+/// <summary>
 /// One turn against the configured model provider.
 /// <para>
 /// A turn, never a loop. Each iteration of the agent loop is a stage transition,
@@ -50,5 +72,34 @@ public interface IAgentTurnRunner
         IReadOnlyList<ChatMessage> conversation,
         EffortLevel effort,
         int maxOutputTokens,
+        OfferedCapabilities offered = OfferedCapabilities.All,
+        CancellationToken ct = default);
+}
+
+/// <summary>
+/// Supplies the context a retrieval-only run is given up front (FR-033).
+/// <para>
+/// A port rather than a direct call because the orchestrator must not know how
+/// retrieval works, and because the baseline is a measurement condition — the
+/// thing being compared against — so it belongs behind the same seam as
+/// everything else the orchestrator depends on.
+/// </para>
+/// </summary>
+public interface IBaselineContextProvider
+{
+    /// <summary>
+    /// Retrieves context for <paramref name="taskDescription"/>, rendered for a
+    /// prompt.
+    /// </summary>
+    /// <param name="maxCharacters">
+    /// Ceiling on the returned text. Whole results are included until the next one
+    /// would exceed it; nothing is cut mid-result, because a half-shown chunk
+    /// reads to the model as a complete one (FR-006).
+    /// </param>
+    /// <returns>An empty string when nothing was retrieved.</returns>
+    Task<string> RetrieveAsync(
+        Guid repositoryId,
+        string taskDescription,
+        int maxCharacters,
         CancellationToken ct = default);
 }

@@ -244,3 +244,40 @@ public sealed class EfTestResultStore(RepoPilotDbContext db) : ITestResultStore
             .ThenBy(t => t.CreatedAt)
             .ToListAsync(ct);
 }
+
+/// <inheritdoc cref="IEvaluationStore" />
+public sealed class EfEvaluationStore(RepoPilotDbContext db) : IEvaluationStore
+{
+    public Task<EvaluationRun?> FindAsync(Guid id, CancellationToken ct = default) =>
+        db.EvaluationRuns.FirstOrDefaultAsync(e => e.Id == id, ct);
+
+    public async Task<IReadOnlyList<EvaluationRun>> ListAsync(CancellationToken ct = default) =>
+        await db.EvaluationRuns.OrderByDescending(e => e.StartedAt).ToListAsync(ct);
+
+    public async Task AddAsync(EvaluationRun evaluation, CancellationToken ct = default)
+    {
+        db.EvaluationRuns.Add(evaluation);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(EvaluationRun evaluation, CancellationToken ct = default)
+    {
+        db.EvaluationRuns.Update(evaluation);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddResultAsync(EvaluationTaskResult result, CancellationToken ct = default)
+    {
+        db.EvaluationTaskResults.Add(result);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<EvaluationTaskResult>> ListResultsAsync(
+        Guid evaluationRunId,
+        CancellationToken ct = default) =>
+        await db.EvaluationTaskResults
+            .Where(r => r.EvaluationRunId == evaluationRunId)
+            .OrderBy(r => r.TaskId)
+            .ThenBy(r => r.Mode)
+            .ToListAsync(ct);
+}

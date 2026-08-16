@@ -1,0 +1,12 @@
+# A fixture simulates an independent repository and must not inherit RepoPilot's
+# own analyzer strictness. In particular, the deliberate defect this fixture
+# carries has to fail at run time as a test failure — not at compile time,
+# which is what the host .editorconfig's CS8602-as-error would cause.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4

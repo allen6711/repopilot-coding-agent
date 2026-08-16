@@ -1,0 +1,20 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "testwork-order-id-assertion-02",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "test_work",
+  "description": "The padding test for the customer-facing order identifier fails. The documented output is the prefix followed by eight digits and the implementation produces exactly that; the expected value in the test is wrong. Correct the test, not the code.",
+  "relevantFiles": [
+    "tests/Orders.Tests/OrderIdFormatterTests.cs",
+    "src/Orders/OrderIdFormatter.cs"
+  ],
+  "baselineTestCommand": "unit-order-id",
+  "successTestCommand": "unit-order-id",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "tests/Orders.Tests/OrderIdFormatterTests.cs"
+  ],
+  "referencePatch": "_reference/testwork-order-id-assertion-02.md"
+}

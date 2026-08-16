@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-currency-code-05",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "input_validation",
+  "description": "Ledger rows are appearing with currency codes such as lower-case gbp, two-letter GB, and G8P with a digit in the middle. The accepted form is written down; only whether something was supplied is checked.",
+  "relevantFiles": [
+    "src/Billing/CurrencyCodeValidator.cs"
+  ],
+  "baselineTestCommand": "unit-currency-code",
+  "successTestCommand": "unit-currency-code",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/CurrencyCodeValidator.cs"
+  ],
+  "referencePatch": "_reference/validation-currency-code-05.md"
+}

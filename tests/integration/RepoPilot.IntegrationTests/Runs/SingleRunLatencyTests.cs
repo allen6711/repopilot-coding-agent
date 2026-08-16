@@ -168,7 +168,8 @@ public sealed class SingleRunLatencyTests(PostgresFixture postgres) : IDisposabl
             invoker,
             recorder,
             Options.Create(new RunConcurrencyOptions()),
-            Options.Create(retrieverOptions));
+            Options.Create(retrieverOptions),
+            new RetrievalOnlyContext(retriever, retrieverOptions));
     }
 
     public void Dispose()

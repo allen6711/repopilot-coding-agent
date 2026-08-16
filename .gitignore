@@ -41,6 +41,12 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+
+# The adversarial fixture's .env is test data, not a credential. It has to be
+# committed: the indexer's secret exclusion is checked against it, and a file the
+# repository refuses to carry cannot be the thing that test reads (FR-025a,
+# SC-014).
+!evals/fixtures/adversarial-content/config/.env
 appsettings.Local.json
 **/appsettings.*.Local.json
 secrets.json

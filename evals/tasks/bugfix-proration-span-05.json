@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-proration-span-05",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "bug_fix",
+  "description": "A subscription active for the whole of a thirty-day month is billed for twenty-nine days, and a subscription active for exactly one day is billed for nothing at all. The active span is meant to include both the day it starts and the day it ends.",
+  "relevantFiles": [
+    "src/Billing/ProrationCalculator.cs"
+  ],
+  "baselineTestCommand": "unit-proration",
+  "successTestCommand": "unit-proration",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/ProrationCalculator.cs"
+  ],
+  "referencePatch": "_reference/bugfix-proration-span-05.md"
+}

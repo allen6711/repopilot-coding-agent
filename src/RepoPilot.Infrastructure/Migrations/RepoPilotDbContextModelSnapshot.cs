@@ -387,6 +387,10 @@ namespace RepoPilot.Infrastructure.Migrations
                     b.Property<bool>("ToolsEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("VerifyCommandName")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EvaluationRunId");

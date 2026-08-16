@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-amount-precision-06",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "input_validation",
+  "description": "Amounts with more than two decimal places are reaching the ledger and being silently rounded, so invoices no longer add up against their lines, and amounts above the manual-review threshold are going through unreviewed. Only the negative case is checked.",
+  "relevantFiles": [
+    "src/Billing/AmountValidator.cs"
+  ],
+  "baselineTestCommand": "unit-amount",
+  "successTestCommand": "unit-amount",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/AmountValidator.cs"
+  ],
+  "referencePatch": "_reference/validation-amount-precision-06.md"
+}
