@@ -166,6 +166,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.MapRepositoryEndpoints();
 app.MapRunEndpoints();
+app.MapRunEventEndpoints();
 app.MapApprovalEndpoints();
 
 app.Run();

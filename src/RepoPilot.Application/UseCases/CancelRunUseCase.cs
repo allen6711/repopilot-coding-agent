@@ -83,7 +83,22 @@ public sealed class CancelRunUseCase(
                 RunId = runId,
                 EventType = RunEventType.StageChanged,
                 ArgumentsSummary =
-                    $$"""{"from":"{{from}}","trigger":"Cancelled","to":"Cancelled","by":"{{cancelledBy.Trim()}}"}""",
+                    $$"""{"fromStage":"{{from}}","trigger":"Cancelled","toStage":"Cancelled","by":"{{cancelledBy.Trim()}}"}""",
+                Status = RunEventStatus.Succeeded,
+            },
+            ct);
+
+        // Always the last event of a run, cancellation included. A watching
+        // client treats stream closure without it as a transport drop and
+        // reconnects — so a cancelled run that omitted it would leave every
+        // viewer reconnecting forever to a run that had already ended.
+        await events.RecordAsync(
+            new RunEvent
+            {
+                RunId = runId,
+                EventType = RunEventType.RunEnded,
+                ArgumentsSummary =
+                    $$"""{"terminalOutcome":"Cancelled","outcomeReason":"AbandonedByUser"}""",
                 Status = RunEventStatus.Succeeded,
             },
             ct);

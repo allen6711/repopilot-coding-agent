@@ -599,3 +599,97 @@ pre {
   margin: 0.9rem 0 0;
   color: var(--text-muted);
 }
+
+/* Timeline ---------------------------------------------------------------- */
+
+.run-timeline {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.run-timeline h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.run-timeline__reconnecting {
+  color: var(--warn);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.run-timeline__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.run-timeline__entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.run-timeline__entry {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.run-timeline__sequence {
+  min-width: 2.2rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.run-timeline__label {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.run-timeline__detail {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.run-timeline__duration {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A failure is the most interesting entry in a run, so it reads that way. */
+.run-timeline__entry--failed .run-timeline__label {
+  color: var(--removed);
+}
+
+.run-timeline__status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--removed);
+}
+
+.run-timeline__error {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  color: var(--removed);
+  font-size: 0.8rem;
+}
+
+.run-timeline__entry[data-event-type='run_ended'] .run-timeline__label,
+.run-timeline__entry[data-event-type='stage_changed'] .run-timeline__label {
+  font-family: inherit;
+}

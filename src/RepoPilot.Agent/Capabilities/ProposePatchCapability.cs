@@ -67,10 +67,20 @@ public sealed class ProposePatchCapability(
             summary,
         });
 
+        // The audit summary names the files. An entry count and a hash say that
+        // something was proposed and let it be identified later, but a reader
+        // scanning a run's history should be able to see which files were
+        // touched without opening each proposal (FR-027a). The content itself
+        // stays out — that is what the diff is for.
         return new CapabilityResult(
             result,
             result.Length,
-            $$"""{"entries":{{entries.Count}},"diff_hash":"{{diffHash}}"}""");
+            JsonSerializer.Serialize(new
+            {
+                entries = entries.Count,
+                affected_paths = proposal.AffectedPaths,
+                diff_hash = diffHash,
+            }));
     }
 
     private static List<ProposalEntry> ReadEntries(JsonElement args)

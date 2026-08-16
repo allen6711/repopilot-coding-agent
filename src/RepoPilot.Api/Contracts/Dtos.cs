@@ -210,3 +210,71 @@ public sealed record CreateRunRequest(
 
 /// <summary>The body of <c>POST /api/runs/{runId}/approval</c>.</summary>
 public sealed record DecideProposalRequest(Guid ProposalId, string Decision, string DiffHash);
+
+/// <summary>A run event, as the contract's <c>RunEvent</c> schema.</summary>
+public sealed record RunEventDto(
+    Guid Id,
+    long Sequence,
+    string EventType,
+    string? ToolName,
+    JsonElement? ArgumentsSummary,
+    string Status,
+    string? ErrorMessage,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? EndedAt,
+    int? DurationMs)
+{
+    public static RunEventDto From(RunEvent runEvent) => new(
+        runEvent.Id,
+        runEvent.Sequence,
+        WireEventType(runEvent.EventType),
+        runEvent.ToolName,
+        ParseSummary(runEvent.ArgumentsSummary),
+        runEvent.Status == RunEventStatus.Failed ? "failed" : "succeeded",
+        runEvent.ErrorMessage,
+        runEvent.StartedAt,
+        runEvent.EndedAt,
+        runEvent.DurationMs);
+
+    /// <summary>Maps an event type to its contract value, which is also the SSE event name.</summary>
+    public static string WireEventType(RunEventType type) => type switch
+    {
+        RunEventType.StageChanged => "stage_changed",
+        RunEventType.StageTransitionRejected => "stage_transition_rejected",
+        RunEventType.ToolCall => "tool_call",
+        RunEventType.PlanProduced => "plan_produced",
+        RunEventType.ProposalCreated => "proposal_created",
+        RunEventType.ApprovalRecorded => "approval_recorded",
+        RunEventType.PatchApplied => "patch_applied",
+        RunEventType.TestsCompleted => "tests_completed",
+        RunEventType.RunFailed => "run_failed",
+        RunEventType.RunEnded => "run_ended",
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
+    };
+
+    /// <summary>
+    /// The summary as an object rather than a string.
+    /// <para>
+    /// It is stored as jsonb and the contract types it as an object, so handing
+    /// a client a JSON-encoded string would make every consumer parse it a
+    /// second time — and PostgreSQL normalizes jsonb on the way back, so
+    /// string-level comparisons against it are unreliable anyway.
+    /// </para>
+    /// </summary>
+    private static JsonElement? ParseSummary(string? summary)
+    {
+        if (string.IsNullOrWhiteSpace(summary))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonDocument.Parse(summary).RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+}

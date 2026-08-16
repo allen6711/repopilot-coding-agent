@@ -241,19 +241,19 @@ which actions succeeded or failed, as they happen.
 **Independent Test**: Start a run and observe stage transitions and action entries appearing in order
 before the run completes.
 
-- [ ] T103 [US3] Implement `GET /api/runs/{id}/events` as SSE with the event sequence as the frame id and a 15-second keepalive, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs` (FR-028a)
-- [ ] T104 [US3] Implement `Last-Event-ID` replay from persisted events before attaching to the live channel, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs`
-- [ ] T105 [US3] Integration test that a dropped and reconnected stream produces no gap and no duplicate, in `tests/integration/Events/ReconnectReplayTests.cs`
-- [ ] T106 [US3] Apply the redaction predicate to recorded action argument summaries, never storing full file contents, in `src/RepoPilot.Agent/Invocation/ArgumentSummarizer.cs` (FR-027a)
-- [ ] T107 [US3] Integration test that no secret value appears in any recorded argument summary across a full run, in `tests/integration/Events/ArgumentRedactionTests.cs`
-- [ ] T108 [US3] Record `stage_transition_rejected` events for illegal transitions rather than continuing, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-009)
-- [ ] T109 [US3] Surface the failure reason and the stage it occurred at on every non-success outcome, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-030)
-- [ ] T110 [P] [US3] Implement the `useRunStream` SSE hook with reconnect and `Last-Event-ID` handling in `web/repopilot-ui/src/hooks/useRunStream.ts`
-- [ ] T111 [P] [US3] Build the `RunTimeline` component listing every action with name, timing, and status in `web/repopilot-ui/src/components/RunTimeline.tsx` (FR-027)
-- [ ] T112 [US3] Integration test measuring that 95% of stage transitions and recorded actions reach a subscriber within 2 seconds, in `tests/integration/Events/EventLatencyTests.cs` (SC-013)
-- [ ] T113 [US3] Reconstructability test rebuilding a completed run's stage sequence, action history, diff, and test output from stored data alone, with the service stopped and the working copy deleted, in `tests/integration/Events/ReconstructabilityTests.cs` (FR-029, SC-008)
-- [ ] T114 [US3] Implement the `Accept: application/json` variant of the events endpoint returning the persisted list, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs`
-- [ ] T114a [P] [US3] Contract test the events endpoint — SSE frame shape, `id` as sequence, and the JSON variant — against `contracts/rest-api.yaml` and `contracts/run-events.md`, in `tests/integration/Contracts/RunEventContractTests.cs`
+- [X] T103 [US3] Implement `GET /api/runs/{id}/events` as SSE with the event sequence as the frame id and a 15-second keepalive, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs` (FR-028a)
+- [X] T104 [US3] Implement `Last-Event-ID` replay from persisted events before attaching to the live channel, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs`
+- [X] T105 [US3] Integration test that a dropped and reconnected stream produces no gap and no duplicate, in `tests/integration/Events/ReconnectReplayTests.cs`
+- [X] T106 [US3] Apply the redaction predicate to recorded action argument summaries, never storing full file contents, in `src/RepoPilot.Agent/Invocation/ArgumentSummarizer.cs` (FR-027a)
+- [X] T107 [US3] Integration test that no secret value appears in any recorded argument summary across a full run, in `tests/integration/Events/ArgumentRedactionTests.cs`
+- [X] T108 [US3] Record `stage_transition_rejected` events for illegal transitions rather than continuing, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-009)
+- [X] T109 [US3] Surface the failure reason and the stage it occurred at on every non-success outcome, in `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-030)
+- [X] T110 [P] [US3] Implement the `useRunStream` SSE hook with reconnect and `Last-Event-ID` handling in `web/repopilot-ui/src/hooks/useRunStream.ts`
+- [X] T111 [P] [US3] Build the `RunTimeline` component listing every action with name, timing, and status in `web/repopilot-ui/src/components/RunTimeline.tsx` (FR-027)
+- [X] T112 [US3] Integration test measuring that 95% of stage transitions and recorded actions reach a subscriber within 2 seconds, in `tests/integration/Events/EventLatencyTests.cs` (SC-013)
+- [X] T113 [US3] Reconstructability test rebuilding a completed run's stage sequence, action history, diff, and test output from stored data alone, with the service stopped and the working copy deleted, in `tests/integration/Events/ReconstructabilityTests.cs` (FR-029, SC-008)
+- [X] T114 [US3] Implement the `Accept: application/json` variant of the events endpoint returning the persisted list, in `src/RepoPilot.Api/Endpoints/RunEventEndpoints.cs`
+- [X] T114a [P] [US3] Contract test the events endpoint — SSE frame shape, `id` as sequence, and the JSON variant — against `contracts/rest-api.yaml` and `contracts/run-events.md`, in `tests/integration/Contracts/RunEventContractTests.cs`
 
 **Checkpoint**: Stories 1, 2, and 3 all work independently.
 

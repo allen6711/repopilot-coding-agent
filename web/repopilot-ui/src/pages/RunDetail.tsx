@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isTerminal, stageLabel } from '../api/client';
 import { ApprovalBar } from '../components/ApprovalBar';
 import { DiffViewer } from '../components/DiffViewer';
 import { PlanPanel } from '../components/PlanPanel';
+import { RunTimeline } from '../components/RunTimeline';
 import { TestOutput } from '../components/TestOutput';
+import { useRunStream } from '../hooks/useRunStream';
 
 interface RunDetailProps {
   readonly runId: string;
@@ -31,6 +33,13 @@ export function RunDetail({ runId }: RunDetailProps) {
     localStorage.setItem(ACTOR_STORAGE_KEY, value);
   }
 
+  // The event stream is the live view (FR-028a). The run itself is still
+  // fetched, because a stage is a fact about the run rather than something a
+  // client should derive by replaying events — but the stream is what makes it
+  // arrive without a refresh, so the poll exists only as a fallback for a
+  // browser with no EventSource.
+  const stream = useRunStream(runId);
+
   const run = useQuery({
     queryKey: ['run', runId],
     queryFn: () => api.getRun(runId),
@@ -39,6 +48,19 @@ export function RunDetail({ runId }: RunDetailProps) {
     refetchInterval: (query) =>
       query.state.data && isTerminal(query.state.data.stage) ? false : 2000,
   });
+
+  // Refetch on each event rather than on a timer: the stream already knows
+  // something changed, and waiting out the poll interval after it would be a
+  // delay the system has no reason to have.
+  const eventCount = stream.events.length;
+
+  useEffect(() => {
+    if (eventCount > 0) {
+      void queryClient.invalidateQueries({ queryKey: ['run', runId] });
+      void queryClient.invalidateQueries({ queryKey: ['proposal', runId] });
+      void queryClient.invalidateQueries({ queryKey: ['tests', runId] });
+    }
+  }, [eventCount, queryClient, runId]);
 
   const proposal = useQuery({
     queryKey: ['proposal', runId],
@@ -151,6 +173,8 @@ export function RunDetail({ runId }: RunDetailProps) {
       )}
 
       <TestOutput results={tests.data ?? []} />
+
+      <RunTimeline events={stream.events} reconnecting={stream.reconnecting} />
     </article>
   );
 }

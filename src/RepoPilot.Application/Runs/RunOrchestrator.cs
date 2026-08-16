@@ -460,7 +460,27 @@ public sealed class RunOrchestrator(
         string? detail = null)
     {
         var from = run.Stage;
-        var to = RunStateMachine.Transition(from, trigger);
+
+        if (!RunStateMachine.TryTransition(from, trigger, out var to))
+        {
+            // FR-009: a transition the table does not permit is recorded as
+            // rejected and then thrown. Recording before throwing is the point —
+            // the alternative leaves an illegal attempt visible only as a
+            // stack trace in a log the audit trail does not include.
+            await events.RecordAsync(
+                new RunEvent
+                {
+                    RunId = run.Id,
+                    EventType = RunEventType.StageTransitionRejected,
+                    ArgumentsSummary =
+                        $$"""{"fromStage":"{{from}}","attemptedTrigger":"{{trigger}}"}""",
+                    Status = RunEventStatus.Failed,
+                    ErrorMessage = $"Transition from {from} on {trigger} is not permitted.",
+                },
+                CancellationToken.None);
+
+            throw new IllegalTransitionException(from, trigger);
+        }
 
         run.Stage = to;
 
@@ -484,11 +504,48 @@ public sealed class RunOrchestrator(
                 RunId = run.Id,
                 EventType = RunEventType.StageChanged,
                 ArgumentsSummary =
-                    $$"""{"from":"{{from}}","trigger":"{{trigger}}","to":"{{to}}"{{(reason is null ? "" : $",\"reason\":\"{reason}\"")}}}""",
+                    $$"""{"fromStage":"{{from}}","trigger":"{{trigger}}","toStage":"{{to}}"{{(reason is null ? "" : $",\"outcomeReason\":\"{reason}\"")}}}""",
                 Status = RunEventStatus.Succeeded,
                 ErrorMessage = detail,
             },
             ct);
+
+        if (!RunStateMachine.IsTerminal(to))
+        {
+            return;
+        }
+
+        // FR-030: a non-success outcome says which stage it happened at, not
+        // just that it happened. "Failed" alone leaves a reader unable to tell a
+        // provider outage during planning from a sandbox failure during testing.
+        if (to != RunStage.Succeeded)
+        {
+            await events.RecordAsync(
+                new RunEvent
+                {
+                    RunId = run.Id,
+                    EventType = RunEventType.RunFailed,
+                    ArgumentsSummary =
+                        $$"""{"failureStage":"{{from}}","outcomeReason":"{{reason?.ToString() ?? "unspecified"}}","terminalOutcome":"{{run.TerminalOutcome}}"}""",
+                    Status = RunEventStatus.Failed,
+                    ErrorMessage = detail,
+                },
+                CancellationToken.None);
+        }
+
+        // Always last. The stream contract lets a client treat closure without
+        // this frame as a transport drop rather than as completion, so emitting
+        // it is what makes reconnect-versus-finished distinguishable.
+        await events.RecordAsync(
+            new RunEvent
+            {
+                RunId = run.Id,
+                EventType = RunEventType.RunEnded,
+                ArgumentsSummary =
+                    $$"""{"terminalOutcome":"{{run.TerminalOutcome}}","outcomeReason":"{{reason?.ToString() ?? "unspecified"}}"}""",
+                Status = RunEventStatus.Succeeded,
+            },
+            CancellationToken.None);
     }
 
     private async Task<Run> RequireRunAsync(Guid runId, CancellationToken ct) =>

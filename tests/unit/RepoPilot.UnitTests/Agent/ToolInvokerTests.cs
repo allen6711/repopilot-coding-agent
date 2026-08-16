@@ -210,14 +210,25 @@ public sealed class ToolInvokerTests
     }
 
     [Fact]
-    public void ArgumentSummariesAreRedactedAndBounded()
+    public async Task ARecordedSummaryIsNeverTheRawArguments()
     {
-        // FR-027a: summaries are persisted and shown to reviewers.
-        var withSecret = ToolInvoker.SummarizeArguments("""{"token":"ghp""" + "_1234567890abcdefghijklmnopqrstuvwx\"}");
-        Assert.DoesNotContain("1234567890abcdefghij", withSecret, StringComparison.Ordinal);
+        var (invoker, store) = Build(
+            new StubCapability("read_file", (_, _) => new CapabilityResult("contents", 8)));
 
-        var huge = ToolInvoker.SummarizeArguments(new string('x', 5_000));
-        Assert.True(huge.Length < 600);
-        Assert.Contains("chars", huge, StringComparison.Ordinal);
+        var secret = "ghp_" + new string('a', 36);
+
+        await invoker.InvokeAsync(
+            Context(),
+            "read_file",
+            $$"""{"path":"src/Service.cs","content":"{{secret}}"}""",
+            InvocationSurface.Model);
+
+        // FR-027a. The detailed rules live in ArgumentSummarizerTests; what
+        // matters here is that the invoker routes through them rather than
+        // persisting what it was handed.
+        var summary = Assert.Single(store.Events).ArgumentsSummary!;
+
+        Assert.DoesNotContain(secret, summary, StringComparison.Ordinal);
+        Assert.Contains("src/Service.cs", summary, StringComparison.Ordinal);
     }
 }

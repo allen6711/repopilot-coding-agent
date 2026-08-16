@@ -285,13 +285,15 @@ internal sealed class ScriptedAgent : IAgentTurnRunner
 /// asked for.
 /// </summary>
 internal sealed class ScriptedCapabilities(
-    InMemoryProposalStore proposals, bool testsPass) : ICapabilityInvoker
+    IProposalStore proposals,
+    bool testsPass,
+    RepoPilot.Application.Runs.RunEventRecorder? recorder = null) : ICapabilityInvoker
 {
     public List<(string Name, InvocationSurface Surface)> Invocations { get; } = [];
 
     public int ApplyCount => Invocations.Count(i => i.Name == "apply_patch");
 
-    public Task<CapabilityOutcome> InvokeAsync(
+    public async Task<CapabilityOutcome> InvokeAsync(
         CapabilityContext context,
         string capabilityName,
         string argumentsJson,
@@ -311,6 +313,24 @@ internal sealed class ScriptedCapabilities(
                 capabilityName, callerSurface, descriptor.Surface);
         }
 
+        // The real invoker records an action for every invocation (FR-027). A
+        // double that skipped it would leave tests unable to tell "the audit
+        // trail is incomplete" from "this stand-in does less than the thing it
+        // stands in for".
+        if (recorder is not null)
+        {
+            await recorder.RecordAsync(
+                new RunEvent
+                {
+                    RunId = context.RunId,
+                    EventType = RunEventType.ToolCall,
+                    ToolName = capabilityName,
+                    ArgumentsSummary = """{"scripted":true}""",
+                    Status = RunEventStatus.Succeeded,
+                },
+                ct);
+        }
+
         switch (capabilityName)
         {
             case "propose_patch":
@@ -319,7 +339,10 @@ internal sealed class ScriptedCapabilities(
                     new("src/Orders/OrderLookupService.cs", ProposalOperation.Modify, "guarded content"),
                 };
 
-                proposals.AddAsync(
+                // Awaited. Against an EF-backed store, a fire-and-forget write
+                // is a second operation on the same DbContext and fails at
+                // random — the in-memory store simply hid that.
+                await proposals.AddAsync(
                     new ChangeProposal
                     {
                         RunId = context.RunId,
@@ -330,15 +353,15 @@ internal sealed class ScriptedCapabilities(
                     },
                     ct);
 
-                return Task.FromResult(new CapabilityOutcome("proposal created", 1));
+                return new CapabilityOutcome("proposal created", 1);
 
             case "run_tests":
-                return Task.FromResult(new CapabilityOutcome(
+                return new CapabilityOutcome(
                     $$"""{"passed":{{(testsPass ? "true" : "false")}},"exit_code":{{(testsPass ? 0 : 1)}},"output":"scripted","duration_ms":5,"timed_out":false}""",
-                    5));
+                    5);
 
             default:
-                return Task.FromResult(new CapabilityOutcome("ok", 1));
+                return new CapabilityOutcome("ok", 1);
         }
     }
 }

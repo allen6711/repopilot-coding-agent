@@ -122,7 +122,7 @@ public sealed class ToolInvoker(
             await RecordAsync(
                 context.RunId,
                 capabilityName,
-                argumentsSummary ?? SummarizeArguments(argumentsJson),
+                argumentsSummary ?? ArgumentSummarizer.Summarize(argumentsJson),
                 status,
                 errorMessage,
                 startedAt,
@@ -170,27 +170,4 @@ public sealed class ToolInvoker(
         }
     }
 
-    /// <summary>
-    /// Produces a bounded, redacted summary of the raw arguments.
-    /// <para>
-    /// Summaries are persisted and shown to reviewers (FR-027a), so full file
-    /// contents never go in and anything matching a credential shape is redacted
-    /// on the way through.
-    /// </para>
-    /// </summary>
-    internal static string SummarizeArguments(string argumentsJson)
-    {
-        const int maxLength = 512;
-
-        if (string.IsNullOrEmpty(argumentsJson))
-        {
-            return "{}";
-        }
-
-        var redacted = SecretRedactor.Redact(argumentsJson);
-
-        return redacted.Length <= maxLength
-            ? redacted
-            : redacted[..maxLength] + $"… ({redacted.Length} chars)";
-    }
 }
