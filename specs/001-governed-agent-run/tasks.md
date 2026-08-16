@@ -216,18 +216,18 @@ included, what was excluded and why, and can search the result.
 **Independent Test**: Register a fixture, index it, and issue a search returning file paths and line
 ranges — with no agent run involved.
 
-- [ ] T091 [P] [US2] Implement `POST /api/repositories` refusing any slug outside the configured allowed set, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs` (FR-001)
-- [ ] T092 [P] [US2] Implement `GET /api/repositories` and `GET /api/repositories/{id}` in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs`
-- [ ] T093 [US2] Implement `POST /api/repositories/{id}/index` returning 202, and 409 when a rebuild is already running, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs`
-- [ ] T094 [US2] Implement exclusion-count reporting broken down by reason in `src/RepoPilot.Application/UseCases/IndexRepositoryUseCase.cs` (FR-003, FR-003b)
-- [ ] T095 [US2] Integration test that included and excluded counts and the reason breakdown are accurate for a fixture seeded with each exclusion category, in `tests/integration/Indexing/ExclusionReportingTests.cs`
-- [ ] T096 [US2] Implement `GET /api/repositories/{id}/search` returning path, content, start line, end line, and score, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs` (FR-004)
-- [ ] T097 [US2] Validate `repopilot.fixture.json` against its schema at registration, rejecting shell operators in any `argv` entry, in `src/RepoPilot.Application/UseCases/RegisterRepositoryUseCase.cs` (FR-022a, FR-022b)
-- [ ] T098 [US2] Integration test that an empty fixture registers successfully, reports zero indexed files, and causes run creation to be refused, in `tests/integration/Indexing/EmptyFixtureTests.cs`
-- [ ] T099 [P] [US2] Contract test the repository endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/RepositoryApiContractTests.cs`
-- [ ] T100 [P] [US2] Build the repository list page with register, index trigger, and status display in `web/repopilot-ui/src/pages/RepositoryList.tsx`
-- [ ] T101 [P] [US2] Build the search panel showing path, line range, and score in `web/repopilot-ui/src/components/SearchPanel.tsx`
-- [ ] T102 [US2] Acceptance test through the API that re-indexing serves the previous index until the swap completes and leaves no duplicates, in `tests/integration/Indexing/AtomicSwapAcceptanceTests.cs` (FR-003a) — the swap mechanism itself is covered by T036; this asserts only the operator-visible behavior
+- [X] T091 [P] [US2] Implement `POST /api/repositories` refusing any slug outside the configured allowed set, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs` (FR-001)
+- [X] T092 [P] [US2] Implement `GET /api/repositories` and `GET /api/repositories/{id}` in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs`
+- [X] T093 [US2] Implement `POST /api/repositories/{id}/index` returning 202, and 409 when a rebuild is already running, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs`
+- [X] T094 [US2] Implement exclusion-count reporting broken down by reason in `src/RepoPilot.Application/UseCases/IndexRepositoryUseCase.cs` (FR-003, FR-003b)
+- [X] T095 [US2] Integration test that included and excluded counts and the reason breakdown are accurate for a fixture seeded with each exclusion category, in `tests/integration/Indexing/ExclusionReportingTests.cs`
+- [X] T096 [US2] Implement `GET /api/repositories/{id}/search` returning path, content, start line, end line, and score, in `src/RepoPilot.Api/Endpoints/RepositoryEndpoints.cs` (FR-004)
+- [X] T097 [US2] Validate `repopilot.fixture.json` against its schema at registration, rejecting shell operators in any `argv` entry, in `src/RepoPilot.Application/UseCases/RegisterRepositoryUseCase.cs` (FR-022a, FR-022b)
+- [X] T098 [US2] Integration test that an empty fixture registers successfully, reports zero indexed files, and causes run creation to be refused, in `tests/integration/Indexing/EmptyFixtureTests.cs`
+- [X] T099 [P] [US2] Contract test the repository endpoints against `contracts/rest-api.yaml`, in `tests/integration/Contracts/RepositoryApiContractTests.cs`
+- [X] T100 [P] [US2] Build the repository list page with register, index trigger, and status display in `web/repopilot-ui/src/pages/RepositoryList.tsx`
+- [X] T101 [P] [US2] Build the search panel showing path, line range, and score in `web/repopilot-ui/src/components/SearchPanel.tsx`
+- [X] T102 [US2] Acceptance test through the API that re-indexing serves the previous index until the swap completes and leaves no duplicates, in `tests/integration/Indexing/AtomicSwapAcceptanceTests.cs` (FR-003a) — the swap mechanism itself is covered by T036; this asserts only the operator-visible behavior
 
 **Checkpoint**: Stories 1 and 2 both work independently.
 

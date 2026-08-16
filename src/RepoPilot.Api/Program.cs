@@ -119,12 +119,17 @@ builder.Services.AddScoped<ICapabilityInvoker>(sp => sp.GetRequiredService<ToolI
 builder.Services.AddSingleton<RunQueue>();
 builder.Services.AddScoped<RunOrchestrator>();
 builder.Services.AddScoped<DecideProposalUseCase>();
+builder.Services.AddScoped<RegisterRepositoryUseCase>();
+builder.Services.AddScoped<IndexRepositoryUseCase>();
+builder.Services.AddScoped<IIndexBuilder>(sp => sp.GetRequiredService<IndexingService>());
 builder.Services.AddScoped<CancelRunUseCase>();
 builder.Services.AddHostedService<RunExecutionService>();
 
 // Options the orchestrator reads through IOptions ---------------------------
 builder.Services.AddSingleton(Options.Create(concurrency));
 builder.Services.AddSingleton(Options.Create(retrieval));
+builder.Services.AddSingleton(Options.Create(workspace));
+builder.Services.AddSingleton(Options.Create(allowed));
 
 // Recovery ------------------------------------------------------------------
 builder.Services.AddScoped<StartupRecoveryService>();
@@ -159,6 +164,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
+app.MapRepositoryEndpoints();
 app.MapRunEndpoints();
 app.MapApprovalEndpoints();
 

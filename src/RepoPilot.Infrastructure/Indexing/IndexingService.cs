@@ -9,19 +9,6 @@ using RepoPilot.Infrastructure.Persistence;
 
 namespace RepoPilot.Infrastructure.Indexing;
 
-/// <summary>What an indexing pass produced.</summary>
-/// <param name="IncludedFileCount">Files that contributed at least one chunk.</param>
-/// <param name="ExcludedFileCount">Files left out.</param>
-/// <param name="ExclusionBreakdown">Counts keyed by normative reason (FR-003b).</param>
-/// <param name="ChunkCount">Total chunks written.</param>
-/// <param name="IndexVersion">The version now active.</param>
-public sealed record IndexingReport(
-    int IncludedFileCount,
-    int ExcludedFileCount,
-    IReadOnlyDictionary<string, int> ExclusionBreakdown,
-    int ChunkCount,
-    int IndexVersion);
-
 /// <summary>
 /// Builds a repository's retrieval index.
 /// <para>
@@ -35,7 +22,7 @@ public sealed class IndexingService(
     RepoPilotDbContext db,
     IEmbeddingProviderAdapter embeddings,
     IndexingOptions options,
-    ILogger<IndexingService> logger)
+    ILogger<IndexingService> logger) : IIndexBuilder
 {
     /// <summary>
     /// Rebuilds the index for <paramref name="repository"/> and swaps it in.

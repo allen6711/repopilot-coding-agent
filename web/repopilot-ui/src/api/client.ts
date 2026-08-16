@@ -15,6 +15,9 @@ export type ApprovalDecision = components['schemas']['ApprovalDecision'];
 export type TestResult = components['schemas']['TestResult'];
 export type RunEvent = components['schemas']['RunEvent'];
 export type Problem = components['schemas']['Problem'];
+export type Repository = components['schemas']['Repository'];
+export type IndexingStatus = components['schemas']['IndexingStatus'];
+export type RetrievalResult = components['schemas']['RetrievalResult'];
 
 /**
  * An error carrying the server's RFC 9457 problem details.
@@ -88,6 +91,22 @@ async function request<T>(path: string, init: RequestInit = {}, actor?: Actor): 
 }
 
 export const api = {
+  listRepositories: () => request<Repository[]>('/api/repositories'),
+
+  registerRepository: (slug: string) =>
+    request<Repository>('/api/repositories', {
+      method: 'POST',
+      body: JSON.stringify({ slug }),
+    }),
+
+  indexRepository: (repositoryId: string) =>
+    request<IndexingStatus>(`/api/repositories/${repositoryId}/index`, { method: 'POST' }),
+
+  search: (repositoryId: string, q: string, limit = 10) =>
+    request<RetrievalResult[]>(
+      `/api/repositories/${repositoryId}/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    ),
+
   getRun: (runId: string) => request<Run>(`/api/runs/${runId}`),
 
   listRuns: (repositoryId?: string) =>
