@@ -12,6 +12,20 @@ using RepoPilot.Evals.Hosting;
 // There is no evaluation-specific run path: the figures this prints describe the
 // system the API serves, or they describe nothing worth publishing.
 
+// `--output <path>` writes the report to exactly that file, as quickstart.md
+// documents. Read here rather than bound as configuration because it names one
+// file for one invocation, not a setting a deployment carries.
+var outputIndex = Array.IndexOf(args, "--output");
+var reportPath = outputIndex >= 0 && outputIndex + 1 < args.Length
+    ? args[outputIndex + 1]
+    : null;
+
+if (outputIndex >= 0 && reportPath is null)
+{
+    Console.Error.WriteLine("--output needs a file path.");
+    return 64;
+}
+
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddRepoPilotCore(builder.Configuration);
@@ -38,7 +52,7 @@ await using var scope = host.Services.CreateAsyncScope();
 try
 {
     var harness = scope.ServiceProvider.GetRequiredService<EvaluationHarness>();
-    var evaluation = await harness.RunAsync(stopping.Token);
+    var evaluation = await harness.RunAsync(reportPath, stopping.Token);
 
     logger.LogInformation(
         "Evaluation {Id}: {Tasks} tasks, Recall@5 {Recall}, completion {Tool} tool-enabled / " +

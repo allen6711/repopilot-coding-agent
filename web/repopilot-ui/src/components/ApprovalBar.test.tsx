@@ -68,15 +68,25 @@ describe('ApprovalBar', () => {
     expect(onDecide).toHaveBeenCalledWith('approve', 'b'.repeat(64));
   });
 
-  it('refuses to submit without an actor', async () => {
+  it('refuses to submit without an actor, and says why', async () => {
     const onDecide = vi.fn().mockResolvedValue({});
     renderBar(onDecide, {}, '   ');
 
     const approve = screen.getByRole('button', { name: /approve/i });
 
-    // SC-015: an unattributable decision is not offered in the first place.
-    expect(approve).toBeDisabled();
+    // Reachable rather than disabled. A disabled button leaves the tab order, so
+    // a reviewer working by keyboard would never meet the approve control at all
+    // and would have nothing to tell them what is missing.
+    expect(approve).toBeEnabled();
+
+    await userEvent.click(approve);
+
+    // SC-015 still holds: an unattributable decision never leaves the client.
     expect(onDecide).not.toHaveBeenCalled();
+
+    // And the reason is in a live region, so it is announced rather than only
+    // shown.
+    expect(await screen.findByRole('alert')).toHaveTextContent(/enter who is making this decision/i);
   });
 
   it('shows the server’s reason when a decision is refused', async () => {

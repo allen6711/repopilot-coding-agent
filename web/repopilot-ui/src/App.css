@@ -4,9 +4,16 @@
   --border: #d8dce2;
   --text: #14161a;
   --text-muted: #5b6270;
-  --added: #1a7f37;
+  /* Diff colours are darkened to their own tinted backgrounds rather than to
+     white. An added line is green text on green-tinted ground, and that pairing
+     is the one a reviewer actually reads — #1a7f37 on #e6f6ea measured 4.53:1
+     and #b3261e on #fdeceb measured 4.37:1, which is under WCAG AA for body
+     text. Colour is never the only signal here (the leading + and - carry the
+     meaning), but a reviewer deciding whether to approve should not have to
+     rely on that. */
+  --added: #15662c;
   --added-bg: #e6f6ea;
-  --removed: #b3261e;
+  --removed: #a01c16;
   --removed-bg: #fdeceb;
   --accent: #1f5fd6;
   --warn: #8a5a00;
@@ -31,6 +38,38 @@ code,
 pre {
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
   font-size: 0.85rem;
+}
+
+/* Focus -------------------------------------------------------------------
+
+   Declared once, for everything. The approve and reject buttons carry their own
+   backgrounds, and a browser default outline against a saturated green or red
+   is easy to lose — which matters more here than in most interfaces, because
+   the control a keyboard user is about to activate applies a change to a
+   repository. The offset keeps the ring off the button's own border so it reads
+   as a ring rather than as a thicker edge.
+
+   :focus-visible rather than :focus, so a mouse click does not leave a ring
+   behind on a control the user is already looking at. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* For text and code that never needs announcing but does need a name — a
+   heading that duplicates a visible label would be noise on screen and is
+   navigation structure to a screen reader. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .app {

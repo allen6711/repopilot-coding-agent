@@ -214,13 +214,50 @@ Each task should define ground truth:
 7. **Write approval coverage**  
    Must be 100% for repository write operations.
 
-Recommended development targets, not guaranteed outcomes:
+### Measured
 
-- evaluation tasks: 30;
-- Retrieval Recall@5: 80–90%;
-- retrieval-only completion baseline: approximately 35–50%;
-- tool-enabled completion: approximately 60–75%;
-- every write operation gated by approval: 100%.
+Facts about what is committed, checked by the test suite rather than asserted here.
+
+| Figure | Value | Where it comes from |
+|---|---|---|
+| Evaluation tasks in the committed set | **30** | `evals/tasks/`, floor enforced by `TaskSetCompletenessTests` |
+| Task mix | 8 bug fix, 6 input validation, 6 API behaviour, 5 refactor, 5 test | same |
+| Fixtures | 2 evaluation, 1 adversarial | `evals/fixtures/` |
+| File modifications outside a working copy, across the set | **0** | `EvaluationSetNoOutsideWritesTests` |
+
+### Not yet measured
+
+These are development targets. No evaluation has been run against a model provider yet, so no
+value below has been observed — they are stated as expectations, and none of them may be quoted as
+an outcome (Principle V).
+
+| Figure | Target | Status |
+|---|---|---|
+| Retrieval Recall@5 | 80–90% | Not measured |
+| Retrieval-only completion baseline | ~35–50% | Not measured |
+| Tool-enabled completion | ~60–75% | Not measured |
+| Start of run to reviewable diff, p95 | under 3 min | Not measured |
+
+To produce them, run the harness against a provider credential and a running database:
+
+```bash
+dotnet run --project src/RepoPilot.Evals
+```
+
+It writes a committed JSON report to `evals/results/`, carrying the summary figures and a per-task
+line with the run id behind each one. Replace the rows above from that file, and leave anything the
+report does not cover labelled as a target.
+
+### Release gates
+
+Unlike the figures above, these block release rather than being reported.
+
+| Gate | Requirement | Enforcement |
+|---|---|---|
+| Write approval coverage | 100% of applied changes carry a matching decision record | `ApprovalCoverageGate` flags the evaluation and the CLI exits non-zero |
+| Successful out-of-workspace accesses | 0 | `RefusalReport`, counted from recorded refusals |
+
+Approval coverage below 100% is not published as a number and moved past; it fails the run.
 
 ## Testing
 

@@ -18,7 +18,10 @@ services:
       # which SC-007 (identical retrieval metrics on repeat runs) depends on.
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     ports:
-      - "5432:5432"
+      # Overridable: a developer machine often already has something on 5432,
+      # and a compose file that cannot start is a worse default than a
+      # configurable port.
+      - "${REPOPILOT_POSTGRES_PORT:-5432}:5432"
     volumes:
       - ./.postgres-data:/var/lib/postgresql/data
     healthcheck:

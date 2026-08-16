@@ -63,7 +63,18 @@ export function TestOutput({ results }: TestOutputProps) {
             )}
           </header>
 
-          {result.output && <pre className="test-output__log">{result.output}</pre>}
+          {result.output && (
+            // Scrolls in both directions under a max-height, so it needs to be
+            // reachable by keyboard for the same reason the diff does.
+            <pre
+              className="test-output__log"
+              role="region"
+              aria-label={`Output of ${result.commandName}`}
+              tabIndex={0}
+            >
+              {result.output}
+            </pre>
+          )}
         </article>
       ))}
     </section>

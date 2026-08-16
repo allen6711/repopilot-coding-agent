@@ -92,15 +92,20 @@ public sealed class EvaluationHarness(
     /// Runs every committed task in both conditions and writes the report.
     /// </summary>
     /// <returns>The evaluation run, with its metrics.</returns>
-    public async Task<EvaluationRun> RunAsync(CancellationToken ct = default) =>
-        await ExecuteAsync(await BeginAsync(ct), ct);
+    /// <param name="reportPath">
+    /// An explicit file for the report, or null for a generated name under the
+    /// configured results directory.
+    /// </param>
+    public async Task<EvaluationRun> RunAsync(
+        string? reportPath = null, CancellationToken ct = default) =>
+        await ExecuteAsync(await BeginAsync(ct), reportPath, ct);
 
     /// <summary>
     /// Runs the committed task set against an evaluation record already created
     /// by <see cref="BeginAsync"/>.
     /// </summary>
     public async Task<EvaluationRun> ExecuteAsync(
-        EvaluationRun evaluation, CancellationToken ct = default)
+        EvaluationRun evaluation, string? reportPath = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(evaluation);
 
@@ -108,6 +113,12 @@ public sealed class EvaluationHarness(
 
         var measurements = new List<TaskMeasurement>(definitions.Count * 2);
         var lines = new List<TaskReportLine>(definitions.Count * 2);
+
+        // Kept for the refusal report. Every recorded event from every run in the
+        // evaluation, because SC-010's count is across the set rather than per
+        // run and a per-run total could not distinguish one run refusing thirty
+        // paths from thirty runs refusing one.
+        var recorded = new List<RunEvent>();
 
         foreach (var task in definitions)
         {
@@ -126,7 +137,7 @@ public sealed class EvaluationHarness(
                 ct.ThrowIfCancellationRequested();
 
                 var (measurement, line) = await RunOneAsync(
-                    task, fixture, evaluation.Id, mode, retrievalHit, baselineFailed, ct);
+                    task, fixture, evaluation.Id, mode, retrievalHit, baselineFailed, recorded, ct);
 
                 measurements.Add(measurement);
                 lines.Add(line);
@@ -155,6 +166,8 @@ public sealed class EvaluationHarness(
         var verdict = ApprovalCoverageGate.Judge(
             metrics.ApprovalCoverage, measurements.Count(m => m.AppliedChange));
 
+        var refusals = RefusalReport.Summarise(recorded);
+
         evaluation.EndedAt = DateTimeOffset.UtcNow;
         evaluation.RecallAt5 = metrics.RecallAt5;
         evaluation.CompletionRateToolEnabled = metrics.CompletionRateToolEnabled;
@@ -169,7 +182,9 @@ public sealed class EvaluationHarness(
         await evaluations.UpdateAsync(evaluation, ct);
 
         var path = await reports.WriteAsync(
-            ReportWriter.Build(evaluation, definitions.Count, metrics, verdict, lines), ct);
+            ReportWriter.Build(evaluation, definitions.Count, metrics, verdict, refusals, lines),
+            reportPath,
+            ct);
 
         logger.LogInformation("Evaluation {Id} written to {Path}.", evaluation.Id, path);
 
@@ -177,6 +192,11 @@ public sealed class EvaluationHarness(
         {
             logger.LogError("Evaluation {Id} is flagged: {Detail}", evaluation.Id, verdict.Detail);
         }
+
+        logger.LogInformation(
+            "Workspace confinement: {Refused} refused attempts across {Runs} runs, " +
+            "{Escapes} successful escapes (SC-010).",
+            refusals.RefusedAttempts, refusals.RunsWithRefusals, refusals.SuccessfulEscapes);
 
         return evaluation;
     }
@@ -191,6 +211,7 @@ public sealed class EvaluationHarness(
         EvaluationMode mode,
         bool retrievalHit,
         bool baselineFailed,
+        List<RunEvent> recorded,
         CancellationToken ct)
     {
         var run = BaselineMode.RunFor(task, fixture.Id, evaluationId, mode);
@@ -221,7 +242,7 @@ public sealed class EvaluationHarness(
                 ex, "Task {Task} ({Mode}) ended in failure.", task.Id, mode);
         }
 
-        return await MeasureAsync(task, run.Id, mode, retrievalHit, baselineFailed, ct);
+        return await MeasureAsync(task, run.Id, mode, retrievalHit, baselineFailed, recorded, ct);
     }
 
     /// <summary>
@@ -257,15 +278,18 @@ public sealed class EvaluationHarness(
         EvaluationMode mode,
         bool retrievalHit,
         bool baselineFailed,
+        List<RunEvent> recorded,
         CancellationToken ct)
     {
         var run = await runs.FindAsync(runId, ct)
             ?? throw new EvaluationRefusedException($"Run {runId} disappeared mid-evaluation.");
 
-        var recorded = await events.ListAsync(runId, 0, ct);
-        var toolCalls = recorded.Where(e => e.EventType == RunEventType.ToolCall).ToList();
+        var runEvents = await events.ListAsync(runId, 0, ct);
+        recorded.AddRange(runEvents);
 
-        var applyEvents = recorded.Count(e =>
+        var toolCalls = runEvents.Where(e => e.EventType == RunEventType.ToolCall).ToList();
+
+        var applyEvents = runEvents.Count(e =>
             e.ToolName == "apply_patch" && e.Status == RunEventStatus.Succeeded);
 
         var results = await testResults.ListForRunAsync(runId, ct);

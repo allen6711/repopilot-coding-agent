@@ -32,6 +32,13 @@ export function ApprovalBar({ proposal, actor, onActorChange, onDecide }: Approv
 
   const alreadyDecided = proposal.decisionStatus !== 'pending';
   const actorMissing = actor.trim().length === 0;
+
+  // A missing actor is deliberately not in here. A disabled button is removed
+  // from the tab order, so a reviewer working by keyboard or screen reader would
+  // never encounter the approve control at all and would have nothing to explain
+  // its absence. Leaving it operable means activating it reaches the guard in
+  // decide(), which puts the reason in a live region where it gets announced.
+  // What does disable it is a state that trying again cannot change.
   const disabled = pending !== null || alreadyDecided || conflict;
 
   async function decide(decision: 'approve' | 'reject') {
@@ -71,7 +78,14 @@ export function ApprovalBar({ proposal, actor, onActorChange, onDecide }: Approv
   }
 
   return (
-    <section className="approval-bar" aria-label="Approve or reject this change">
+    <section className="approval-bar" aria-labelledby="approval-heading">
+      {/* Structure rather than decoration: the visible label for this region is
+          the buttons themselves, and a screen reader navigating by heading needs
+          the decision point to be one of the stops. */}
+      <h2 id="approval-heading" className="visually-hidden">
+        Approve or reject this change
+      </h2>
+
       <div className="approval-bar__actor">
         <label htmlFor="approval-actor">Your name or email</label>
         <input
@@ -93,7 +107,9 @@ export function ApprovalBar({ proposal, actor, onActorChange, onDecide }: Approv
           type="button"
           className="approval-bar__approve"
           onClick={() => decide('approve')}
-          disabled={disabled || actorMissing}
+          disabled={disabled}
+          aria-busy={pending === 'approve'}
+          aria-describedby="approval-binding"
         >
           {pending === 'approve' ? 'Approving…' : 'Approve and apply'}
         </button>
@@ -102,19 +118,21 @@ export function ApprovalBar({ proposal, actor, onActorChange, onDecide }: Approv
           type="button"
           className="approval-bar__reject"
           onClick={() => decide('reject')}
-          disabled={disabled || actorMissing}
+          disabled={disabled}
+          aria-busy={pending === 'reject'}
         >
           {pending === 'reject' ? 'Rejecting…' : 'Reject'}
         </button>
       </div>
 
-      {error && (
-        <p className="approval-bar__error" role="alert">
-          {error}
-        </p>
-      )}
+      {/* Always present, so the assistive-technology announcement is an update
+          to an existing region rather than the arrival of a new node — which
+          some screen readers miss. */}
+      <div className="approval-bar__error-slot" role="alert" aria-live="assertive">
+        {error && <p className="approval-bar__error">{error}</p>}
+      </div>
 
-      <p className="approval-bar__binding">
+      <p className="approval-bar__binding" id="approval-binding">
         Approving applies exactly the change shown above, identified by{' '}
         <code>{proposal.diffHash.slice(0, 12)}…</code>
       </p>

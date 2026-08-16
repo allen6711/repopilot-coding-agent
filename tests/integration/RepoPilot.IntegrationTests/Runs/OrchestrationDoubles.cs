@@ -259,6 +259,35 @@ internal sealed class ScriptedAgent : IAgentTurnRunner
             default,
             "scripted"));
 
+    /// <summary>
+    /// Proposes a real edit to a named path, so the apply step writes something a
+    /// filesystem assertion can see.
+    /// </summary>
+    public static ScriptedAgent ThatProposesAChangeTo(string relativePath, string newContent) =>
+        new(_ => new ChatCompletion(
+            $"Plan: rewrite {relativePath}.",
+            [
+                new ToolCall(
+                    "call-1",
+                    "propose_patch",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        summary = "rewrite " + relativePath,
+                        entries = new[]
+                        {
+                            new
+                            {
+                                path = relativePath,
+                                operation = "modify",
+                                new_content = newContent,
+                            },
+                        },
+                    })),
+            ],
+            ChatStopReason.ToolUse,
+            default,
+            "scripted"));
+
     /// <summary>Never calls anything — it could not find the code at all.</summary>
     public static ScriptedAgent ThatCannotFindAnything() => new(_ => new ChatCompletion(
         "I could not locate code relevant to this task.",

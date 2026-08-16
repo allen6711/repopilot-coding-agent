@@ -32,6 +32,7 @@ public sealed record TaskReportLine(
 /// <param name="Metrics">The reported figures.</param>
 /// <param name="ApprovalCoverageFlagged">Whether the release gate failed (SC-001).</param>
 /// <param name="ApprovalCoverageDetail">What the gate found.</param>
+/// <param name="Refusals">Workspace-confinement figures across the set (SC-010).</param>
 /// <param name="Tasks">Per-task lines, so a figure can be traced to the runs behind it.</param>
 public sealed record EvaluationReport(
     Guid EvaluationId,
@@ -41,6 +42,7 @@ public sealed record EvaluationReport(
     EvaluationMetrics Metrics,
     bool ApprovalCoverageFlagged,
     string ApprovalCoverageDetail,
+    RefusalSummary Refusals,
     IReadOnlyList<TaskReportLine> Tasks);
 
 /// <summary>
@@ -66,19 +68,38 @@ public sealed class ReportWriter(string resultsDirectory)
     /// <summary>
     /// Writes <paramref name="report"/> and returns the path it was written to.
     /// </summary>
-    public async Task<string> WriteAsync(EvaluationReport report, CancellationToken ct = default)
+    /// <param name="destination">
+    /// An explicit file to write, overriding the generated name. Supplied by the
+    /// CLI's <c>--output</c>; null uses <see cref="ResultsDirectory"/> and a
+    /// generated name.
+    /// </param>
+    public async Task<string> WriteAsync(
+        EvaluationReport report, string? destination = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(report);
 
-        Directory.CreateDirectory(ResultsDirectory);
+        string path;
 
-        // Sortable, collision-free, and readable in a directory listing. The
-        // evaluation id is in the name as well as the body so a report can be
-        // matched to its stored run without opening it.
-        var name =
-            $"{report.StartedAt.UtcDateTime:yyyyMMdd-HHmmss}-{report.EvaluationId:N}.json";
+        if (string.IsNullOrWhiteSpace(destination))
+        {
+            Directory.CreateDirectory(ResultsDirectory);
 
-        var path = Path.Combine(ResultsDirectory, name);
+            // Sortable, collision-free, and readable in a directory listing. The
+            // evaluation id is in the name as well as the body so a report can be
+            // matched to its stored run without opening it.
+            path = Path.Combine(
+                ResultsDirectory,
+                $"{report.StartedAt.UtcDateTime:yyyyMMdd-HHmmss}-{report.EvaluationId:N}.json");
+        }
+        else
+        {
+            path = Path.GetFullPath(destination);
+
+            // The caller named a file, so its directory is the caller's intent
+            // too. Failing because a parent does not exist would be a worse
+            // ending than creating it, after an evaluation that already ran.
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        }
 
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(report, Options), ct);
 
@@ -91,6 +112,7 @@ public sealed class ReportWriter(string resultsDirectory)
         int taskSetSize,
         EvaluationMetrics metrics,
         ApprovalCoverageVerdict verdict,
+        RefusalSummary refusals,
         IReadOnlyList<TaskReportLine> tasks) =>
         new(
             evaluation.Id,
@@ -100,6 +122,7 @@ public sealed class ReportWriter(string resultsDirectory)
             metrics,
             verdict.Flagged,
             verdict.Detail,
+            refusals,
 
             // Ordered so two evaluations over an unchanged task set produce the
             // same file, which is what makes SC-007 a diff rather than a reading

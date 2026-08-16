@@ -16,8 +16,14 @@ public sealed class RepoPilotDbContextFactory : IDesignTimeDbContextFactory<Repo
 {
     public RepoPilotDbContext CreateDbContext(string[] args)
     {
+        // Both spellings, because `dotnet ef` reaches this factory rather than the
+        // API host, and someone applying a migration reasonably expects the same
+        // variable the host reads. Discovering that the documented one is ignored
+        // here costs an authentication failure against whatever is on the default
+        // port — which reads as a wrong password rather than as a wrong database.
         var connectionString =
             Environment.GetEnvironmentVariable("REPOPILOT_CONNECTION_STRING")
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__RepoPilot")
             ?? "Host=localhost;Port=5432;Database=repopilot;Username=repopilot;Password=repopilot";
 
         var options = new DbContextOptionsBuilder<RepoPilotDbContext>()

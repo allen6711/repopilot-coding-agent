@@ -44,7 +44,17 @@ export function DiffViewer({ proposal }: DiffViewerProps) {
         </ul>
       </header>
 
-      <pre className="diff-viewer__diff" aria-label="Unified diff">
+      {/* Focusable and given a role, because it scrolls horizontally. A
+          scrollable region that cannot be reached by keyboard is content a
+          keyboard user cannot read — and SC-004 requires the whole diff to be
+          visible before a decision, for every reviewer. The role is what makes
+          the label announce; a bare <pre> has no implicit role to attach it to. */}
+      <pre
+        className="diff-viewer__diff"
+        role="region"
+        aria-label="Unified diff"
+        tabIndex={0}
+      >
         {lines.map((line, index) => (
           <span
             // Diff lines repeat freely, and their meaning is positional — two

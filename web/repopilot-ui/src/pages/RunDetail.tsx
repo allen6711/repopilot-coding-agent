@@ -26,6 +26,10 @@ export function RunDetail({ runId }: RunDetailProps) {
 
   const [actor, setActor] = useState(() => localStorage.getItem(ACTOR_STORAGE_KEY) ?? '');
 
+  // Why a cancellation was not attempted, as opposed to why one failed. Held
+  // separately from the mutation's error so the two cannot overwrite each other.
+  const [cancelBlocked, setCancelBlocked] = useState<string | null>(null);
+
   function rememberActor(value: string) {
     setActor(value);
     // Convenience only. It is not a credential, and the server treats whatever
@@ -116,7 +120,17 @@ export function RunDetail({ runId }: RunDetailProps) {
       <header className="run-detail__header">
         <h1>{current.taskDescription}</h1>
 
-        <p className="run-detail__stage" data-stage={current.stage}>
+        {/* Announced when it changes. The stage arrives over the event stream
+            without a page change, so a reviewer who cannot see it move has no
+            way to learn that the run is now waiting for them (FR-028a). Polite
+            rather than assertive: it should not interrupt someone mid-sentence
+            in the diff. */}
+        <p
+          className="run-detail__stage"
+          data-stage={current.stage}
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {stageLabel(current.stage)}
           {current.outcomeReason && (
             <span className="run-detail__reason">
@@ -130,23 +144,38 @@ export function RunDetail({ runId }: RunDetailProps) {
           <button
             type="button"
             className="run-detail__cancel"
-            onClick={() => cancel.mutate()}
-            disabled={cancel.isPending || actor.trim().length === 0}
-            title={
-              actor.trim().length === 0 ? 'Enter your name below before cancelling' : undefined
-            }
+            onClick={() => {
+              if (actor.trim().length === 0) {
+                setCancelBlocked('Enter your name below before cancelling.');
+                return;
+              }
+
+              setCancelBlocked(null);
+              cancel.mutate();
+            }}
+            // Not disabled on a missing name, for the same reason the approve
+            // button is not: a disabled control leaves the tab order, so a
+            // keyboard user meets nothing at all rather than meeting something
+            // that explains itself. A tooltip is no substitute — it is not
+            // announced and cannot be reached without a pointer.
+            disabled={cancel.isPending}
+            aria-busy={cancel.isPending}
           >
             {cancel.isPending ? 'Cancelling…' : 'Cancel run'}
           </button>
         )}
 
-        {cancel.isError && (
-          <p className="run-detail__error" role="alert">
-            {cancel.error instanceof ApiError
-              ? cancel.error.message
-              : 'The run could not be cancelled.'}
-          </p>
-        )}
+        <div className="run-detail__cancel-error" role="alert" aria-live="assertive">
+          {cancelBlocked && <p className="run-detail__error">{cancelBlocked}</p>}
+
+          {cancel.isError && (
+            <p className="run-detail__error">
+              {cancel.error instanceof ApiError
+                ? cancel.error.message
+                : 'The run could not be cancelled.'}
+            </p>
+          )}
+        </div>
       </header>
 
       <PlanPanel plan={current.plan} />

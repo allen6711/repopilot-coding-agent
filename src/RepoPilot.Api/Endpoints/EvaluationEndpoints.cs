@@ -77,7 +77,7 @@ public static class EvaluationEndpoints
 
                 await scope.ServiceProvider
                     .GetRequiredService<EvaluationHarness>()
-                    .ExecuteAsync(started, CancellationToken.None);
+                    .ExecuteAsync(started, reportPath: null, CancellationToken.None);
             }
             catch (Exception ex)
             {

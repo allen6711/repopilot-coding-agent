@@ -298,14 +298,15 @@ metrics are consistent and derived only from committed task definitions.
 
 **Purpose**: Release-gate verification and work that spans stories.
 
-- [ ] T131 [P] Extend the per-run check from T063a into a full-evaluation-set sweep, asserting zero modifications outside any run's working copy across every task in the committed set, in `tests/integration/Security/EvaluationSetNoOutsideWritesTests.cs` (SC-002)
-- [ ] T132 [P] Implement the SC-010 refusal report counting every refused out-of-workspace attempt across the evaluation set, in `src/RepoPilot.Evals/Metrics/RefusalReport.cs`
-- [ ] T133 [P] Add the SC-015 check asserting every decision record carries an actor and a hash, in `tests/integration/Approval/DecisionRecordCompletenessTests.cs`
-- [ ] T134 [P] Extend the single-run measurement from T074a to the full committed task set, reporting the distribution rather than a single sample, in `tests/integration/Runs/LatencyBudgetTests.cs` (SC-003)
-- [ ] T135 [P] Accessibility pass over the review view (keyboard operation of approve and reject, focus order, contrast) in `web/repopilot-ui/src/components/`
-- [ ] T136 [P] Author the capability contract and fixture authoring guide in `docs/`
+- [X] T131 [P] Extend the per-run check from T063a into a full-evaluation-set sweep, asserting zero modifications outside any run's working copy across every task in the committed set, in `tests/integration/Security/EvaluationSetNoOutsideWritesTests.cs` (SC-002)
+- [X] T132 [P] Implement the SC-010 refusal report counting every refused out-of-workspace attempt across the evaluation set, in `src/RepoPilot.Evals/Metrics/RefusalReport.cs`
+- [X] T133 [P] Add the SC-015 check asserting every decision record carries an actor and a hash, in `tests/integration/Approval/DecisionRecordCompletenessTests.cs`
+- [X] T134 [P] Extend the single-run measurement from T074a to the full committed task set, reporting the distribution rather than a single sample, in `tests/integration/Runs/LatencyBudgetTests.cs` (SC-003)
+- [X] T135 [P] Accessibility pass over the review view (keyboard operation of approve and reject, focus order, contrast) in `web/repopilot-ui/src/components/`
+- [X] T136 [P] Author the capability contract and fixture authoring guide in `docs/`
 - [ ] T137 Replace the target values in `README.md` with measured values from the first complete evaluation, keeping unmeasured figures labelled as targets (Principle V)
-- [ ] T138 Run the full `quickstart.md` validation end to end and record any deviation
+  - Blocked on a completed evaluation. The README now separates measured facts (task-set size and mix, fixture count, zero out-of-workspace writes) from targets and release gates, and every unmeasured figure is labelled as a target. Fill the remaining rows from `evals/results/` once the harness has run against a provider credential — see `docs/quickstart-validation.md`.
+- [X] T138 Run the full `quickstart.md` validation end to end and record any deviation
 
 ---
 

@@ -310,9 +310,26 @@ public sealed class PathAccessRefusedException(
     string relativePath,
     AccessIntent intent,
     PathRefusalReason reason)
-    : UnauthorizedAccessException(
-        $"{intent} access to '{relativePath}' was refused: {reason}.")
+    : UnauthorizedAccessException(Describe(relativePath, intent, reason))
 {
+    /// <summary>
+    /// The phrase every refusal message carries, immediately before the reason.
+    /// <para>
+    /// A refusal reaches the audit trail as recorded text, not as an exception —
+    /// the invoker stores <see cref="Exception.Message"/> and the object is gone.
+    /// SC-010 then asks for a count of refused attempts, which means something has
+    /// to read those strings back. This constant is that seam, declared here so
+    /// the reader and the writer of the format are the same type rather than two
+    /// places that happen to agree.
+    /// </para>
+    /// </summary>
+    public const string RefusalMarker = "was refused:";
+
+    /// <summary>Builds the message. Used by the constructor and by tests.</summary>
+    public static string Describe(
+        string relativePath, AccessIntent intent, PathRefusalReason reason) =>
+        $"{intent} access to '{relativePath}' {RefusalMarker} {reason}.";
+
     public string RelativePath { get; } = relativePath;
 
     public AccessIntent Intent { get; } = intent;
