@@ -111,7 +111,7 @@ Story 1's independent test requires a pre-indexed fixture.
 
 - [X] T039 [P] Implement `ToolInvoker` enforcing permission class, path guard, size and context budgets, and writing the audit record in a `finally` block, in `src/RepoPilot.Agent/Invocation/ToolInvoker.cs` (FR-027)
 - [X] T040 [P] Unit test that a throwing capability still produces a `failed` audit record and that exceeding the context budget refuses rather than truncates, in `tests/unit/Agent/ToolInvokerTests.cs` (FR-006)
-- [X] T040a [P] Unit test the per-file size limit at both enforcement points — indexing exclusion and bounded file read — in `tests/unit/Agent/FileSizeLimitTests.cs`, closing the constitution's "file-size and context-size limits" test area (only the context half was covered by T040)
+- [X] T040a [P] Unit test the per-file size limit at both enforcement points — indexing exclusion and bounded file read — in `tests/unit/RepoPilot.UnitTests/Agent/FileSizeLimitTests.cs`, closing the constitution's "file-size and context-size limits" test area (only the context half was covered by T040)
 - [X] T041 [P] Implement `RunEventStore` with monotonic per-run sequence and strict persist-then-publish ordering in `src/RepoPilot.Infrastructure/Events/RunEventStore.cs`
 - [X] T042 [P] Integration test that sequences are gap-free and ordered under concurrent writes, in `tests/integration/Events/RunEventSequenceTests.cs`
 - [X] T043 [P] Wire OpenTelemetry — `ActivitySource("RepoPilot")`, run/stage/capability spans, metrics, OTLP exporter — in `src/RepoPilot.Infrastructure/Observability/`
@@ -144,7 +144,7 @@ other story implemented.
 - [X] T052 [P] [US1] Implement the `search_docs` capability restricted to documentation entries in `src/RepoPilot.Agent/Capabilities/SearchDocsCapability.cs`
 - [X] T052a [US1] Implement plan production — the agent emits a short human-readable plan, persisted and published as a `plan_produced` event, before any proposal can be created — in `src/RepoPilot.Agent/PlanStage.cs` and `src/RepoPilot.Application/Runs/RunOrchestrator.cs` (FR-010)
 - [X] T053 [US1] Implement the `propose_patch` capability with no filesystem writer injected, in `src/RepoPilot.Agent/Capabilities/ProposePatchCapability.cs` (FR-014)
-- [X] T054 [US1] Unit test that the working copy is byte-identical before and after `propose_patch`, in `tests/unit/Agent/ProposePatchWritesNothingTests.cs` (Principle I)
+- [X] T054 [US1] Unit test that the working copy is byte-identical before and after `propose_patch`, in `tests/unit/RepoPilot.UnitTests/Agent/ProposePatchWritesNothingTests.cs` (Principle I)
 - [X] T055 [US1] Implement proposal validation — size caps, binary rejection, empty-proposal rejection, path guard on every entry — in `src/RepoPilot.Application/Proposals/ProposalValidator.cs` (FR-011a, FR-008b)
 - [X] T056 [US1] Unit test that a proposal exceeding any configured cap is refused at creation, in `tests/unit/Application/ProposalCapTests.cs` (SC-004)
 - [X] T057 [US1] Implement unified-diff rendering with DiffPlex and the affected-path list in `src/RepoPilot.Application/Proposals/DiffRenderer.cs` (FR-011)
