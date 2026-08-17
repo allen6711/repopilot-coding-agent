@@ -31,6 +31,7 @@ public sealed class EvaluationApiContractTests(PostgresFixture postgres) : IAsyn
     [
         "id", "startedAt", "endedAt", "taskCount", "recallAt5",
         "completionRateToolEnabled", "completionRateBaseline", "approvalCoverage",
+        "interactiveApprovals", "programmaticApprovals",
         "toolSuccessRate", "avgToolCallsPerCompletedTask",
         "p50LatencyMs", "p95LatencyMs", "flagged",
     ];
@@ -132,6 +133,26 @@ public sealed class EvaluationApiContractTests(PostgresFixture postgres) : IAsyn
         // taskCount is set before any task runs: it is the size of the committed
         // set, not a count of what has finished.
         Assert.True(body.GetProperty("taskCount").GetInt32() >= 30);
+    }
+
+    /// <summary>
+    /// SC-001 requires interactive and programmatic approvals to be reported
+    /// separately. A single coverage percentage cannot say which kind it is made
+    /// of, so both counts are on the wire — as integers, not nullable, because
+    /// "none yet" is zero rather than unmeasured.
+    /// </summary>
+    [RequiresDockerFact]
+    public async Task TheApprovalSplitIsReportedAsTwoSeparateCounts()
+    {
+        using var client = Client();
+
+        var started = await client.PostAsync("/api/evaluations", content: null);
+        var body = await started.Content.ReadFromJsonAsync<JsonElement>(Json);
+
+        Assert.Equal(JsonValueKind.Number, body.GetProperty("interactiveApprovals").ValueKind);
+        Assert.Equal(JsonValueKind.Number, body.GetProperty("programmaticApprovals").ValueKind);
+        Assert.Equal(0, body.GetProperty("interactiveApprovals").GetInt32());
+        Assert.Equal(0, body.GetProperty("programmaticApprovals").GetInt32());
     }
 
     [RequiresDockerFact]

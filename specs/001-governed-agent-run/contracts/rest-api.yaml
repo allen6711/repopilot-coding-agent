@@ -603,6 +603,14 @@ components:
         completionRateToolEnabled: { type: [number, "null"] }
         completionRateBaseline: { type: [number, "null"] }
         approvalCoverage: { type: [number, "null"] }
+        interactiveApprovals:
+          type: integer
+          description: >-
+            Decisions a person made. Reported separately from programmatic ones so a
+            programmatic decision is never presented as a human one (SC-001).
+        programmaticApprovals:
+          type: integer
+          description: Decisions the evaluation harness made (FR-015b, SC-001)
         toolSuccessRate: { type: [number, "null"] }
         avgToolCallsPerCompletedTask: { type: [number, "null"] }
         p50LatencyMs: { type: [integer, "null"] }

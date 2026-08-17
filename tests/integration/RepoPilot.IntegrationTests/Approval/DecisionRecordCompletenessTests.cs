@@ -232,6 +232,44 @@ public sealed class DecisionRecordCompletenessTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// FR-014a: an approval does not expire.
+    /// <para>
+    /// The requirement is expressed as the absence of a mechanism — there is no
+    /// TTL to test — so what is checkable is the reasoning behind it: a proposal
+    /// is immutable once created and its working copy is owned by one run, so the
+    /// content a decision names cannot have changed underneath it however long the
+    /// reviewer took. This pins that a stale proposal still decides, which is what
+    /// would break if someone added a freshness check.
+    /// </para>
+    /// </summary>
+    [RequiresDockerFact]
+    public async Task ADecisionOnALongStandingProposalIsStillValid()
+    {
+        await using var db = postgres.CreateContext();
+
+        var s = await ScaffoldAsync(db);
+
+        // Backdated well past any plausible expiry window someone might add.
+        s.Proposal.CreatedAt = DateTimeOffset.UtcNow.AddDays(-90);
+        await db.SaveChangesAsync();
+
+        var decision = await s.Decide.DecideAsync(
+            s.Proposal.Id, ApprovalDecisionKind.Approve, s.Proposal.DiffHash, "reviewer@example.test");
+
+        Assert.Equal(ApprovalDecisionKind.Approve, decision.Decision);
+        Assert.Equal(s.Proposal.DiffHash, decision.DiffHash);
+
+        // The hash still matches, which is the actual guarantee: the decision
+        // binds the same content the reviewer saw ninety days ago because nothing
+        // could have rewritten it.
+        var stored = await db.ChangeProposals.AsNoTracking()
+            .SingleAsync(p => p.Id == s.Proposal.Id);
+
+        Assert.Equal(stored.DiffHash, decision.DiffHash);
+        Assert.Equal(ProposalDecisionStatus.Approved, stored.DecisionStatus);
+    }
+
+    /// <summary>
     /// A rejection is a decision too, and carries the same fields. Without this,
     /// "every decision has an actor and a hash" could hold only for approvals and
     /// the sweep above would never notice.

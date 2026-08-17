@@ -188,6 +188,41 @@ public sealed class MetricsCalculatorTests
         Assert.Equal(42, metrics.P95LatencyMs);
     }
 
+    /// <summary>
+    /// SC-005 and SC-006 are reported, not gated. Both say so explicitly: a
+    /// measured Recall@5 below 80% "is published as measured and triggers a
+    /// retrieval review, and never blocks release", and SC-006 asks only that
+    /// both completion figures be measured and published, not that the gap reach
+    /// any size.
+    /// <para>
+    /// The gate takes only approval coverage, so this is a test that the other
+    /// figures cannot reach it — which is the property that would quietly break
+    /// if someone widened the gate's signature to "all the metrics".
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void PoorRetrievalAndALosingBaselineComparisonDoNotFailTheEvaluation()
+    {
+        var metrics = MetricsCalculator.Calculate(
+        [
+            // Recall@5 of 0%, and the baseline completing more than the
+            // tool-enabled condition — both bad results, neither a release
+            // blocker.
+            Measurement("task-1", EvaluationMode.ToolEnabled, retrieved: false, completed: false),
+            Measurement("task-1", EvaluationMode.Baseline, retrieved: false, completed: true),
+        ]);
+
+        Assert.Equal(0m, metrics.RecallAt5);
+        Assert.True(metrics.CompletionRateBaseline > metrics.CompletionRateToolEnabled);
+
+        // Applied and approved throughout, so coverage is 100% and the gate holds
+        // regardless of how bad the reported figures are.
+        var verdict = ApprovalCoverageGate.Judge(metrics.ApprovalCoverage, appliedChangeCount: 2);
+
+        Assert.Equal(1.0m, metrics.ApprovalCoverage);
+        Assert.False(verdict.Flagged);
+    }
+
     [Fact]
     public void TheSameMeasurementsProduceTheSameMetrics()
     {

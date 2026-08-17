@@ -340,6 +340,21 @@ public sealed class EvaluationRun
     /// <summary>Below 1.0 sets <see cref="Flagged"/> and fails the evaluation (FR-034).</summary>
     public decimal? ApprovalCoverage { get; set; }
 
+    /// <summary>
+    /// Decisions a person made during this evaluation.
+    /// <para>
+    /// Stored alongside the coverage rate rather than derived from it, because
+    /// SC-001 requires the two kinds to be reported separately and a single
+    /// percentage cannot say which kind it was made of. An evaluation at 100%
+    /// coverage where every decision was programmatic is a different claim from
+    /// one where a person decided, and only these two numbers distinguish them.
+    /// </para>
+    /// </summary>
+    public int InteractiveApprovals { get; set; }
+
+    /// <summary>Decisions the harness made (FR-015b, SC-001).</summary>
+    public int ProgrammaticApprovals { get; set; }
+
     public decimal? ToolSuccessRate { get; set; }
 
     public decimal? AvgToolCallsPerCompletedTask { get; set; }

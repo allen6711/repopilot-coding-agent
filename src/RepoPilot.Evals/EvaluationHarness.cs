@@ -173,6 +173,8 @@ public sealed class EvaluationHarness(
         evaluation.CompletionRateToolEnabled = metrics.CompletionRateToolEnabled;
         evaluation.CompletionRateBaseline = metrics.CompletionRateBaseline;
         evaluation.ApprovalCoverage = metrics.ApprovalCoverage;
+        evaluation.InteractiveApprovals = metrics.InteractiveApprovals;
+        evaluation.ProgrammaticApprovals = metrics.ProgrammaticApprovals;
         evaluation.ToolSuccessRate = metrics.ToolSuccessRate;
         evaluation.AvgToolCallsPerCompletedTask = metrics.AvgToolCallsPerCompletedTask;
         evaluation.P50LatencyMs = metrics.P50LatencyMs;

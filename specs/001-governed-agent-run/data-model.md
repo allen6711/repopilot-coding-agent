@@ -302,6 +302,8 @@ A committed task definition under `evals/tasks/`, validated against
 | `completion_rate_tool_enabled` | numeric(5,4) NULL | FR-032 |
 | `completion_rate_baseline` | numeric(5,4) NULL | FR-033, SC-006 |
 | `approval_coverage` | numeric(5,4) NULL | FR-034; below 1.0 sets `flagged` |
+| `interactive_approvals` | int NOT NULL DEFAULT 0 | Decisions a person made. Stored beside the coverage rate rather than derived from it: a single percentage cannot say which kind of decision it is made of, and SC-001 requires the two to be reported separately |
+| `programmatic_approvals` | int NOT NULL DEFAULT 0 | Decisions the harness made (FR-015b, SC-001) |
 | `tool_success_rate` | numeric(5,4) NULL | |
 | `avg_tool_calls_per_completed_task` | numeric(6,2) NULL | |
 | `p50_latency_ms` / `p95_latency_ms` | int NULL | |
