@@ -31,8 +31,9 @@ RepoPilot is designed to demonstrate:
         Task / Run Coordinator
                    |
                    v
-       Microsoft Agent Framework
-          single coding agent
+        Run Orchestrator owns
+       the loop; single agent
+       supplies one turn at a time
                    |
       +------------+-------------+
       |            |             |
@@ -68,7 +69,7 @@ MVP should use **one agent with a small set of well-defined tools**. Do not intr
 | Area | Technology |
 | --- | --- |
 | Backend | C#, ASP.NET Core |
-| Agent runtime | Microsoft Agent Framework |
+| Agent loop | Owned by `RunOrchestrator` in backend code. No orchestration framework: the loop is where stage transitions are decided, and Principle IV puts those in code that can be tested (constitution v2.0.0) |
 | Frontend | React, TypeScript |
 | Relational/vector store | PostgreSQL + pgvector |
 | Cache/state | Redis (only where justified) |

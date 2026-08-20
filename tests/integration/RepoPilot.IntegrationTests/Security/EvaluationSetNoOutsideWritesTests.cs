@@ -277,7 +277,7 @@ public sealed class EvaluationSetNoOutsideWritesTests(PostgresFixture postgres) 
         // landing in a disposable copy; SC-012 is about the copy then going away,
         // and a sweep that satisfied the first while accumulating thirty
         // directories would be reporting half the story.
-        Assert.Empty(Listing(_workspaceRoot)
-            .Where(p => p.StartsWith("runs/", StringComparison.Ordinal)));
+        Assert.DoesNotContain(
+            Listing(_workspaceRoot), p => p.StartsWith("runs/", StringComparison.Ordinal));
     }
 }

@@ -41,7 +41,8 @@ task set, `sandbox/` for pre-baked execution images.
 **Purpose**: Project initialization and the scaffolding every later phase depends on.
 
 - [X] T001 Create the solution and six projects (`RepoPilot.Domain`, `RepoPilot.Application`, `RepoPilot.Infrastructure`, `RepoPilot.Agent`, `RepoPilot.Api`, `RepoPilot.Evals`) with project references enforcing the layering in `RepoPilot.slnx` and `src/`
-- [X] T002 [P] Add package references — Agent Framework, Anthropic SDK, EF Core + Npgsql + pgvector, DiffPlex, Docker.DotNet, OpenTelemetry — to the relevant `src/RepoPilot.*/*.csproj`
+- [X] T002 [P] Add package references — Microsoft.Extensions.AI, Anthropic SDK, EF Core + Npgsql + pgvector, DiffPlex, Docker.DotNet, OpenTelemetry — to the relevant `src/RepoPilot.*/*.csproj`
+  - Originally listed Agent Framework. It was referenced and never used, and constitution v2.0.0 removed the mandate: the loop belongs to `RunOrchestrator` because that is where stage transitions are decided (Principle IV). The package reference was dropped on 2026-08-20.
 - [X] T003 [P] Scaffold the React + TypeScript + Vite app in `web/repopilot-ui/` with TanStack Query and Vitest configured
 - [X] T004 [P] Create `docker-compose.yml` with PostgreSQL 17 + pgvector and an OpenTelemetry collector
 - [X] T005 [P] Create test projects `tests/unit/`, `tests/integration/` (with Testcontainers), and `tests/e2e/`
@@ -127,7 +128,7 @@ Story 1's independent test requires a pre-indexed fixture.
 - [X] T044 [P] Create the API host with Minimal APIs, RFC 9457 problem details, and `X-Actor` binding that refuses an absent or empty value, in `src/RepoPilot.Api/Program.cs` and `src/RepoPilot.Api/Middleware/` (FR-015a)
 - [X] T045 [P] Implement the startup recovery hosted service — fail non-terminal runs with `service_restarted`, destroy their working copies, remove orphaned containers — in `src/RepoPilot.Api/Hosting/StartupRecoveryService.cs` (FR-030a, FR-026e)
 - [X] T046 Integration test startup recovery leaves no non-terminal run, no working copy, and no container behind, in `tests/integration/RepoPilot.IntegrationTests/Hosting/StartupRecoveryTests.cs` (SC-012)
-- [X] T047 [P] Create the agent host — single Agent Framework agent, prompt assembly, read-capability registration — in `src/RepoPilot.Agent/RepoPilotAgent.cs`
+- [X] T047 [P] Create the agent host — prompt assembly, one-turn provider call, read-capability registration — in `src/RepoPilot.Agent/RepoPilotAgent.cs`. It supplies turns; it does not own the loop (constitution v2.0.0, Principle IV)
 - [X] T048 [P] Add a developer seed command that registers and indexes a fixture so User Story 1 can run against a pre-indexed repository, in `src/RepoPilot.Api/Seed/SeedCommand.cs`
 
 **Checkpoint**: Governance primitives, persistence, retrieval, and audit infrastructure exist and are

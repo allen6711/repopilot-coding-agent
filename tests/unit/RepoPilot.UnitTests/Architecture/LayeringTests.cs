@@ -36,7 +36,6 @@ public sealed class LayeringTests
         "Docker",           // the sandbox runtime
         "Testcontainers",
         "DiffPlex",         // diff rendering is a presentation concern
-        "Microsoft.Agents", // the agent runtime
         "Microsoft.Extensions.AI",
         "OpenTelemetry",    // instrumentation is wired in Infrastructure
     ];

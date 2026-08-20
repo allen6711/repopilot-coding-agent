@@ -8,16 +8,28 @@ the principle is named.
 
 ---
 
-## 1. Runtime and agent framework version
+## 1. Runtime and who owns the agent loop
 
-- **Decision**: .NET 10 (LTS) with C# 13. Agent runtime is Microsoft Agent Framework
-  (`Microsoft.Agents.AI`), which reached 1.0 GA on 2026-04-02 and is at 1.17.0 as of 2026-08-04. It
-  targets `net8.0`/`netstandard2.0`/`net472`, so it runs unchanged on .NET 10.
-- **Rationale**: The constitution mandates the framework; GA status removes the preview-churn risk
-  that would otherwise argue for pinning. LTS keeps the toolchain stable across the MVP.
-- **Alternatives considered**: Semantic Kernel or AutoGen directly — both are now unified into Agent
-  Framework, so using them would be building on a superseded surface. Hand-rolling the tool loop —
-  rejected as re-implementing the mandated runtime for no measured benefit (Principle III).
+- **Decision**: .NET 10 (LTS) with C# 13. No agent-orchestration framework. `RunOrchestrator` owns
+  the loop and calls `IAgentTurnRunner` for one turn at a time; `Microsoft.Extensions.AI` supplies
+  the provider-neutral chat and embedding shapes.
+- **Rationale**: An agent framework earns its place by owning the tool-call loop. That loop is where
+  stage transitions are decided, and Principle IV requires every run lifecycle transition to be
+  implemented explicitly in backend code and forbids inferring one from model output. Confined to
+  what Principle IV allows, the framework had nothing left to do — it was referenced as a package
+  and used by no source file, which made the dependency list imply a compliance the code did not
+  have. Constitution v2.0.0 resolved the tension in favour of Principle IV.
+- **Revised 2026-08-20.** This decision originally read: "Agent runtime is Microsoft Agent Framework
+  (`Microsoft.Agents.AI`), which reached 1.0 GA on 2026-04-02 … The constitution mandates the
+  framework", and dismissed hand-rolling the loop as "re-implementing the mandated runtime for no
+  measured benefit". That was written before the orchestrator existed. What the implementation
+  showed is that the loop is not an incidental convenience but the place the governance lives, so
+  the earlier reasoning had the dependency backwards.
+- **Alternatives considered**: Adopting the framework and letting it own the loop — rejected, it
+  puts stage transitions inside a third-party loop where they cannot be asserted on. Adopting it for
+  prompt assembly and tool marshalling only — still permitted by the amended constitution, but it
+  buys little over `Microsoft.Extensions.AI` and adds a dependency whose main feature must be left
+  unused.
 
 ## 2. Chat provider adapter
 
@@ -27,7 +39,8 @@ the principle is named.
   and `effort: xhigh` for the proposing stage / `high` elsewhere. Provider types, prompts, and SDK
   calls stay inside `RepoPilot.Infrastructure` and `RepoPilot.Agent`.
 - **Rationale**: The constitution requires provider access behind an adapter with no leakage into
-  Application or Domain. Agent Framework ships first-class providers, so the adapter is thin. Claude
+  Application or Domain. `Microsoft.Extensions.AI` gives a provider-neutral `IChatClient`, so the
+  adapter is thin. Claude
   Opus 5 is the current default for agentic coding work; the id is a fixed string with no date
   suffix.
 - **Alternatives considered**: Calling the SDK directly from the orchestrator — rejected, violates
@@ -278,7 +291,7 @@ the principle is named.
 | Technical Context field | Resolution |
 |---|---|
 | Language/Version | .NET 10 LTS, C# 13; TypeScript 5.x + React 19 |
-| Primary Dependencies | Agent Framework 1.x, Anthropic .NET SDK, EF Core 10 + pgvector-dotnet, DiffPlex, Docker.DotNet, OpenTelemetry |
+| Primary Dependencies | Microsoft.Extensions.AI, Anthropic .NET SDK, EF Core 10 + pgvector-dotnet, DiffPlex, Docker.DotNet, OpenTelemetry |
 | Storage | PostgreSQL 17+ with pgvector 0.8+; filesystem workspace root; no Redis |
 | Testing | xUnit + Testcontainers; Vitest; one API-level e2e |
 | Target Platform | Linux containers; Docker daemon access required |

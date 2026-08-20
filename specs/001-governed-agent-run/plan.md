@@ -7,7 +7,8 @@
 ## Summary
 
 Deliver the full MVP flow: register and index a repository fixture, retrieve context with hybrid
-search, run a single Microsoft Agent Framework agent over a constrained read-only tool surface,
+search, drive a single agent over a constrained read-only tool surface from an orchestrator that
+owns the loop,
 produce a plan and a structured patch proposal, gate every write behind a recorded human approval
 bound to a diff hash, apply the approved change only to a disposable working copy, execute
 allow-listed test commands inside a network-isolated Docker container with a timeout, and stream
@@ -28,8 +29,10 @@ to compute and verify.
 **Language/Version**: C# 13 on .NET 10 (LTS) for backend, agent runtime, and evaluation CLI;
 TypeScript 5.x with React 19 for the web UI.
 
-**Primary Dependencies**: ASP.NET Core Minimal APIs; Microsoft Agent Framework
-(`Microsoft.Agents.AI` 1.x, GA since 2026-04) over `Microsoft.Extensions.AI` abstractions; Anthropic
+**Primary Dependencies**: ASP.NET Core Minimal APIs; `Microsoft.Extensions.AI` abstractions for
+provider-neutral chat and embedding shapes — no agent-orchestration framework, because the loop it
+would own is where stage transitions are decided and Principle IV puts those in backend code
+(constitution v2.0.0); Anthropic
 .NET SDK (`Anthropic` package) as the default chat-provider adapter implementation
 (`claude-opus-5`); Npgsql + EF Core 10 with `pgvector-dotnet`; DiffPlex for unified-diff rendering;
 Docker.DotNet for sandbox orchestration; OpenTelemetry .NET SDK with OTLP exporter; xUnit +
@@ -77,7 +80,7 @@ Gates derived from `.specify/memory/constitution.md` v1.0.0.
 | III | Minimal Agent, Constrained Tool Surface | Exactly one agent. Exactly the seven defined capabilities — no additions. Each declares its permission class (`Read`, `NoDirectWrite`, `WriteWithApproval`, `SandboxExecution`) and is enforced in `ToolInvoker` at the call site, not by prompt text. No planner/coder/reviewer split. | PASS (see narrowing note below) |
 | IV | Explicit State, Full Traceability | `RunStateMachine` is a static transition table in the Domain layer; every transition is attempted in backend code and persisted before the next action. Illegal transitions throw and are recorded as `StageTransitionRejected` events. Every capability invocation records name, run id, argument summary, start/end, and status. OTel spans wrap run, stage, and tool call. A completed run is replayable from `run_events` alone. | PASS |
 | V | Evidence Before Claims | `RepoPilot.Evals` computes Recall@5, completion rate, retrieval-only baseline vs tool-enabled, approval coverage, tool success rate, and latency from the committed task set. Reference patches live outside every indexed fixture directory, so they cannot enter model context. README numbers stay labelled as targets until this harness produces measured values. Approval coverage below 100% fails the evaluation. | PASS |
-| — | Technology and Architecture Constraints | C#/ASP.NET Core, Microsoft Agent Framework, React + TypeScript, PostgreSQL + pgvector as system of record, no Redis, provider access behind `IChatProviderAdapter` / `IEmbeddingProviderAdapter` with no provider types in Application or Domain, indexing exclusions enforced, retrieval results carry path/chunk id/content/start line/end line/score. All artifacts in English. | PASS |
+| — | Technology and Architecture Constraints | C#/ASP.NET Core, React + TypeScript, PostgreSQL + pgvector as system of record, no Redis, provider access behind `IChatProviderAdapter` / `IEmbeddingProviderAdapter` with no provider types in Application or Domain, indexing exclusions enforced, retrieval results carry path/chunk id/content/start line/end line/score. All artifacts in English. The agent loop is owned by `RunOrchestrator`; no orchestration framework is referenced or used (see the v2.0.0 note below). | PASS |
 | — | Development Workflow and Quality Gates | Every listed mandatory test area has a named test project and target in this plan; integration tests cover pgvector and the sandbox runner; one end-to-end test covers the seeded-task flow; GitHub Actions blocks merge on failure; no stretch-goal work is planned. | PASS |
 
 **Narrowing note on Principle III.** The constitution requires the seven-tool set and forbids
@@ -94,6 +97,17 @@ backend. This is recorded here so a reviewer can check it against Principles III
 written. No gate regressed. The data model adds no entity that stores a secret; the REST contract
 exposes no endpoint that writes without an approval; the tool contract pins each permission class to
 a documented enforcement point. **PASS.**
+
+**Constitution v2.0.0 re-check (2026-08-20).** The gate above previously read PASS while naming
+Microsoft Agent Framework, which was referenced as a package and used by no source file. The
+constraint and the design were in genuine tension: an agent framework earns its place by owning the
+tool-call loop, and that loop is where stage transitions are decided — which Principle IV requires
+to be explicit backend code. `RunOrchestrator` therefore drives the loop and calls
+`IAgentTurnRunner` for one turn at a time, leaving the framework nothing to do. The constitution was
+amended rather than the design: the rule is now that the loop MUST be owned by backend code and a
+framework MAY only assist with prompt assembly, tool-definition marshalling, or provider transport.
+The unused package reference was removed in the same change, so the dependency list no longer
+implies a compliance the code did not have.
 
 **Post-checklist re-check (2026-08-10)**: after the governance checklist remediation added 30
 requirements and 2 success criteria, every gate was re-evaluated. Three controls that had existed
@@ -137,8 +151,9 @@ src/
 ├── RepoPilot.Infrastructure/      # EF Core + pgvector persistence, chunker, hybrid retriever,
 │                                  # working-copy manager, Docker sandbox runner,
 │                                  # provider adapters, OpenTelemetry wiring.
-├── RepoPilot.Agent/               # Microsoft Agent Framework host, prompt assembly,
-│                                  # ToolInvoker, tool schema registration.
+├── RepoPilot.Agent/               # Prompt assembly, one-turn provider call, ToolInvoker,
+│                                  # tool schema registration. Not the loop — that is
+│                                  # RunOrchestrator's, in Application.
 ├── RepoPilot.Api/                 # Minimal API endpoints, SSE stream, DI composition root,
 │                                  # startup recovery: fail non-terminal runs, sweep orphaned
 │                                  # working copies and containers (FR-030a).

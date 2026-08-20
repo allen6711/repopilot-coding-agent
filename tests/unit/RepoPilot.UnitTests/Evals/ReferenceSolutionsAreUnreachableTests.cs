@@ -48,9 +48,9 @@ public sealed class ReferenceSolutionsAreUnreachableTests
     }
 
     [Fact]
-    public void EveryReferenceFileNamedByATaskIsInThatDirectory()
+    public async Task EveryReferenceFileNamedByATaskIsInThatDirectory()
     {
-        var tasks = CommittedTaskSet.LoadAsync().GetAwaiter().GetResult();
+        var tasks = await CommittedTaskSet.LoadAsync();
 
         foreach (var task in tasks)
         {

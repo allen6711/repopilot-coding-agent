@@ -28,6 +28,35 @@ Amendment 1.0.0 → 1.0.1 (2026-08-10)
 - Artifacts requiring follow-up: specs/001-governed-agent-run/tasks.md maps this area to its
   validation and hashing tasks. No migration plan is required — Principles I, II, and V are
   untouched.
+
+Amendment 1.0.1 → 2.0.0 (2026-08-20)
+- Bump rationale: MAJOR — a governance rule is relaxed. The versioning policy below makes any
+  relaxation MAJOR regardless of how narrow it is, and dropping a named MUST from the technology
+  constraints is a relaxation even though it is replaced by a stricter rule about the same thing.
+- Change: "agent runtime MUST be Microsoft Agent Framework" is removed. In its place, the agent
+  loop MUST be owned by backend code, and an orchestration framework MAY be used only for prompt
+  assembly, tool-definition marshalling, or provider transport — never to own the loop, decide a
+  stage transition, or invoke a write or execution capability.
+- Why: the two rules were in tension and the implementation could not satisfy both. Principle IV
+  requires every run lifecycle transition to be implemented explicitly in backend code and forbids
+  inferring one from model output. An agent framework's value is precisely that it owns the
+  tool-call loop — which is where stage transitions are decided. `RunOrchestrator` therefore drives
+  the loop itself, calling `IAgentTurnRunner` for one turn at a time, and the framework was left
+  with nothing to do. It was referenced as a package and used by no source file, which meant the
+  constraint read as satisfied in the dependency list while being unmet in the code. The rule that
+  survives is the one that carries the guarantee.
+- What this does NOT relax: provider access still sits behind an adapter, provider types still may
+  not reach Application or Domain, and Principle III's seven-capability surface is unchanged.
+  Adopting a framework later is permitted, and the new wording states the shape it must fit.
+- Artifacts requiring follow-up: `src/RepoPilot.Agent/RepoPilot.Agent.csproj` (unused
+  `Microsoft.Agents.AI` reference removed), `specs/001-governed-agent-run/plan.md` (constitution
+  check row and dependency list), `specs/001-governed-agent-run/research.md` (decision 1),
+  `specs/001-governed-agent-run/tasks.md` (T002, T047), `README.md` (stack table and diagram),
+  `tests/unit/RepoPilot.UnitTests/Architecture/LayeringTests.cs` (the namespace no longer needs an
+  allowance). All updated in the same change as this amendment.
+- Migration plan: none required. This amendment touches the Technology and Architecture Constraints
+  section, not Principles I, II, or V, and no run or stored record was created under the prior rule
+  that depends on it — the framework was never on any execution path.
 -->
 
 # RepoPilot Constitution
@@ -99,8 +128,12 @@ this project from a demo.
 
 ## Technology and Architecture Constraints
 
-- Backend MUST be C# / ASP.NET Core; agent runtime MUST be Microsoft Agent Framework; frontend
-  MUST be React with TypeScript.
+- Backend MUST be C# / ASP.NET Core; frontend MUST be React with TypeScript.
+- The agent loop MUST be owned by backend code. An agent-orchestration framework MAY be used for
+  prompt assembly, tool-definition marshalling, or provider transport, but MUST NOT own the run
+  loop, decide a stage transition, or invoke a write or execution capability. Where a framework
+  cannot be confined to that role, it MUST NOT be adopted: Principle IV is the constraint the
+  framework has to fit, not the other way round.
 - PostgreSQL with pgvector is the system of record for repository chunks and run metadata. Redis
   MAY be used only for short-lived run or cache state, and only where a written justification
   exists.
@@ -158,4 +191,4 @@ be recorded in the pull request with an expiry condition — undocumented deviat
 Runtime development guidance for agents lives in the Spec Kit templates under `.specify/`; those
 templates read this constitution and MUST NOT contradict it.
 
-**Version**: 1.0.1 | **Ratified**: 2026-08-09 | **Last Amended**: 2026-08-10
+**Version**: 2.0.0 | **Ratified**: 2026-08-09 | **Last Amended**: 2026-08-20

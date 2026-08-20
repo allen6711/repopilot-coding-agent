@@ -5,10 +5,6 @@
     <ProjectReference Include="..\RepoPilot.Infrastructure\RepoPilot.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Agents.AI" Version="1.17.0" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
