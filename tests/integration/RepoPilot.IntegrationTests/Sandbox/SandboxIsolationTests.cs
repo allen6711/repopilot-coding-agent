@@ -72,7 +72,18 @@ public sealed class SandboxIsolationTests : IDisposable
         var result = await _runner.RunAsync(Request("id", "-u"));
 
         Assert.True(result.Passed);
-        Assert.Equal("1000", result.Output.Trim());
+
+        // Not root — that is the guarantee (Principle II). The exact uid is
+        // deliberately not pinned: it is the one that owns the bind-mounted
+        // working copy, so that the container can write to it on a host whose
+        // bind mounts do not translate ownership. Asserting "1000" pinned an
+        // implementation detail and would have to be relaxed every time the
+        // service ran as a different user.
+        Assert.True(
+            uint.TryParse(result.Output.Trim(), out var uid),
+            $"'id -u' did not report a uid: {result.Output}");
+
+        Assert.NotEqual(0u, uid);
     }
 
     [RequiresDockerFact]

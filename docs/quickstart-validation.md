@@ -168,6 +168,33 @@ against the same commands CI runs.
 **Fixed.** `dotnet test RepoPilot.slnx` for everything, with explicit project paths
 for running one suite at a time.
 
+### D8 — the sandbox could not write to its own working copy on Linux
+
+CI's first green-lit run failed one test: `touch: scratch.txt: Permission denied`
+inside `/workspace`.
+
+`DockerSandboxRunner` hardcoded `User = "1000:1000"`, but the bind-mounted working
+copy is owned by whoever runs the service. Docker Desktop's bind mounts translate
+ownership, so every local run passed; a Linux bind mount does not, and the GitHub
+runner is uid 1001. On any Linux host not running the service as uid 1000,
+`apply_patch` would succeed and the `run_tests` that follows would fail on a
+permission error that reads as a broken fixture.
+
+This is a portability defect in the product, not a test artefact — and local
+testing could not have found it. It took CI actually running.
+
+**Fixed.** The container runs as the identity that owns the working copy
+(`geteuid`/`getegid`), falling back to 1000 when the service is root, since
+matching the host identity there would hand the sandbox root and Principle II
+says it is non-root regardless. The image tolerates any uid: its root filesystem
+is read-only and every writable path a toolchain needs is already redirected to
+the tmpfs at `/tmp`.
+
+`ProcessDoesNotRunAsRoot` asserted `id -u == "1000"`, which pinned an
+implementation detail rather than the guarantee. It now asserts the uid parses and
+is not zero — which is what the principle actually says, and what stays true when
+the service runs as a different user.
+
 ---
 
 ## Still open

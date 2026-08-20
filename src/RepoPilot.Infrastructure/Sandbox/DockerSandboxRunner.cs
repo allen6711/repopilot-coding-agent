@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Microsoft.Extensions.Logging;
@@ -154,9 +155,9 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
             AttachStderr = true,
             NetworkDisabled = true,
 
-            // Non-root. The working copy is the only writable path the process
-            // is given.
-            User = "1000:1000",
+            // Non-root, and specifically the identity that owns the working copy.
+            // See SandboxUser.
+            User = SandboxUser(),
 
             HostConfig = new HostConfig
             {
@@ -269,6 +270,49 @@ public sealed class DockerSandboxRunner : ISandboxRunner, IDisposable
             _logger.LogError(ex, "Could not remove container {ContainerId}.", containerId);
         }
     }
+
+    /// <summary>
+    /// The identity the container runs as: the one that owns the bind-mounted
+    /// working copy.
+    /// <para>
+    /// A hardcoded <c>1000:1000</c> works on Docker Desktop, whose bind mounts
+    /// translate ownership, and fails on Linux, where they do not. There the
+    /// working copy is a real directory owned by whoever runs this service, and a
+    /// container running as a different uid cannot write to it — so
+    /// <c>apply_patch</c> would succeed and the test command that follows would
+    /// fail on a permission error that looks like a broken fixture. CI found this;
+    /// every local run had passed.
+    /// </para>
+    /// <para>
+    /// The image is built for uid 1000 but does not require it: the root
+    /// filesystem is read-only and every writable path a toolchain needs is
+    /// redirected to the tmpfs at <c>/tmp</c>, while the baked package cache is
+    /// world-readable. Any uid can therefore run it.
+    /// </para>
+    /// </summary>
+    private static string SandboxUser()
+    {
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
+        {
+            return "1000:1000";
+        }
+
+        var uid = GetEuid();
+
+        // Running as root is the one case where matching the host identity would
+        // be a downgrade. Principle II says the sandbox process is non-root, and
+        // that holds regardless of what this service was started as.
+        return uid == 0 ? "1000:1000" : $"{uid}:{GetEgid()}";
+    }
+
+    // DllImport rather than LibraryImport: the source generator requires
+    // AllowUnsafeBlocks across the whole project, which is a large permission to
+    // take for two argument-free syscalls returning a blittable integer.
+    [DllImport("libc", EntryPoint = "geteuid")]
+    private static extern uint GetEuid();
+
+    [DllImport("libc", EntryPoint = "getegid")]
+    private static extern uint GetEgid();
 
     public void Dispose()
     {
