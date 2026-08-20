@@ -137,6 +137,37 @@ took no arguments and always generated its own filename.
 **Fixed.** `--output <path>` writes that exact file; omitting it keeps the generated name under the
 configured results directory.
 
+### D6 — the CI workflow had never run, and its test commands did not work
+
+Discovered while preparing the first pull request. `main` has two commits and no
+`specs/`, so no pull request had ever opened and `.github/workflows/ci.yml` had never
+executed. All three of its test steps used `dotnet test <directory>`, which is not a
+supported form — it looks for a project in the working directory and fails with
+`MSB1003`. The workflow the constitution relies on to block merge would itself have
+failed on its first run.
+
+Two further gaps in the same file: the end-to-end tests need the pre-baked sandbox
+image, which CI never built, so they would have skipped wholesale; and the
+"assert nothing was skipped" step failed on *any* skip, which would have fired on
+the two latency tests that legitimately need a model-provider credential CI has no
+way to supply.
+
+**Fixed.** Explicit project paths; the sandbox image is built before the end-to-end
+step; `REPOPILOT_REQUIRE_DOCKER=1` makes the daemon-gated tests incapable of
+skipping; and the skip assertion now reads the reason — a skip that names Docker or
+the sandbox image fails the build, one that names a missing credential is reported
+and allowed. It also fails a suite that executed nothing, because an empty run
+passes every assertion it never made. The whole sequence was replayed locally
+against the same commands CI runs.
+
+### D7 — quickstart's own test commands had the same defect
+
+`dotnet test` with no argument, and `dotnet test tests/e2e`. Both fail with
+`MSB1003`.
+
+**Fixed.** `dotnet test RepoPilot.slnx` for everything, with explicit project paths
+for running one suite at a time.
+
 ---
 
 ## Still open

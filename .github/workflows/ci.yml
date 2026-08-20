@@ -9,6 +9,10 @@ on:
 env:
   DOTNET_NOLOGO: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # The Docker-gated tests skip locally when no daemon is present. A daemon is
+  # available here, so make them incapable of skipping: a governance control that
+  # skips everywhere is a control that is never verified.
+  REPOPILOT_REQUIRE_DOCKER: "1"
 
 jobs:
   backend:
@@ -28,24 +32,44 @@ jobs:
         run: dotnet build --no-restore -warnaserror
 
       - name: Unit tests
-        run: dotnet test tests/unit --no-build --verbosity normal
+        run: >-
+          dotnet test tests/unit/RepoPilot.UnitTests/RepoPilot.UnitTests.csproj
+          --no-build --verbosity normal
 
-      # A Docker daemon is available on ubuntu-latest, so the Testcontainers and
-      # sandbox-runner tests that skip locally must run for real here. If they
-      # skip in CI, the governance controls are unverified — fail instead.
+      # Built before the end-to-end tests because they need it and will otherwise
+      # skip. It is the image the sandbox actually runs, so building it here is
+      # also the only check that sandbox/Dockerfile.dotnet still builds.
+      - name: Build the sandbox fixture image
+        run: docker build -f sandbox/Dockerfile.dotnet -t repopilot/fixture-dotnet:1 .
+
       - name: Integration tests
-        run: dotnet test tests/integration --no-build --verbosity normal
+        run: >-
+          dotnet test tests/integration/RepoPilot.IntegrationTests/RepoPilot.IntegrationTests.csproj
+          --no-build --verbosity normal
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory ${{ github.workspace }}/TestResults
 
       - name: End-to-end tests
-        run: dotnet test tests/e2e --no-build --verbosity normal
+        run: >-
+          dotnet test tests/e2e/RepoPilot.E2ETests/RepoPilot.E2ETests.csproj
+          --no-build --verbosity normal
+          --logger "trx;LogFileName=e2e.trx"
+          --results-directory ${{ github.workspace }}/TestResults
 
-      - name: Assert no governance test was skipped
-        run: |
-          dotnet test tests/integration --no-build --logger "trx;LogFileName=integration.trx" || true
-          if grep -q 'outcome="NotExecuted"' **/TestResults/integration.trx 2>/dev/null; then
-            echo "::error::A test was skipped in CI. Docker-gated tests must execute here."
-            exit 1
-          fi
+      # A skip in CI is either acceptable or a silently unverified control, and
+      # the difference is the reason. Anything gated on a daemon or on the
+      # sandbox image must run here; only a missing model-provider credential is
+      # allowed to skip, because no credential is available to a pull request
+      # and the tests that need one measure latency rather than a control.
+      - name: Assert no control was left unverified
+        run: python3 .github/scripts/check_skips.py TestResults/integration.trx TestResults/e2e.trx
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
 
   frontend:
     name: Frontend (build + tests)
@@ -68,5 +92,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm exec tsc --noEmit
       - run: pnpm build
       - run: pnpm test --run

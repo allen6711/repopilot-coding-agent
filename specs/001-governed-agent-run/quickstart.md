@@ -250,9 +250,14 @@ dotnet run --project src/RepoPilot.Evals -- --output evals/results/$(date +%Y%m%
 ## Test suite
 
 ```bash
-dotnet test                          # unit + integration (Testcontainers starts Postgres and Docker)
+dotnet test RepoPilot.slnx           # everything (Testcontainers starts Postgres; Docker required)
 pnpm --dir web/repopilot-ui test     # UI units
-dotnet test tests/e2e                # seeded task: create → approve → apply → test → result
+
+# Or one suite at a time. `dotnet test <directory>` is not a supported form —
+# it looks for a project in the working directory and fails with MSB1003.
+dotnet test tests/unit/RepoPilot.UnitTests/RepoPilot.UnitTests.csproj
+dotnet test tests/integration/RepoPilot.IntegrationTests/RepoPilot.IntegrationTests.csproj
+dotnet test tests/e2e/RepoPilot.E2ETests/RepoPilot.E2ETests.csproj   # seeded task: create → approve → apply → test → result
 ```
 
 The mandatory coverage areas from the constitution, and where each is verified:
