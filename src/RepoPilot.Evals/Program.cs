@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RepoPilot.Agent.Hosting;
 using RepoPilot.Evals;
 using RepoPilot.Evals.Hosting;
+using RepoPilot.Evals.Modes;
 
 // The evaluation CLI (FR-034).
 //
@@ -25,6 +26,13 @@ if (outputIndex >= 0 && reportPath is null)
     Console.Error.WriteLine("--output needs a file path.");
     return 64;
 }
+
+// `--retrieval-only` measures Recall@5 and stops there. It is the half of an
+// evaluation that needs no model provider, because embeddings are deterministic
+// and retrieval is a function of committed fixture content — so it is the half
+// that can run in a checkout with no credential, no Docker daemon, and no spend
+// (FR-032, SC-005).
+var retrievalOnly = Array.IndexOf(args, "--retrieval-only") >= 0;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -51,6 +59,17 @@ await using var scope = host.Services.CreateAsyncScope();
 
 try
 {
+    if (retrievalOnly)
+    {
+        var retrieval = scope.ServiceProvider.GetRequiredService<RetrievalOnlyEvaluation>();
+        await retrieval.MeasureAsync(reportPath, stopping.Token);
+
+        // No gate. tasks.md records that SC-005 is reported rather than gated,
+        // and a threshold here would quietly turn a published figure into a
+        // build condition the spec does not ask for.
+        return 0;
+    }
+
     var harness = scope.ServiceProvider.GetRequiredService<EvaluationHarness>();
     var evaluation = await harness.RunAsync(reportPath, stopping.Token);
 

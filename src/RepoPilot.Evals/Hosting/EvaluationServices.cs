@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RepoPilot.Evals.Modes;
 using RepoPilot.Evals.Reporting;
 using RepoPilot.Evals.Tasks;
 
@@ -54,6 +55,12 @@ public static class EvaluationServices
         services.AddSingleton(new ReportWriter(options.ResultsDirectory));
         services.AddScoped<FixtureBaselineProbe>();
         services.AddScoped<EvaluationHarness>();
+
+        // Registered alongside the harness rather than behind a flag, so that
+        // resolving one never constructs the other. The retrieval-only mode takes
+        // no chat provider, and that is the property worth keeping: a host that
+        // asks for it must not need a credential to get it.
+        services.AddScoped<RetrievalOnlyEvaluation>();
 
         return services;
     }

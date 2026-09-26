@@ -50,12 +50,6 @@ public sealed class EvaluationHarness(
     ILogger<EvaluationHarness> logger)
 {
     /// <summary>
-    /// How many retrieved results Recall@5 looks at. Fixed by the criterion
-    /// itself, not configurable — a configurable "top five" is not a top five.
-    /// </summary>
-    private const int RecallDepth = 5;
-
-    /// <summary>
     /// Approvals a run may need before it ends. A revision produces a fresh
     /// proposal needing its own approval (FR-013), and the revision limit is two,
     /// so three is the most any run can legitimately ask for.
@@ -127,7 +121,7 @@ public sealed class EvaluationHarness(
             // Measured once per task, not once per condition. The query is the
             // task description in both conditions, and the index does not change
             // between them, so a second measurement could only differ by noise.
-            var retrievalHit = await RelevantFileIsInTopFiveAsync(fixture.Id, task, ct);
+            var (retrievalHit, _) = await RecallAt5.MeasureAsync(retriever, fixture.Id, task, ct);
 
             var baselineFailed = await baseline.FailsBeforeChangeAsync(
                 fixture, task.BaselineTestCommand, ct);
@@ -359,24 +353,6 @@ public sealed class EvaluationHarness(
         }
 
         return covered >= applyEvents;
-    }
-
-    /// <summary>
-    /// Whether a file the task names as relevant is in the top five results for
-    /// the task description (FR-032, SC-005).
-    /// </summary>
-    private async Task<bool> RelevantFileIsInTopFiveAsync(
-        Guid repositoryId, EvaluationTaskDefinition task, CancellationToken ct)
-    {
-        var found = await retriever.SearchAsync(
-            repositoryId, task.Description, RecallDepth, documentationOnly: false, ct);
-
-        var paths = found
-            .Take(RecallDepth)
-            .Select(r => r.RelativePath.Replace('\\', '/'))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        return task.RelevantFiles.Any(f => paths.Contains(f.Replace('\\', '/')));
     }
 
     /// <summary>

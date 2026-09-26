@@ -472,7 +472,7 @@ reported.
   disabled control on an unindexed fixture, and a run list that opens a run by id, in
   `web/repopilot-ui/src/components/StartRunForm.test.tsx` and
   `web/repopilot-ui/src/pages/RunList.test.tsx` per FR-007, US1/AC5 (missing)
-- [ ] T142 Add a retrieval-only evaluation mode — `repopilot-evals --retrieval-only` — that measures
+- [X] T142 Add a retrieval-only evaluation mode — `repopilot-evals --retrieval-only` — that measures
   Recall@5 over the committed task set through `HybridRetriever` alone and writes a report, making
   the metric obtainable with no chat-provider credential, in `src/RepoPilot.Evals/Modes/RetrievalOnlyEvaluation.cs`,
   `src/RepoPilot.Evals/Reporting/ReportWriter.cs`, and `src/RepoPilot.Evals/Program.cs` per FR-032,

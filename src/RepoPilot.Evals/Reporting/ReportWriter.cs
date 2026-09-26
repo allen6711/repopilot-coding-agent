@@ -45,6 +45,47 @@ public sealed record EvaluationReport(
     RefusalSummary Refusals,
     IReadOnlyList<TaskReportLine> Tasks);
 
+/// <summary>One task's line in a retrieval-only report.</summary>
+/// <param name="TaskId">Which committed task.</param>
+/// <param name="RepositorySlug">The fixture it was measured against.</param>
+/// <param name="RelevantFileInTop5">Whether a relevant file was in the top five.</param>
+/// <param name="RelevantFiles">What the committed task names as relevant.</param>
+/// <param name="TopPaths">
+/// The paths the criterion considered, in rank order. Present so a miss can be
+/// read rather than re-derived: a reader seeing which five files came back
+/// instead can tell a retrieval problem from a task whose relevant files are
+/// wrong.
+/// </param>
+public sealed record RetrievalTaskLine(
+    string TaskId,
+    string RepositorySlug,
+    bool RelevantFileInTop5,
+    IReadOnlyList<string> RelevantFiles,
+    IReadOnlyList<string> TopPaths);
+
+/// <summary>
+/// A retrieval-only measurement (FR-032, SC-005).
+/// </summary>
+/// <remarks>
+/// Separate from <see cref="EvaluationReport"/> and deliberately not a subset of
+/// it. This measures the retriever; that measures the agent. A single shape
+/// carrying both with the agent's fields left null would put a reader one missing
+/// value away from reading a retrieval measurement as a completion rate of zero.
+/// </remarks>
+/// <param name="MeasuredAt">When the measurement ran.</param>
+/// <param name="TaskSetSize">How many committed tasks were loaded.</param>
+/// <param name="RecallDepth">The depth the criterion is stated at.</param>
+/// <param name="RelevantFileInTopFive">How many tasks hit.</param>
+/// <param name="RecallAt5">The reported share (SC-005).</param>
+/// <param name="Tasks">Per-task lines, ordered so a repeat produces the same file.</param>
+public sealed record RetrievalReport(
+    DateTimeOffset MeasuredAt,
+    int TaskSetSize,
+    int RecallDepth,
+    int RelevantFileInTopFive,
+    decimal RecallAt5,
+    IReadOnlyList<RetrievalTaskLine> Tasks);
+
 /// <summary>
 /// Writes the report to <c>evals/results/</c> (FR-032).
 /// <para>
@@ -73,23 +114,50 @@ public sealed class ReportWriter(string resultsDirectory)
     /// CLI's <c>--output</c>; null uses <see cref="ResultsDirectory"/> and a
     /// generated name.
     /// </param>
-    public async Task<string> WriteAsync(
+    public Task<string> WriteAsync(
         EvaluationReport report, string? destination = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(report);
 
+        // Sortable, collision-free, and readable in a directory listing. The
+        // evaluation id is in the name as well as the body so a report can be
+        // matched to its stored run without opening it.
+        return WriteJsonAsync(
+            report,
+            destination,
+            $"{report.StartedAt.UtcDateTime:yyyyMMdd-HHmmss}-{report.EvaluationId:N}.json",
+            ct);
+    }
+
+    /// <summary>
+    /// Writes a retrieval-only report and returns the path it was written to.
+    /// </summary>
+    /// <remarks>
+    /// The name says <c>retrieval</c> rather than carrying an id, because there is
+    /// no evaluation run to match it to — and because a directory holding both
+    /// kinds should say which is which without either being opened.
+    /// </remarks>
+    public Task<string> WriteAsync(
+        RetrievalReport report, string? destination = null, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+
+        return WriteJsonAsync(
+            report,
+            destination,
+            $"{report.MeasuredAt.UtcDateTime:yyyyMMdd-HHmmss}-retrieval.json",
+            ct);
+    }
+
+    private async Task<string> WriteJsonAsync<T>(
+        T report, string? destination, string generatedName, CancellationToken ct)
+    {
         string path;
 
         if (string.IsNullOrWhiteSpace(destination))
         {
             Directory.CreateDirectory(ResultsDirectory);
-
-            // Sortable, collision-free, and readable in a directory listing. The
-            // evaluation id is in the name as well as the body so a report can be
-            // matched to its stored run without opening it.
-            path = Path.Combine(
-                ResultsDirectory,
-                $"{report.StartedAt.UtcDateTime:yyyyMMdd-HHmmss}-{report.EvaluationId:N}.json");
+            path = Path.Combine(ResultsDirectory, generatedName);
         }
         else
         {
