@@ -481,7 +481,7 @@ reported.
   `HybridRetriever` queried directly, and needs no `IChatProviderAdapter` call, in
   `tests/integration/RepoPilot.IntegrationTests/Evals/RetrievalOnlyEvaluationTests.cs` per SC-005,
   SC-007 (missing)
-- [ ] T144 Run the retrieval-only evaluation against the committed fixtures and commit its report to
+- [X] T144 Run the retrieval-only evaluation against the committed fixtures and commit its report to
   `evals/results/` as the first measured artefact per SC-007, plan: `evals/results/` (partial)
 - [ ] T145 Replace the README rows the measured report covers with their measured values, keeping
   every model-dependent row labelled as a target — advances T137 without closing it per Principle V
