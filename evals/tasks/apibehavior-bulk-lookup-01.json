@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-bulk-lookup-01",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "api_behavior",
+  "description": "The orders list draws one row per requested identifier, but a request containing an identifier that no longer exists comes back short, so every row after the missing one is drawn against the wrong order. The bulk lookup needs to keep a position for every identifier it was asked about.",
+  "relevantFiles": [
+    "src/Orders/OrderQueryService.cs"
+  ],
+  "baselineTestCommand": "unit-order-query",
+  "successTestCommand": "unit-order-query",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderQueryService.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-bulk-lookup-01.md"
+}

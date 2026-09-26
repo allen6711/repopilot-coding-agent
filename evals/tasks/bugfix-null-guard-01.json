@@ -1,0 +1,16 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-null-guard-01",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "bug_fix",
+  "description": "Looking up an order for a customer who has no shipping address on file throws instead of returning the order. The lookup should return the order with no shipping city or postal code rather than failing.",
+  "relevantFiles": ["src/Orders/OrderLookupService.cs"],
+  "baselineTestCommand": "unit",
+  "successTestCommand": "unit",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed",
+    "note": "Verified 2026-08-10: baseline is 2 passed / 1 failed with NullReferenceException at OrderLookupService.cs line 23."
+  },
+  "expectedChangedFiles": ["src/Orders/OrderLookupService.cs"],
+  "referencePatch": "_reference/bugfix-null-guard-01.md"
+}

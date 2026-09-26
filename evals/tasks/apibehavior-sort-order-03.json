@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-sort-order-03",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "api_behavior",
+  "description": "The orders list opens on the oldest orders in the system, which is never what an operator wants. It should open on the most recent, and orders placed on the same day must keep the order they arrived in rather than being shuffled.",
+  "relevantFiles": [
+    "src/Orders/OrderSorter.cs"
+  ],
+  "baselineTestCommand": "unit-order-sorter",
+  "successTestCommand": "unit-order-sorter",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderSorter.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-sort-order-03.md"
+}

@@ -1,0 +1,46 @@
+# Local development dependencies for RepoPilot.
+#
+# The API additionally needs access to a Docker daemon socket to create sandbox
+# containers for test execution (FR-021). That is the host daemon, not a service
+# defined here — a sandbox container is created per run and destroyed with it.
+
+services:
+  postgres:
+    # pgvector 0.8+ on PostgreSQL 17. This is the system of record for
+    # repository chunks and all run metadata (constitution, Technology section).
+    image: pgvector/pgvector:pg17
+    container_name: repopilot-postgres
+    environment:
+      POSTGRES_USER: repopilot
+      POSTGRES_PASSWORD: repopilot
+      POSTGRES_DB: repopilot
+      # Deterministic collation so index ordering does not drift between hosts,
+      # which SC-007 (identical retrieval metrics on repeat runs) depends on.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      # Overridable: a developer machine often already has something on 5432,
+      # and a compose file that cannot start is a worse default than a
+      # configurable port.
+      - "${REPOPILOT_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./.postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U repopilot -d repopilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  otel-collector:
+    # Receives run, stage, and capability spans plus token/cost metrics
+    # (constitution, Principle IV).
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: repopilot-otel
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./deployments/otel-collector.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    depends_on:
+      postgres:
+        condition: service_healthy

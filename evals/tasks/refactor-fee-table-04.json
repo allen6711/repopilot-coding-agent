@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "refactor-fee-table-04",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "refactor",
+  "description": "The processing fee rules are six near-identical branches differing only in a percentage, so adding a payment method means adding another branch and the rounding is spelled out six times. Give the rates a single definition. No fee may change.",
+  "relevantFiles": [
+    "src/Billing/FeeSchedule.cs"
+  ],
+  "baselineTestCommand": "unit-fee-schedule",
+  "successTestCommand": "unit-fee-schedule",
+  "successCondition": {
+    "type": "tests_pass"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/FeeSchedule.cs"
+  ],
+  "referencePatch": "_reference/refactor-fee-table-04.md"
+}

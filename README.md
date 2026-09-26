@@ -31,8 +31,9 @@ RepoPilot is designed to demonstrate:
         Task / Run Coordinator
                    |
                    v
-       Microsoft Agent Framework
-          single coding agent
+        Run Orchestrator owns
+       the loop; single agent
+       supplies one turn at a time
                    |
       +------------+-------------+
       |            |             |
@@ -68,7 +69,7 @@ MVP should use **one agent with a small set of well-defined tools**. Do not intr
 | Area | Technology |
 | --- | --- |
 | Backend | C#, ASP.NET Core |
-| Agent runtime | Microsoft Agent Framework |
+| Agent loop | Owned by `RunOrchestrator` in backend code. No orchestration framework: the loop is where stage transitions are decided, and Principle IV puts those in code that can be tested (constitution v2.0.0) |
 | Frontend | React, TypeScript |
 | Relational/vector store | PostgreSQL + pgvector |
 | Cache/state | Redis (only where justified) |
@@ -214,13 +215,76 @@ Each task should define ground truth:
 7. **Write approval coverage**  
    Must be 100% for repository write operations.
 
-Recommended development targets, not guaranteed outcomes:
+### Measured
 
-- evaluation tasks: 30;
-- Retrieval Recall@5: 80–90%;
-- retrieval-only completion baseline: approximately 35–50%;
-- tool-enabled completion: approximately 60–75%;
-- every write operation gated by approval: 100%.
+Facts about what is committed, checked by the test suite rather than asserted here.
+
+| Figure | Value | Where it comes from |
+|---|---|---|
+| Evaluation tasks in the committed set | **30** | `evals/tasks/`, floor enforced by `TaskSetCompletenessTests` |
+| Task mix | 8 bug fix, 6 input validation, 6 API behaviour, 5 refactor, 5 test | same |
+| Fixtures | 2 evaluation, 1 adversarial | `evals/fixtures/` |
+| File modifications outside a working copy, across the set | **0** | `EvaluationSetNoOutsideWritesTests` |
+| Retrieval Recall@5 over the committed task set | **83.3%** (25 / 30) | `evals/results/20260926-013445-retrieval.json` |
+
+**On that Recall@5 figure.** SC-005 asks for a relevant file in the top five for at least 80% of
+tasks, so **SC-005 is met** — on a measurement, not a target. It is reproducible: a second pass over
+an unchanged index produces a byte-identical report apart from its timestamp (SC-007).
+
+It is worth knowing how it got there, because the first measurement is also committed and reads
+70.0% (`20260926-011429-retrieval.json`). Measuring it is what found the reason: the lexical arm of
+hybrid search built its text query with `plainto_tsquery`, which ANDs every term, so a task
+description — a sentence of prose — matched no chunk at all and Reciprocal Rank Fusion had one arm to
+fuse. Nothing failed; retrieval simply ran at half strength, and no amount of reading the code had
+caught it. An OR of the query's lexemes moved four tasks.
+
+Five tasks still miss, with the paths each retrieved recorded in the report. That is a
+retrieval-quality question rather than a defect: the arm carrying them is
+`DeterministicEmbeddingAdapter`, the shipped default — a local hash-based embedding chosen so
+retrieval needs no credential and repeats exactly. It is the right default for reproducibility and it
+is not a semantic model.
+
+### Not yet measured
+
+These are development targets. No evaluation has been run against a model provider, so no value
+below has been observed — they are stated as expectations, and none of them may be quoted as an
+outcome (Principle V).
+
+| Figure | Target | Status |
+|---|---|---|
+| Retrieval-only completion baseline | ~35–50% | Not measured |
+| Tool-enabled completion | ~60–75% | Not measured |
+| Start of run to reviewable diff, p95 | under 3 min | Not measured |
+
+Recall@5 needs no model provider, because embeddings are deterministic and retrieval is a function
+of committed fixture content alone. Measuring it is therefore a separate mode, and the only thing it
+needs is an indexed fixture in a running database:
+
+```bash
+dotnet run --project src/RepoPilot.Evals -- --retrieval-only
+```
+
+The rows above need a provider credential, because each task is run twice through the agent:
+
+```bash
+dotnet run --project src/RepoPilot.Evals
+```
+
+Either writes a committed JSON report to `evals/results/` — the full harness carrying the summary
+figures and a per-task line with the run id behind each one, the retrieval-only mode carrying the
+per-task hits and the paths each one retrieved. Replace the rows above from that file, and leave
+anything the report does not cover labelled as a target.
+
+### Release gates
+
+Unlike the figures above, these block release rather than being reported.
+
+| Gate | Requirement | Enforcement |
+|---|---|---|
+| Write approval coverage | 100% of applied changes carry a matching decision record | `ApprovalCoverageGate` flags the evaluation and the CLI exits non-zero |
+| Successful out-of-workspace accesses | 0 | `RefusalReport`, counted from recorded refusals |
+
+Approval coverage below 100% is not published as a number and moved past; it fails the run.
 
 ## Testing
 
@@ -244,18 +308,32 @@ An end-to-end test must execute at least one seeded issue from task creation thr
 
 ## MVP acceptance criteria
 
-The MVP is complete only when:
+The MVP is complete only when every row below is met. The list carries status because the
+constitution makes it a gate rather than an aspiration: no stretch-goal work may begin until all of
+it holds, and a gate whose state a reader has to reverse-engineer from the code is not a gate.
 
-- a repository fixture can be indexed and searched;
-- the agent can call `search_code`, `read_file`, and `search_docs`;
-- the agent can produce a structured patch proposal;
-- no code change can be applied without a recorded approval;
-- approved patches apply only to a disposable workspace;
-- tests run inside Docker with a timeout and allow-listed command;
-- final diff and test output are visible in the React UI;
-- all tool calls are traceable by run ID;
-- a 30-task evaluation suite produces Retrieval Recall@5 and task-completion metrics;
-- a retrieval-only baseline and tool-enabled result can be compared reproducibly.
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | A repository fixture can be indexed and searched | **Met** | `Indexing/*Tests`, `Retrieval/HybridRetrieverTests` |
+| 2 | The agent can call `search_code`, `read_file`, and `search_docs` | **Met** | `ReadCapabilities`, `ToolInvokerTests` |
+| 3 | The agent can produce a structured patch proposal | **Met** | `ProposePatchCapability`, `ProposalValidatorTests` |
+| 4 | No code change can be applied without a recorded approval | **Met** | `ApprovalGateTests`, `SeededTaskFlowTests` |
+| 5 | Approved patches apply only to a disposable workspace | **Met** | `EvaluationSetNoOutsideWritesTests`, `FixtureIsReadOnlyTests` |
+| 6 | Tests run inside Docker with a timeout and allow-listed command | **Met** | `SandboxIsolationTests`, `SandboxTimeoutTests`, `AllowedCommandTests` |
+| 7 | Final diff and test output are visible in the React UI | **Met** | `DiffViewer`, `TestOutput`, and their Vitest suites |
+| 8 | All tool calls are traceable by run ID | **Met** | `RunEventSequenceTests`, `ReconstructabilityTests` |
+| 9 | A 30-task evaluation suite produces Retrieval Recall@5 **and** task-completion metrics | **Partly met** | Recall@5 measured at 83.3% in `evals/results/`; completion needs a provider credential |
+| 10 | A retrieval-only baseline and tool-enabled result can be compared reproducibly | **Not met** | `BaselineMode` runs both conditions and `EvaluationHarness` reports them separately, but no comparison has been produced — it needs a credential |
+
+Rows 9 and 10 are the whole of what remains, and both wait on the same thing: each figure requires
+every committed task run through the agent twice, which requires a model-provider credential. Nothing
+in the codebase blocks them.
+
+**Consequence for stretch goals.** The MVP criteria are therefore *not* met, so the constitution's
+Development Workflow section forbids beginning any of the stretch goals below — including a
+model-provider comparison, which is what swapping the deterministic embedding adapter for a semantic
+one would be. That work is the obvious next step for the five evaluation tasks whose relevant files
+are still missed, and it stays out of scope until rows 9 and 10 hold.
 
 ## Stretch goals
 

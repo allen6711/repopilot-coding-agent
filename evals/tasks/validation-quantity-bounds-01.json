@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-quantity-bounds-01",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "input_validation",
+  "description": "Orders are arriving with lines for zero units, which the warehouse cannot pick, and lines for tens of thousands of units, which belong to the wholesale channel. The permitted range is written down but nothing enforces it.",
+  "relevantFiles": [
+    "src/Orders/LineItemValidator.cs"
+  ],
+  "baselineTestCommand": "unit-line-item",
+  "successTestCommand": "unit-line-item",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/LineItemValidator.cs"
+  ],
+  "referencePatch": "_reference/validation-quantity-bounds-01.md"
+}

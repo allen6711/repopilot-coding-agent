@@ -1,0 +1,464 @@
+{
+  "measuredAt": "2026-09-26T01:34:45.79893+00:00",
+  "taskSetSize": 30,
+  "recallDepth": 5,
+  "relevantFileInTopFive": 25,
+  "recallAt5": 0.8333,
+  "tasks": [
+    {
+      "taskId": "apibehavior-bulk-lookup-01",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderQueryService.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/OrderQueryService.cs",
+        "src/Orders/RefundPolicy.cs",
+        "src/Orders/AddressValidator.cs"
+      ]
+    },
+    {
+      "taskId": "apibehavior-invoice-status-04",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/InvoiceStatusReporter.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/InvoiceStatusReporter.cs",
+        "src/Billing/RefundProcessor.cs",
+        "src/Billing/CurrencyCodeValidator.cs",
+        "src/Billing/AmountValidator.cs"
+      ]
+    },
+    {
+      "taskId": "apibehavior-page-size-cap-02",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderPaging.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderPaging.cs",
+        "src/Orders/OrderQueryService.cs",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "src/Orders/OrderProjection.cs"
+      ]
+    },
+    {
+      "taskId": "apibehavior-partial-refund-05",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/RefundProcessor.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/RefundProcessor.cs",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/ProrationCalculator.cs",
+        "src/Billing/CreditLimit.cs"
+      ]
+    },
+    {
+      "taskId": "apibehavior-sort-order-03",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderSorter.cs"
+      ],
+      "topPaths": [
+        "src/Orders/OrderSorter.cs",
+        "README.md",
+        "src/Orders/RefundPolicy.cs",
+        "src/Orders/OrderQueryService.cs",
+        "src/Orders/DiscountCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "apibehavior-statement-window-06",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/StatementPeriod.cs"
+      ],
+      "topPaths": [
+        "src/Billing/StatementPeriod.cs",
+        "src/Billing/BillingCycle.cs",
+        "README.md",
+        "src/Billing/ProrationCalculator.cs",
+        "src/Billing/DunningSchedule.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-discount-rounding-02",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/DiscountCalculator.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/DiscountCalculator.cs",
+        "tests/Orders.Tests/DiscountCalculatorTests.cs",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "src/Orders/RefundPolicy.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-invoice-numbering-07",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/InvoiceNumberAllocator.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/InvoiceNumberAllocator.cs",
+        "src/Billing/CardExpiryValidator.cs",
+        "src/Billing/StatementPeriod.cs",
+        "src/Billing/BillingCycle.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-null-guard-01",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderLookupService.cs"
+      ],
+      "topPaths": [
+        "src/Orders/OrderLookupService.cs",
+        "src/Orders/OrderProjection.cs",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "README.md",
+        "src/Orders/OrderSorter.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-order-total-04",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": false,
+      "relevantFiles": [
+        "src/Orders/OrderTotals.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderIdFormatter.cs",
+        "src/Orders/RefundPolicy.cs",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/OrderQueryService.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-proration-span-05",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/ProrationCalculator.cs"
+      ],
+      "topPaths": [
+        "src/Billing/ProrationCalculator.cs",
+        "README.md",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/DunningSchedule.cs",
+        "src/Billing/StatementPeriod.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-retry-exhaustion-08",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/PaymentRetryPolicy.cs"
+      ],
+      "topPaths": [
+        "src/Billing/PaymentRetryPolicy.cs",
+        "README.md",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/DunningSchedule.cs",
+        "src/Billing/StatementPeriod.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-status-transition-03",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderStatusMachine.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/LineItemValidator.cs",
+        "src/Orders/OrderStatusMachine.cs",
+        "src/Orders/AddressValidator.cs",
+        "src/Orders/OrderSorter.cs"
+      ]
+    },
+    {
+      "taskId": "bugfix-tax-exemption-06",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/TaxCalculator.cs"
+      ],
+      "topPaths": [
+        "src/Billing/TaxCalculator.cs",
+        "README.md",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/AmountValidator.cs",
+        "src/Billing/CreditLimit.cs"
+      ]
+    },
+    {
+      "taskId": "refactor-duplicate-projection-01",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/OrderProjection.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/OrderQueryService.cs",
+        "src/Orders/OrderProjection.cs",
+        "src/Orders/RefundPolicy.cs"
+      ]
+    },
+    {
+      "taskId": "refactor-fee-table-04",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": false,
+      "relevantFiles": [
+        "src/Billing/FeeSchedule.cs"
+      ],
+      "topPaths": [
+        "src/Billing/AmountValidator.cs",
+        "README.md",
+        "src/Billing/CardExpiryValidator.cs",
+        "src/Billing/PaymentRetryPolicy.cs",
+        "src/Billing/RefundProcessor.cs"
+      ]
+    },
+    {
+      "taskId": "refactor-magic-numbers-03",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/LoyaltyTiers.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/LoyaltyTiers.cs",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "src/Orders/LineItemValidator.cs",
+        "src/Orders/OrderQueryService.cs"
+      ]
+    },
+    {
+      "taskId": "refactor-nested-conditionals-02",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/ShippingCostRules.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "src/Orders/RefundPolicy.cs",
+        "src/Orders/ShippingCostRules.cs",
+        "src/Orders/DiscountCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "refactor-receipt-building-05",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": false,
+      "relevantFiles": [
+        "src/Billing/ReceiptFormatter.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        ".editorconfig",
+        "src/Billing/AmountValidator.cs",
+        "src/Billing/CardExpiryValidator.cs",
+        "src/Billing/ProrationCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "testwork-billing-cycle-expectation-04",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "tests/Billing.Tests/BillingCycleTests.cs",
+        "src/Billing/BillingCycle.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/ProrationCalculator.cs",
+        "src/Billing/CurrencyCodeValidator.cs",
+        "src/Billing/CardExpiryValidator.cs"
+      ]
+    },
+    {
+      "taskId": "testwork-credit-limit-boundary-05",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/CreditLimit.cs",
+        "tests/Billing.Tests/CreditLimitTests.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/CreditLimit.cs",
+        "src/Billing/PaymentRetryPolicy.cs",
+        "src/Billing/AmountValidator.cs",
+        "src/Billing/BillingCycle.cs"
+      ]
+    },
+    {
+      "taskId": "testwork-dunning-coverage-03",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/DunningSchedule.cs",
+        "tests/Billing.Tests/DunningScheduleTests.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/DunningSchedule.cs",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/AmountValidator.cs",
+        ".editorconfig"
+      ]
+    },
+    {
+      "taskId": "testwork-order-id-assertion-02",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "tests/Orders.Tests/OrderIdFormatterTests.cs",
+        "src/Orders/OrderIdFormatter.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderIdFormatter.cs",
+        "src/Orders/OrderQueryService.cs",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/CustomerNameNormalizer.cs"
+      ]
+    },
+    {
+      "taskId": "testwork-refund-boundary-01",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/RefundPolicy.cs",
+        "tests/Orders.Tests/RefundPolicyTests.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/RefundPolicy.cs",
+        ".editorconfig",
+        "src/Orders/CustomerNameNormalizer.cs",
+        "src/Orders/DiscountCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "validation-amount-precision-06",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/AmountValidator.cs"
+      ],
+      "topPaths": [
+        "src/Billing/AmountValidator.cs",
+        "README.md",
+        "src/Billing/TaxCalculator.cs",
+        "src/Billing/RefundProcessor.cs",
+        "src/Billing/CreditLimit.cs"
+      ]
+    },
+    {
+      "taskId": "validation-card-expiry-04",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/CardExpiryValidator.cs"
+      ],
+      "topPaths": [
+        "src/Billing/CardExpiryValidator.cs",
+        "README.md",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/CreditLimit.cs",
+        "src/Billing/ProrationCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "validation-currency-code-05",
+      "repositorySlug": "sample-dotnet-billing",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Billing/CurrencyCodeValidator.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Billing/AmountValidator.cs",
+        "src/Billing/CurrencyCodeValidator.cs",
+        "src/Billing/BillingCycle.cs",
+        "src/Billing/CardExpiryValidator.cs"
+      ]
+    },
+    {
+      "taskId": "validation-customer-name-03",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": true,
+      "relevantFiles": [
+        "src/Orders/CustomerNameNormalizer.cs"
+      ],
+      "topPaths": [
+        "src/Orders/CustomerNameNormalizer.cs",
+        "README.md",
+        "src/Orders/OrderIdFormatter.cs",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/OrderProjection.cs"
+      ]
+    },
+    {
+      "taskId": "validation-postal-code-02",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": false,
+      "relevantFiles": [
+        "src/Orders/AddressValidator.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/OrderStatusMachine.cs",
+        "src/Orders/RefundPolicy.cs",
+        "src/Orders/OrderIdFormatter.cs",
+        "src/Orders/DiscountCalculator.cs"
+      ]
+    },
+    {
+      "taskId": "validation-quantity-bounds-01",
+      "repositorySlug": "sample-dotnet-api",
+      "relevantFileInTop5": false,
+      "relevantFiles": [
+        "src/Orders/LineItemValidator.cs"
+      ],
+      "topPaths": [
+        "README.md",
+        "src/Orders/DiscountCalculator.cs",
+        "src/Orders/OrderSorter.cs",
+        "src/Orders/OrderIdFormatter.cs",
+        "src/Orders/RefundPolicy.cs"
+      ]
+    }
+  ]
+}

@@ -41,6 +41,12 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+
+# The adversarial fixture's .env is test data, not a credential. It has to be
+# committed: the indexer's secret exclusion is checked against it, and a file the
+# repository refuses to carry cannot be the thing that test reads (FR-025a,
+# SC-014).
+!evals/fixtures/adversarial-content/config/.env
 appsettings.Local.json
 **/appsettings.*.Local.json
 secrets.json
@@ -60,14 +66,19 @@ sandbox/tmp/
 evals/results/raw/
 evals/results/**/*.jsonl
 evals/results/**/*.trace.json
-evals/results/**/*.trace.json
- tl data volumes ----------
+
+# ---------- Disposable run working copies ----------
+# FR-024a: every run gets a working copy under the workspace root. These are
+# destroyed at terminal outcome (FR-026a) and must never be committed.
+.workspace/
+
+# ---------- Local data volumes ----------
 .postgres-data/
 .pgdata/
 .redis-data/
 
 # ---------- OS / editors ----------
-.D.D.D.re
+.DS_Store
 Thumbs.db
 .idea/
 .vscode/

@@ -1,50 +1,194 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: (uninitialized template) → 1.0.0
+- Bump rationale: Initial ratification. Every placeholder replaced with concrete,
+  project-specific governance derived from README.md.
+- Modified principles:
+  - [PRINCIPLE_1_NAME] → I. Human-Approved Writes (NON-NEGOTIABLE)
+  - [PRINCIPLE_2_NAME] → II. Sandboxed, Allow-Listed Execution
+  - [PRINCIPLE_3_NAME] → III. Minimal Agent, Constrained Tool Surface
+  - [PRINCIPLE_4_NAME] → IV. Explicit State, Full Traceability
+  - [PRINCIPLE_5_NAME] → V. Evidence Before Claims
+- Added sections:
+  - [SECTION_2_NAME] → Technology and Architecture Constraints
+  - [SECTION_3_NAME] → Development Workflow and Quality Gates
+- Removed sections: none
+- Deferred TODOs: none
+
+Amendment 1.0.0 → 1.0.1 (2026-08-10)
+- Bump rationale: PATCH — wording clarification, no change to any principle or governance rule.
+- Change: the mandatory test area "diff parsing and validation" is reworded to "proposal parsing
+  and validation including the change-content hash".
+- Why: the design settled on change proposals carrying full replacement content per file rather
+  than model-authored unified-diff hunks (see specs/001-governed-agent-run/research.md, decision 7).
+  There is consequently no diff parser in the system, and the original wording named a component
+  that does not exist — leaving a mandated test area with nothing to bind to. The reworded area
+  covers the same risk: that a proposed change is parsed, validated, and hash-bound before any
+  human sees it or any file is written.
+- Artifacts requiring follow-up: specs/001-governed-agent-run/tasks.md maps this area to its
+  validation and hashing tasks. No migration plan is required — Principles I, II, and V are
+  untouched.
+
+Amendment 1.0.1 → 2.0.0 (2026-08-20)
+- Bump rationale: MAJOR — a governance rule is relaxed. The versioning policy below makes any
+  relaxation MAJOR regardless of how narrow it is, and dropping a named MUST from the technology
+  constraints is a relaxation even though it is replaced by a stricter rule about the same thing.
+- Change: "agent runtime MUST be Microsoft Agent Framework" is removed. In its place, the agent
+  loop MUST be owned by backend code, and an orchestration framework MAY be used only for prompt
+  assembly, tool-definition marshalling, or provider transport — never to own the loop, decide a
+  stage transition, or invoke a write or execution capability.
+- Why: the two rules were in tension and the implementation could not satisfy both. Principle IV
+  requires every run lifecycle transition to be implemented explicitly in backend code and forbids
+  inferring one from model output. An agent framework's value is precisely that it owns the
+  tool-call loop — which is where stage transitions are decided. `RunOrchestrator` therefore drives
+  the loop itself, calling `IAgentTurnRunner` for one turn at a time, and the framework was left
+  with nothing to do. It was referenced as a package and used by no source file, which meant the
+  constraint read as satisfied in the dependency list while being unmet in the code. The rule that
+  survives is the one that carries the guarantee.
+- What this does NOT relax: provider access still sits behind an adapter, provider types still may
+  not reach Application or Domain, and Principle III's seven-capability surface is unchanged.
+  Adopting a framework later is permitted, and the new wording states the shape it must fit.
+- Artifacts requiring follow-up: `src/RepoPilot.Agent/RepoPilot.Agent.csproj` (unused
+  `Microsoft.Agents.AI` reference removed), `specs/001-governed-agent-run/plan.md` (constitution
+  check row and dependency list), `specs/001-governed-agent-run/research.md` (decision 1),
+  `specs/001-governed-agent-run/tasks.md` (T002, T047), `README.md` (stack table and diagram),
+  `tests/unit/RepoPilot.UnitTests/Architecture/LayeringTests.cs` (the namespace no longer needs an
+  allowance). All updated in the same change as this amendment.
+- Migration plan: none required. This amendment touches the Technology and Architecture Constraints
+  section, not Principles I, II, or V, and no run or stored record was created under the prior rule
+  that depends on it — the framework was never on any execution path.
+-->
+
+# RepoPilot Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Human-Approved Writes (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+No repository write operation may occur without an explicit, recorded human approval.
+`propose_patch` MUST NOT mutate any file. `apply_patch` MUST reject any invocation whose run has
+no stored approval record, and MUST apply changes only to a disposable working copy, never to a
+source repository or a shared branch. A rejected approval MUST leave the workspace byte-identical
+to its pre-proposal state. Every approval and rejection MUST be audit logged with run ID, actor,
+decision, timestamp, and the diff hash the decision applied to.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+Rationale: The project's value claim is trustworthiness, not autonomy. An unapproved write, even a
+correct one, invalidates the entire governance premise.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Sandboxed, Allow-Listed Execution
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+All code execution triggered by an agent run MUST happen inside an isolated Docker container with
+an enforced timeout and no credential access. Test commands MUST come from repository-specific
+configuration, never from model-generated strings. The model MUST NOT be given arbitrary shell
+access. File access MUST be confined to the configured workspace root: path traversal outside that
+root MUST be rejected before any I/O, and file-size and retrieved-context limits MUST be enforced
+at the tool boundary. Repository credentials and secrets MUST NEVER enter model context.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Rationale: An agent that can run arbitrary commands is an unbounded remote-execution surface; the
+sandbox and the allow list are what make the tool surface reasonable to reason about.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Minimal Agent, Constrained Tool Surface
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+The system MUST use the simplest agent pattern that satisfies the task. MVP MUST be one agent with
+the defined tool set: `list_files`, `search_code`, `read_file`, `search_docs`, `propose_patch`,
+`apply_patch`, `run_tests`. Adding a tool, an agent, or an orchestration layer requires a written
+justification citing measured evaluation evidence that the current design fails the task. A
+planner/coder/reviewer multi-agent architecture MUST NOT be introduced before MVP acceptance
+criteria are met and evaluation data supports it. Each tool MUST declare its permission class
+(read, no-direct-write, write-with-approval, sandbox-execution) and MUST be enforced at the call
+site, not by prompt instruction.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Rationale: Agent complexity is easy to add and hard to evaluate. Constraining the surface keeps
+failures attributable and keeps prompt-level "rules" from substituting for real enforcement.
+
+### IV. Explicit State, Full Traceability
+
+Run lifecycle transitions MUST be implemented explicitly in backend code and MUST NOT be inferred
+from natural-language model output. Every state change MUST be persisted and legal per the run
+state machine; illegal transitions MUST fail loudly rather than degrade. Every tool call MUST
+record tool name, run ID, arguments summary, start/end timing, and status. Runs MUST emit
+OpenTelemetry traces covering latency, tool calls, errors, and token/cost metadata where the
+provider exposes it. A completed run MUST be reconstructable from its stored events alone.
+
+Rationale: If the state lives only in the model's text, the system cannot be debugged, audited, or
+evaluated — and cannot be trusted with a write gate.
+
+### V. Evidence Before Claims
+
+Performance and capability numbers MUST be measured before they are published anywhere, including
+README, UI, and project write-ups. Target values MUST be labelled as targets and MUST NOT be
+presented as outcomes. Correctness claims about the agent MUST be backed by the committed
+evaluation dataset of at least 30 reproducible tasks with defined ground truth. Metrics MUST be
+reproducible from committed fixtures and task definitions, and reference patches MUST be kept out
+of model context. Write approval coverage MUST measure 100%; any value below 100% is a release
+blocker, not a metric to report.
+
+Rationale: An unevaluated agent claim is a guess. The evaluation set is the only thing separating
+this project from a demo.
+
+## Technology and Architecture Constraints
+
+- Backend MUST be C# / ASP.NET Core; frontend MUST be React with TypeScript.
+- The agent loop MUST be owned by backend code. An agent-orchestration framework MAY be used for
+  prompt assembly, tool-definition marshalling, or provider transport, but MUST NOT own the run
+  loop, decide a stage transition, or invoke a write or execution capability. Where a framework
+  cannot be confined to that role, it MUST NOT be adopted: Principle IV is the constraint the
+  framework has to fit, not the other way round.
+- PostgreSQL with pgvector is the system of record for repository chunks and run metadata. Redis
+  MAY be used only for short-lived run or cache state, and only where a written justification
+  exists.
+- Model-provider access MUST sit behind an adapter interface. Provider-specific types, prompts,
+  and SDK calls MUST NOT leak into Application or Domain layers.
+- Retrieval indexing MUST exclude binaries, build artifacts, dependency directories, secrets, and
+  files beyond configured size limits. A retrieval result MUST carry repository-relative path,
+  chunk identifier, content, start/end line, and score.
+- All source code, identifiers, comments, commit messages, documentation, specs, and generated
+  artifacts MUST be written in English, regardless of the language used in conversation with
+  contributors or agents.
+
+## Development Workflow and Quality Gates
+
+- The following MUST have automated tests before the related feature is considered complete: path
+  allow-list validation, file-size and context-size limits, run-state transitions, approval
+  required before `apply_patch`, rejected approval never applying a patch, tool-call audit
+  records, retrieval filtering, proposal parsing and validation including the change-content hash,
+  allowed test-command enforcement, Docker sandbox timeout behavior, and evaluation metric
+  calculation.
+- Integration tests MUST cover PostgreSQL/pgvector and the sandbox runner. At least one end-to-end
+  test MUST run a seeded task from creation through approval, patch application, test execution,
+  and final result.
+- CI MUST run on GitHub Actions and MUST block merge on failing tests.
+- Security-relevant changes — tool permissions, path validation, approval flow, sandbox
+  configuration, secret handling — MUST be reviewed against Principles I and II explicitly, and
+  the review MUST state which tests cover the change.
+- Work MUST NOT begin on any stretch goal (Entra ID/OIDC, RBAC, GitHub App, checkpoint/resume,
+  reviewer agent, MCP exposure, provider comparison) until the MVP acceptance criteria in README
+  are met.
+- Explicit non-goals in README MUST be treated as out of scope; proposing work against them
+  requires a constitution amendment, not a pull-request argument.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes other practices, conventions, and preferences in this repository.
+Where a template, prompt, or command conflicts with it, this document wins and the conflicting
+artifact MUST be corrected.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Amendment procedure: an amendment MUST be proposed as a pull request that changes this file,
+states the rationale, and lists every artifact requiring follow-up (templates, commands, tests,
+README). Amendments touching Principles I, II, or V additionally require a stated migration plan
+covering runs and data created under the prior rules. Amendments take effect on merge.
+
+Versioning policy follows semantic versioning of governance impact:
+
+- MAJOR — a principle is removed or redefined in a backward-incompatible way, or a governance rule
+  is relaxed.
+- MINOR — a principle or section is added, or existing guidance is materially expanded.
+- PATCH — clarifications, wording, and non-semantic refinement.
+
+Compliance review: every pull request MUST verify compliance with these principles before merge.
+Added complexity MUST be justified in the pull request against Principle III. Any deviation MUST
+be recorded in the pull request with an expiry condition — undocumented deviations are defects.
+Runtime development guidance for agents lives in the Spec Kit templates under `.specify/`; those
+templates read this constitution and MUST NOT contradict it.
+
+**Version**: 2.0.0 | **Ratified**: 2026-08-09 | **Last Amended**: 2026-08-20

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-retry-exhaustion-08",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "bug_fix",
+  "description": "Dunning is retrying failed payments without ever stopping. Asking the retry schedule for an attempt that does not exist answers with a zero-day delay, and the caller reads that as retry immediately rather than as there being no further attempt.",
+  "relevantFiles": [
+    "src/Billing/PaymentRetryPolicy.cs"
+  ],
+  "baselineTestCommand": "unit-payment-retry",
+  "successTestCommand": "unit-payment-retry",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/PaymentRetryPolicy.cs"
+  ],
+  "referencePatch": "_reference/bugfix-retry-exhaustion-08.md"
+}

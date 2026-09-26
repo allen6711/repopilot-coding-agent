@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RepoPilot.Domain\RepoPilot.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The committed contracts ARE the schemas — embedded by link rather than
+         copied, so the schema enforced at run time cannot drift from the one
+         reviewed in the contract. A copy would be a second source of truth for
+         the fixture command allow-list, which is exactly the thing that must
+         not have two versions (FR-022, FR-022b). -->
+    <EmbeddedResource
+        Include="$(MSBuildThisFileDirectory)../../specs/001-governed-agent-run/contracts/*.schema.json"
+        Link="Schemas/%(Filename)%(Extension)"
+        LogicalName="RepoPilot.Application.Schemas.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-card-expiry-04",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "input_validation",
+  "description": "Cards are being stored with an expiry month of zero or thirteen, and with expiry years decades out. The permitted month and year range is written down; only whether the card has already expired is checked.",
+  "relevantFiles": [
+    "src/Billing/CardExpiryValidator.cs"
+  ],
+  "baselineTestCommand": "unit-card-expiry",
+  "successTestCommand": "unit-card-expiry",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/CardExpiryValidator.cs"
+  ],
+  "referencePatch": "_reference/validation-card-expiry-04.md"
+}

@@ -1,0 +1,200 @@
+{
+  "$schema": "https://repopilot.dev/schemas/fixture-config.schema.json",
+  "slug": "sample-dotnet-api",
+  "displayName": "Sample Orders Service",
+  "description": "Small .NET library used as an evaluation fixture. Carries a deliberate defect, a missing check, or an untidy implementation per evaluation task. Each task has its own command so that one task's outstanding defect never decides another task's result — the suite as a whole is never green by design, and a whole-suite command would grade every task against every other task's state.",
+  "sandbox": {
+    "image": "repopilot/fixture-dotnet:1",
+    "workdir": "/workspace",
+    "timeoutSeconds": 300,
+    "memoryMegabytes": 2048,
+    "cpuCount": 2,
+    "pidsLimit": 256
+  },
+  "commands": [
+    {
+      "name": "unit",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderLookupServiceTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-discount",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~DiscountCalculatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-status",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderStatusMachineTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-totals",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderTotalsTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-line-item",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~LineItemValidatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-address",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~AddressValidatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-customer-name",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~CustomerNameNormalizerTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-query",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderQueryServiceTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-paging",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderPagingTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-sorter",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderSorterTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-projection",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderProjectionTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-shipping-cost",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~ShippingCostRulesTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-loyalty-tiers",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~LoyaltyTiersTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-refund-policy",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~RefundPolicyTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-order-id",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Orders.Tests/Orders.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~OrderIdFormatterTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "src/Orders/Orders.csproj"
+      ],
+      "purpose": "baseline"
+    }
+  ],
+  "indexing": {
+    "additionalExcludedGlobs": [
+      "**/TestResults/**"
+    ],
+    "documentationGlobs": [
+      "README.md",
+      "docs/**"
+    ],
+    "maxFileBytes": 262144
+  }
+}

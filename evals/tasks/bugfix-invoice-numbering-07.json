@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-invoice-numbering-07",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "bug_fix",
+  "description": "The first invoice raised in a year is numbered 00000 and every number after it is one behind where the finance team expects. Numbering is meant to start at one in each calendar year.",
+  "relevantFiles": [
+    "src/Billing/InvoiceNumberAllocator.cs"
+  ],
+  "baselineTestCommand": "unit-invoice-number",
+  "successTestCommand": "unit-invoice-number",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/InvoiceNumberAllocator.cs"
+  ],
+  "referencePatch": "_reference/bugfix-invoice-numbering-07.md"
+}

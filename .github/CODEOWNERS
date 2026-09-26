@@ -1,0 +1,18 @@
+# FR-022b: a fixture's test configuration is the sole source of commands the
+# sandbox may execute. It must not be changeable without the same review as
+# source code, because widening the allow-list widens what the agent can run.
+/evals/fixtures/**/repopilot.fixture.json  @allen
+
+# FR-031, FR-035: the committed evaluation task set and its reference patches
+# are the ground truth behind every published capability claim (Principle V).
+/evals/tasks/                              @allen
+
+# The governance primitives. A change here changes what Principles I and II
+# actually enforce, not just how they are implemented.
+/src/RepoPilot.Domain/Workspace/           @allen
+/src/RepoPilot.Domain/Security/            @allen
+/src/RepoPilot.Domain/Proposals/           @allen
+/src/RepoPilot.Domain/Runs/                @allen
+
+# Governance documents.
+/.specify/memory/constitution.md           @allen

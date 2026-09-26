@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-page-size-cap-02",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "api_behavior",
+  "description": "A caller asking for a page of five thousand orders gets a page of five thousand orders and the list screen stalls for everyone. There is a maximum page size the service is meant to serve; nothing applies it.",
+  "relevantFiles": [
+    "src/Orders/OrderPaging.cs"
+  ],
+  "baselineTestCommand": "unit-order-paging",
+  "successTestCommand": "unit-order-paging",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderPaging.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-page-size-cap-02.md"
+}

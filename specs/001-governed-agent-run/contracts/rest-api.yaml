@@ -1,0 +1,620 @@
+openapi: 3.1.0
+info:
+  title: RepoPilot API
+  version: 0.1.0
+  description: >-
+    HTTP surface for the governed agent run flow. Every endpoint that could cause a file
+    modification is gated on a recorded approval decision bound to a proposal diff hash.
+    Authentication and role-based access control are out of scope for this feature; the
+    reviewer identity recorded on an approval comes from whatever identity the deployment
+    supplies via the X-Actor header or an authenticating proxy.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: repositories
+  - name: runs
+  - name: evaluations
+
+paths:
+  /api/repositories:
+    get:
+      tags: [repositories]
+      summary: List registered repository fixtures
+      operationId: listRepositories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Repository" }
+    post:
+      tags: [repositories]
+      summary: Register a repository fixture from the configured allowed set
+      operationId: registerRepository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug]
+              properties:
+                slug:
+                  type: string
+                  description: Must appear in the configured allowed set (FR-001)
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repository" }
+        "409":
+          description: Already registered
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "422":
+          description: Slug is not in the allowed set — registration refused
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/repositories/{repositoryId}:
+    get:
+      tags: [repositories]
+      summary: Read a repository fixture and its indexing status
+      operationId: getRepository
+      parameters:
+        - $ref: "#/components/parameters/RepositoryId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repository" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/repositories/{repositoryId}/index:
+    post:
+      tags: [repositories]
+      summary: Build or rebuild the retrieval index
+      description: >-
+        Always a full rebuild with atomic replacement. Searches issued during the rebuild
+        continue to return results from the previous index until the swap completes (FR-003a).
+      operationId: indexRepository
+      parameters:
+        - $ref: "#/components/parameters/RepositoryId"
+      responses:
+        "202":
+          description: Indexing started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IndexingStatus" }
+        "409":
+          description: An index rebuild is already in progress
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/repositories/{repositoryId}/search:
+    get:
+      tags: [repositories]
+      summary: Search the active index (hybrid lexical + vector, RRF-fused)
+      operationId: searchRepository
+      parameters:
+        - $ref: "#/components/parameters/RepositoryId"
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RetrievalResult" }
+        "409":
+          description: Repository has never been indexed, or has zero indexed files
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/runs:
+    get:
+      tags: [runs]
+      summary: List runs
+      operationId: listRuns
+      parameters:
+        - name: repositoryId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: stage
+          in: query
+          schema: { $ref: "#/components/schemas/RunStage" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RunSummary" }
+    post:
+      tags: [runs]
+      summary: Create a coding-agent run
+      description: >-
+        Accepted immediately and queued. Runs beyond the configured concurrent-execution limit
+        wait in the queue rather than being refused (FR-013a).
+      operationId: createRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repositoryId]
+              properties:
+                repositoryId: { type: string, format: uuid }
+                taskDescription:
+                  type: string
+                  description: Required unless seededTaskId is supplied
+                seededTaskId:
+                  type: string
+                  description: Identifier from the committed evaluation task set
+                toolsEnabled:
+                  type: boolean
+                  default: true
+                  description: false runs the retrieval-only baseline (FR-033)
+      responses:
+        "202":
+          description: Run created and queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "409":
+          description: Repository is not indexed, or has zero indexed files
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "422":
+          description: Neither taskDescription nor seededTaskId supplied
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/runs/{runId}:
+    get:
+      tags: [runs]
+      summary: Read the current state and result of a run
+      operationId: getRun
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/runs/{runId}/cancel:
+    post:
+      tags: [runs]
+      summary: Abandon a run
+      description: >-
+        Ends the run as cancelled from any non-terminal stage, including while awaiting
+        approval, and records who abandoned it and when (FR-008a). The working copy is
+        destroyed (FR-026a).
+      operationId: cancelRun
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/Actor"
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "409":
+          description: Run has already reached a terminal outcome
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/runs/{runId}/events:
+    get:
+      tags: [runs]
+      summary: Stream run events (Server-Sent Events)
+      description: >-
+        Push stream of stage transitions and recorded actions. Each frame carries the event
+        sequence as its SSE id. A client reconnecting with Last-Event-ID receives the persisted
+        events after that sequence before attaching to the live stream (FR-028a, SC-013).
+        Also available as a plain JSON list via Accept: application/json.
+      operationId: streamRunEvents
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - name: Last-Event-ID
+          in: header
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RunEvent" }
+
+  /api/runs/{runId}/proposal:
+    get:
+      tags: [runs]
+      summary: Read the current change proposal awaiting a decision
+      description: >-
+        Returns the affected file list and the full unified diff so a reviewer can decide
+        without leaving the review view (SC-004).
+      operationId: getCurrentProposal
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChangeProposal" }
+        "404":
+          description: No proposal exists for this run
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/runs/{runId}/approval:
+    post:
+      tags: [runs]
+      summary: Approve or reject a proposed change
+      description: >-
+        The only endpoint that can unlock a file write. diffHash must equal the hash of the
+        proposal being decided; a mismatch means the reviewer is deciding on content other than
+        what will be applied and is refused (FR-020). A proposal that already has a decision is
+        refused regardless of the new decision's value (FR-018).
+      operationId: decideProposal
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/Actor"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [proposalId, decision, diffHash]
+              properties:
+                proposalId: { type: string, format: uuid }
+                decision: { type: string, enum: [approve, reject] }
+                diffHash:
+                  type: string
+                  pattern: "^[a-f0-9]{64}$"
+                  description: The hash shown to the approver
+      responses:
+        "201":
+          description: Decision recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApprovalDecision" }
+        "409":
+          description: Proposal already decided (FR-018)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "422":
+          description: >-
+            diffHash does not match the stored proposal (FR-020a), X-Actor is absent or empty
+            (FR-015a), or programmatic mode was requested for an interactive run (FR-015b)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/runs/{runId}/diff:
+    get:
+      tags: [runs]
+      summary: Read the proposed or final diff
+      operationId: getRunDiff
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - name: attempt
+          in: query
+          description: Revision attempt; defaults to the latest
+          schema: { type: integer, minimum: 0, maximum: 2 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChangeProposal" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/runs/{runId}/tests:
+    get:
+      tags: [runs]
+      summary: Read test results for the run
+      operationId: getRunTests
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TestResult" }
+
+  /api/evaluations:
+    post:
+      tags: [evaluations]
+      summary: Run the committed evaluation task set
+      description: >-
+        Executes every committed task twice — once retrieval-only and once tool-enabled —
+        through the same orchestrator path as interactive runs, with approval satisfied
+        programmatically and still recorded as an approval decision (FR-034, SC-001).
+      operationId: startEvaluation
+      responses:
+        "202":
+          description: Evaluation started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EvaluationRun" }
+
+  /api/evaluations/{evaluationId}:
+    get:
+      tags: [evaluations]
+      summary: Read evaluation metrics
+      operationId: getEvaluation
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EvaluationRun" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  parameters:
+    RepositoryId:
+      name: repositoryId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    RunId:
+      name: runId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Actor:
+      name: X-Actor
+      in: header
+      required: true
+      description: >-
+        Identity recorded on the decision or cancellation. Required and non-empty — a request
+        without it is refused (FR-015a, SC-015). Supplied by the deployment and recorded as
+        attributable but not verified; authentication is out of scope for this feature.
+      schema: { type: string, minLength: 1 }
+
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 problem details
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    RunStage:
+      type: string
+      enum:
+        [created, retrieving, planning, proposing, awaiting_approval, applying, testing,
+         succeeded, failed, rejected, cancelled, no_change]
+
+    TerminalOutcome:
+      type: string
+      enum: [succeeded, failed, rejected, cancelled, no_change]
+
+    Repository:
+      type: object
+      required: [id, slug, indexingStatus]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        displayName: { type: string }
+        indexingStatus:
+          type: string
+          enum: [never_indexed, indexing, indexed, failed]
+        activeIndexVersion: { type: [integer, "null"] }
+        includedFileCount: { type: integer }
+        excludedFileCount: { type: integer }
+        exclusionBreakdown:
+          type: object
+          additionalProperties: { type: integer }
+        lastIndexedAt: { type: [string, "null"], format: date-time }
+        testCommands:
+          type: array
+          items: { type: string }
+
+    IndexingStatus:
+      type: object
+      properties:
+        repositoryId: { type: string, format: uuid }
+        status: { type: string, enum: [indexing, indexed, failed] }
+        includedFileCount: { type: integer }
+        excludedFileCount: { type: integer }
+        exclusionBreakdown:
+          type: object
+          additionalProperties: { type: integer }
+
+    RetrievalResult:
+      type: object
+      required: [relativePath, chunkId, content, startLine, endLine, score]
+      properties:
+        relativePath: { type: string }
+        chunkId: { type: string, format: uuid }
+        content: { type: string }
+        startLine: { type: integer }
+        endLine: { type: integer }
+        score: { type: number, format: double }
+        language: { type: [string, "null"] }
+
+    RunSummary:
+      type: object
+      required: [id, repositoryId, taskDescription, stage, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        repositoryId: { type: string, format: uuid }
+        taskDescription: { type: string }
+        stage: { $ref: "#/components/schemas/RunStage" }
+        terminalOutcome:
+          oneOf:
+            - $ref: "#/components/schemas/TerminalOutcome"
+            - type: "null"
+        createdAt: { type: string, format: date-time }
+
+    Run:
+      allOf:
+        - $ref: "#/components/schemas/RunSummary"
+        - type: object
+          required: [revisionAttempt, toolsEnabled]
+          properties:
+            outcomeReason: { type: [string, "null"] }
+            failureStage:
+              oneOf:
+                - $ref: "#/components/schemas/RunStage"
+                - type: "null"
+            revisionAttempt: { type: integer, minimum: 0, maximum: 2 }
+            toolsEnabled: { type: boolean }
+            plan: { type: [string, "null"] }
+            startedAt: { type: [string, "null"], format: date-time }
+            endedAt: { type: [string, "null"], format: date-time }
+
+    RunEvent:
+      type: object
+      required: [id, sequence, eventType, status, startedAt]
+      properties:
+        id: { type: string, format: uuid }
+        sequence: { type: integer, format: int64 }
+        eventType:
+          type: string
+          enum:
+            [stage_changed, stage_transition_rejected, tool_call, plan_produced,
+             proposal_created, approval_recorded, patch_applied, tests_completed,
+             run_failed, run_ended]
+        toolName: { type: [string, "null"] }
+        argumentsSummary: { type: [object, "null"] }
+        status: { type: string, enum: [succeeded, failed] }
+        errorMessage: { type: [string, "null"] }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: [string, "null"], format: date-time }
+        durationMs: { type: [integer, "null"] }
+
+    ProposalEntry:
+      type: object
+      required: [path, operation]
+      properties:
+        path: { type: string }
+        operation: { type: string, enum: [create, modify] }
+
+    ChangeProposal:
+      type: object
+      required: [id, runId, affectedPaths, unifiedDiff, diffHash, decisionStatus]
+      properties:
+        id: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        revisionAttempt: { type: integer }
+        affectedPaths:
+          type: array
+          items: { type: string }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/ProposalEntry" }
+        unifiedDiff: { type: string }
+        diffHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+        decisionStatus: { type: string, enum: [pending, approved, rejected] }
+        createdAt: { type: string, format: date-time }
+
+    ApprovalDecision:
+      type: object
+      required: [id, runId, proposalId, decision, diffHash, decidedBy, decidedAt]
+      properties:
+        id: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        proposalId: { type: string, format: uuid }
+        decision: { type: string, enum: [approve, reject] }
+        diffHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+        decidedBy: { type: string }
+        decidedAt: { type: string, format: date-time }
+        mode: { type: string, enum: [interactive, programmatic] }
+
+    TestResult:
+      type: object
+      required: [id, runId, commandName, passed, durationMs, timedOut]
+      properties:
+        id: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        revisionAttempt: { type: integer }
+        commandName: { type: string }
+        passed: { type: boolean }
+        exitCode: { type: [integer, "null"] }
+        output: { type: string }
+        durationMs: { type: integer }
+        timedOut: { type: boolean }
+
+    EvaluationRun:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: [string, "null"], format: date-time }
+        taskCount: { type: integer }
+        recallAt5: { type: [number, "null"] }
+        completionRateToolEnabled: { type: [number, "null"] }
+        completionRateBaseline: { type: [number, "null"] }
+        approvalCoverage: { type: [number, "null"] }
+        interactiveApprovals:
+          type: integer
+          description: >-
+            Decisions a person made. Reported separately from programmatic ones so a
+            programmatic decision is never presented as a human one (SC-001).
+        programmaticApprovals:
+          type: integer
+          description: Decisions the evaluation harness made (FR-015b, SC-001)
+        toolSuccessRate: { type: [number, "null"] }
+        avgToolCallsPerCompletedTask: { type: [number, "null"] }
+        p50LatencyMs: { type: [integer, "null"] }
+        p95LatencyMs: { type: [integer, "null"] }
+        flagged:
+          type: boolean
+          description: true when approval coverage is below 100% (FR-034, SC-001)

@@ -1,0 +1,69 @@
+# Sandbox image for .NET repository fixtures.
+#
+# Principle II: this container runs with --network none, a read-only root
+# filesystem, all capabilities dropped, and a non-root user. Nothing can be
+# fetched at test time, so every dependency must already be present in the
+# image. A fixture whose tests need a network fetch is not a valid fixture.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+# Non-root. The working copy is bind-mounted at /workspace and is the only
+# writable path the test process is given.
+# The sandbox runs as UID 1000 -- DockerSandboxRunner passes User="1000:1000"
+# unconditionally, so the image must have a usable home for that UID. Several
+# official base images already ship a user there (the SDK image, node), so
+# creating one blindly fails the build. Adopt whoever holds it, or create one.
+RUN if id -u 1000 >/dev/null 2>&1; then \
+        existing="$(id -un 1000)"; \
+    else \
+        useradd --uid 1000 --create-home --shell /bin/bash runner; \
+        existing=runner; \
+    fi && \
+    mkdir -p /home/runner && \
+    chown -R 1000:1000 /home/runner && \
+    usermod --home /home/runner "$existing"
+
+# Warm the NuGet cache with the packages the sample fixtures need.
+#
+# Warming the cache is necessary but not sufficient: a project still needs its
+# own obj/project.assets.json, which only restore produces, and which lives in
+# the run's working copy -- created fresh for every run. So fixtures run restore
+# rather than skipping it, and nuget-offline.config makes that restore resolve
+# from this cache alone.
+COPY sandbox/nuget-warmup/ /tmp/warmup/
+# Not guarded by a file-exists check. A missing warmup project must fail the
+# build here, loudly, rather than produce an image whose tests fail later with
+# a restore error -- which reads as a broken fixture rather than a broken image.
+RUN dotnet restore /tmp/warmup/warmup.csproj --packages /home/runner/.nuget/packages && \
+    chown -R 1000:1000 /home/runner/.nuget && \
+    rm -rf /tmp/warmup
+
+# The SDK writes first-run sentinels and scratch state under its CLI home on
+# every invocation, and the root filesystem is read-only at test time. Pointing
+# that at the tmpfs the sandbox already mounts keeps the write inside the one
+# writable, non-executable, per-container path rather than requiring a hole in
+# the read-only root. The package cache stays in the image, where it only needs
+# to be read.
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    DOTNET_CLI_HOME=/tmp/dotnet-cli \
+    NUGET_PACKAGES=/home/runner/.nuget/packages \
+    NUGET_HTTP_CACHE_PATH=/tmp/nuget-http \
+    NUGET_SCRATCH=/tmp/nuget-scratch \
+    RESTORE_CONFIG_FILE=/etc/repopilot/nuget-offline.config \
+    DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=1 \
+    NuGetAudit=false
+
+# NuGetAudit reaches nuget.org for vulnerability data. With no network that is
+# only a warning, but the warning lands in stored test output and in model
+# context on a revision -- noise that describes the sandbox rather than the
+# code under test.
+
+# Restore resolves from the baked cache only; there is no source to reach.
+COPY sandbox/nuget-offline.config /etc/repopilot/nuget-offline.config
+
+USER 1000:1000
+WORKDIR /workspace
+
+# No ENTRYPOINT: the command comes from the fixture's committed allow-list as an
+# argument vector (FR-022a), never from a shell string and never from the model.

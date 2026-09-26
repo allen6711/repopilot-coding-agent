@@ -1,0 +1,200 @@
+{
+  "$schema": "https://repopilot.dev/schemas/fixture-config.schema.json",
+  "slug": "sample-dotnet-billing",
+  "displayName": "Sample Billing Service",
+  "description": "Small .NET library used as an evaluation fixture. Carries a deliberate defect, a missing check, or an untidy implementation per evaluation task. Each task has its own command so that one task's outstanding defect never decides another task's result — the suite as a whole is never green by design, and a whole-suite command would grade every task against every other task's state.",
+  "sandbox": {
+    "image": "repopilot/fixture-dotnet:1",
+    "workdir": "/workspace",
+    "timeoutSeconds": 300,
+    "memoryMegabytes": 2048,
+    "cpuCount": 2,
+    "pidsLimit": 256
+  },
+  "commands": [
+    {
+      "name": "unit-proration",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~ProrationCalculatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-tax",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~TaxCalculatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-invoice-number",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~InvoiceNumberAllocatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-payment-retry",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~PaymentRetryPolicyTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-card-expiry",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~CardExpiryValidatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-currency-code",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~CurrencyCodeValidatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-amount",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~AmountValidatorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-invoice-status",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~InvoiceStatusReporterTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-refund",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~RefundProcessorTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-statement-period",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~StatementPeriodTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-fee-schedule",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~FeeScheduleTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-receipt",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~ReceiptFormatterTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-dunning",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~DunningScheduleTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-billing-cycle",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~BillingCycleTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "unit-credit-limit",
+      "argv": [
+        "dotnet",
+        "test",
+        "tests/Billing.Tests/Billing.Tests.csproj",
+        "--filter",
+        "FullyQualifiedName~CreditLimitTests"
+      ],
+      "purpose": "verify"
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "src/Billing/Billing.csproj"
+      ],
+      "purpose": "baseline"
+    }
+  ],
+  "indexing": {
+    "additionalExcludedGlobs": [
+      "**/TestResults/**"
+    ],
+    "documentationGlobs": [
+      "README.md",
+      "docs/**"
+    ],
+    "maxFileBytes": 262144
+  }
+}

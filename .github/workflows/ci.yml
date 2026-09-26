@@ -1,0 +1,97 @@
+name: CI
+
+# The constitution requires CI to block merge on failing tests.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # The Docker-gated tests skip locally when no daemon is present. A daemon is
+  # available here, so make them incapable of skipping: a governance control that
+  # skips everywhere is a control that is never verified.
+  REPOPILOT_REQUIRE_DOCKER: "1"
+
+jobs:
+  backend:
+    name: Backend (build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -warnaserror
+
+      - name: Unit tests
+        run: >-
+          dotnet test tests/unit/RepoPilot.UnitTests/RepoPilot.UnitTests.csproj
+          --no-build --verbosity normal
+
+      # Built before the end-to-end tests because they need it and will otherwise
+      # skip. It is the image the sandbox actually runs, so building it here is
+      # also the only check that sandbox/Dockerfile.dotnet still builds.
+      - name: Build the sandbox fixture image
+        run: docker build -f sandbox/Dockerfile.dotnet -t repopilot/fixture-dotnet:1 .
+
+      - name: Integration tests
+        run: >-
+          dotnet test tests/integration/RepoPilot.IntegrationTests/RepoPilot.IntegrationTests.csproj
+          --no-build --verbosity normal
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory ${{ github.workspace }}/TestResults
+
+      - name: End-to-end tests
+        run: >-
+          dotnet test tests/e2e/RepoPilot.E2ETests/RepoPilot.E2ETests.csproj
+          --no-build --verbosity normal
+          --logger "trx;LogFileName=e2e.trx"
+          --results-directory ${{ github.workspace }}/TestResults
+
+      # A skip in CI is either acceptable or a silently unverified control, and
+      # the difference is the reason. Anything gated on a daemon or on the
+      # sandbox image must run here; only a missing model-provider credential is
+      # allowed to skip, because no credential is available to a pull request
+      # and the tests that need one measure latency rather than a control.
+      - name: Assert no control was left unverified
+        run: python3 .github/scripts/check_skips.py TestResults/integration.trx TestResults/e2e.trx
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+
+  frontend:
+    name: Frontend (build + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/repopilot-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: web/repopilot-ui/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build
+      - run: pnpm test --run

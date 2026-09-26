@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RepoPilot.Agent/RepoPilot.Agent.csproj" />
+    <Project Path="src/RepoPilot.Api/RepoPilot.Api.csproj" />
+    <Project Path="src/RepoPilot.Application/RepoPilot.Application.csproj" />
+    <Project Path="src/RepoPilot.Domain/RepoPilot.Domain.csproj" />
+    <Project Path="src/RepoPilot.Evals/RepoPilot.Evals.csproj" />
+    <Project Path="src/RepoPilot.Infrastructure/RepoPilot.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/e2e/">
+    <Project Path="tests/e2e/RepoPilot.E2ETests/RepoPilot.E2ETests.csproj" />
+  </Folder>
+  <Folder Name="/tests/integration/">
+    <Project Path="tests/integration/RepoPilot.IntegrationTests/RepoPilot.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/RepoPilot.UnitTests/RepoPilot.UnitTests.csproj" />
+  </Folder>
+</Solution>

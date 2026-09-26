@@ -1,0 +1,948 @@
+:root {
+  --surface: #ffffff;
+  --surface-sunken: #f6f7f9;
+  --border: #d8dce2;
+  --text: #14161a;
+  --text-muted: #5b6270;
+  /* Diff colours are darkened to their own tinted backgrounds rather than to
+     white. An added line is green text on green-tinted ground, and that pairing
+     is the one a reviewer actually reads — #1a7f37 on #e6f6ea measured 4.53:1
+     and #b3261e on #fdeceb measured 4.37:1, which is under WCAG AA for body
+     text. Colour is never the only signal here (the leading + and - carry the
+     meaning), but a reviewer deciding whether to approve should not have to
+     rely on that. */
+  --added: #15662c;
+  --added-bg: #e6f6ea;
+  --removed: #a01c16;
+  --removed-bg: #fdeceb;
+  --accent: #1f5fd6;
+  --warn: #8a5a00;
+  --warn-bg: #fdf3e0;
+
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  line-height: 1.5;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.85rem;
+}
+
+/* Focus -------------------------------------------------------------------
+
+   Declared once, for everything. The approve and reject buttons carry their own
+   backgrounds, and a browser default outline against a saturated green or red
+   is easy to lose — which matters more here than in most interfaces, because
+   the control a keyboard user is about to activate applies a change to a
+   repository. The offset keeps the ring off the button's own border so it reads
+   as a ring rather than as a thicker edge.
+
+   :focus-visible rather than :focus, so a mouse click does not leave a ring
+   behind on a control the user is already looking at. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* For text and code that never needs announcing but does need a name — a
+   heading that duplicates a visible label would be noise on screen and is
+   navigation structure to a screen reader. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.app {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.app__empty,
+.run-detail__loading {
+  color: var(--text-muted);
+}
+
+/* Run header ------------------------------------------------------------- */
+
+.run-detail__header {
+  margin-bottom: 1.5rem;
+}
+
+.run-detail__header h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.run-detail__stage {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.run-detail__stage[data-stage='awaiting_approval'] {
+  color: var(--warn);
+}
+
+.run-detail__stage[data-stage='succeeded'] {
+  color: var(--added);
+}
+
+.run-detail__stage[data-stage='failed'],
+.run-detail__stage[data-stage='rejected'] {
+  color: var(--removed);
+}
+
+.run-detail__reason {
+  font-weight: 400;
+}
+
+.run-detail__cancel {
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.run-detail__cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.run-detail__error,
+.approval-bar__error {
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.75rem 0 0;
+}
+
+.run-detail__no-proposal {
+  color: var(--text-muted);
+  padding: 1rem 0;
+}
+
+/* Panels ------------------------------------------------------------------ */
+
+.plan-panel,
+.diff-viewer,
+.approval-bar,
+.test-output {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.plan-panel h2,
+.diff-viewer h2,
+.test-output h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.plan-panel__text {
+  margin: 0 0 0.5rem;
+}
+
+.plan-panel__missing {
+  color: var(--warn);
+  margin: 0;
+}
+
+/* Diff -------------------------------------------------------------------- */
+
+.diff-viewer__paths {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.diff-viewer__paths code {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+
+.diff-viewer__diff {
+  margin: 0;
+  /* Scrolls sideways rather than wrapping. A wrapped diff line changes where
+     the change appears to be, which is the one thing the reviewer is reading
+     for. */
+  overflow-x: auto;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 0;
+}
+
+.diff-line {
+  display: block;
+  padding: 0 0.75rem;
+  white-space: pre;
+}
+
+.diff-line--added {
+  background: var(--added-bg);
+  color: var(--added);
+}
+
+.diff-line--removed {
+  background: var(--removed-bg);
+  color: var(--removed);
+}
+
+.diff-line--meta,
+.diff-line--hunk {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.diff-viewer__footer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+}
+
+.diff-viewer__hash-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.diff-viewer__hash {
+  word-break: break-all;
+}
+
+/* Approval ---------------------------------------------------------------- */
+
+.approval-bar {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.approval-bar--decided {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.approval-bar__actor label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.approval-bar__actor input {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.approval-bar__actor-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.approval-bar__actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.approval-bar__approve,
+.approval-bar__reject {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approval-bar__approve {
+  background: var(--added);
+  color: #fff;
+}
+
+.approval-bar__reject {
+  background: var(--surface);
+  border-color: var(--removed);
+  color: var(--removed);
+}
+
+.approval-bar__approve:disabled,
+.approval-bar__reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approval-bar__binding {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.approval-bar__decided {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* Tests ------------------------------------------------------------------- */
+
+.test-output__result {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.test-output__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.test-output__outcome {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.test-output__result--pass .test-output__outcome {
+  color: var(--added);
+}
+
+.test-output__result--fail .test-output__outcome {
+  color: var(--removed);
+}
+
+/* A timeout is not a failure. SC-009 counts them apart, so they read apart. */
+.test-output__result--timeout .test-output__outcome {
+  color: var(--warn);
+}
+
+.test-output__exit,
+.test-output__duration,
+.test-output__attempt {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.test-output__log {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+/* Repositories ------------------------------------------------------------ */
+
+.repository-list h1 {
+  font-size: 1.4rem;
+  margin: 0 0 1rem;
+}
+
+.repository-list__register {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.repository-list__register label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.repository-list__register input {
+  flex: 1 1 16rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.repository-list__register button,
+.repository-card__header button,
+.search-panel__form button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.repository-list__register button:disabled,
+.repository-card__header button:disabled,
+.search-panel__form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.repository-list__hint,
+.search-panel__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.repository-list__error,
+.repository-card__error,
+.search-panel__error {
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0 0 0.75rem;
+}
+
+.repository-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.repository-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.repository-card__header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.repository-card__slug {
+  color: var(--text-muted);
+}
+
+.repository-card__status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.repository-card__status[data-status='indexed'] {
+  color: var(--added);
+}
+
+.repository-card__status[data-status='failed'] {
+  color: var(--removed);
+}
+
+.repository-card__status[data-status='indexing'] {
+  color: var(--warn);
+}
+
+.repository-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 0 0 0.9rem;
+}
+
+.repository-card__counts dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.repository-card__counts dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.repository-card__exclusions {
+  margin-bottom: 0.9rem;
+}
+
+.repository-card__exclusions summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.repository-card__exclusions ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.repository-card__exclusions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* A zero is information -- the check ran and found nothing -- so it is shown,
+   just quietly. */
+.repository-card__exclusions li[data-zero='true'] {
+  color: var(--text-muted);
+}
+
+.repository-card__reason-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.repository-card__commands code {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin-right: 0.35rem;
+}
+
+/* Search ------------------------------------------------------------------ */
+
+.search-panel {
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.search-panel h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.search-panel__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.search-panel__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.search-panel__form input {
+  flex: 1 1 18rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.search-panel__results {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+}
+
+.search-panel__result {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+  overflow: hidden;
+}
+
+.search-panel__result-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.7rem;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.search-panel__lines,
+.search-panel__score,
+.search-panel__language {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.search-panel__score {
+  font-variant-numeric: tabular-nums;
+}
+
+.search-panel__snippet {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  overflow-x: auto;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.search-panel__empty {
+  margin: 0.9rem 0 0;
+  color: var(--text-muted);
+}
+
+/* Timeline ---------------------------------------------------------------- */
+
+.run-timeline {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.run-timeline h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.run-timeline__reconnecting {
+  color: var(--warn);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.run-timeline__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.run-timeline__entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.run-timeline__entry {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.run-timeline__sequence {
+  min-width: 2.2rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.run-timeline__label {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.run-timeline__detail {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.run-timeline__duration {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A failure is the most interesting entry in a run, so it reads that way. */
+.run-timeline__entry--failed .run-timeline__label {
+  color: var(--removed);
+}
+
+.run-timeline__status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--removed);
+}
+
+.run-timeline__error {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  color: var(--removed);
+  font-size: 0.8rem;
+}
+
+.run-timeline__entry[data-event-type='run_ended'] .run-timeline__label,
+.run-timeline__entry[data-event-type='stage_changed'] .run-timeline__label {
+  font-family: inherit;
+}
+
+/* Start a run ------------------------------------------------------------- */
+
+.start-run {
+  border-top: 1px solid var(--border);
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.start-run h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.2rem;
+}
+
+.start-run label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.start-run__optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.start-run textarea,
+.start-run input {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
+
+.start-run button {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.start-run button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Why the form is inert, stated where the form is rather than after a refused
+   request. The reason is the same one the server gives, so an operator who does
+   press through to a 409 reads the same sentence twice rather than two. */
+.start-run__blocked {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+.start-run__error {
+  margin: 0;
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+/* Views nav --------------------------------------------------------------- */
+
+.app-nav {
+  display: flex;
+  gap: 0.25rem;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 0;
+}
+
+.app-nav__link {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The current view carries a border and full-strength text, not colour alone —
+   the same reason the diff marks lines with + and -. */
+.app-nav__link[aria-current='page'] {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Runs ------------------------------------------------------------------- */
+
+.run-list__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.run-list__filter select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.run-list__waiting {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.run-list__loading,
+.run-list__empty {
+  color: var(--text-muted);
+}
+
+.run-list__error {
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+}
+
+.run-list__runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.run-list__run {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* A run waiting on a person is the one row worth finding at a glance. */
+.run-list__run[data-awaiting='true'] {
+  border-color: var(--warn);
+}
+
+.run-list__open {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+}
+
+.run-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0.55rem 0 0;
+}
+
+.run-list__meta dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.run-list__meta dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+}
+
+.run-list__stage {
+  font-weight: 600;
+}
+
+.run-detail__back {
+  border: 0;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+}

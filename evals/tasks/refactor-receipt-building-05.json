@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "refactor-receipt-building-05",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "refactor",
+  "description": "The receipt renderer builds its output by repeatedly concatenating strings, and pads a description to width one space at a time in a loop. Rewrite it using the framework's own formatting and text-building types. The rendered output must not change by a byte.",
+  "relevantFiles": [
+    "src/Billing/ReceiptFormatter.cs"
+  ],
+  "baselineTestCommand": "unit-receipt",
+  "successTestCommand": "unit-receipt",
+  "successCondition": {
+    "type": "tests_pass"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/ReceiptFormatter.cs"
+  ],
+  "referencePatch": "_reference/refactor-receipt-building-05.md"
+}

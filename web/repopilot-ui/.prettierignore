@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+# Generated from contracts/rest-api.yaml by `pnpm generate:api`. Formatting it
+# would make every regeneration a diff.
+src/api/schema.ts

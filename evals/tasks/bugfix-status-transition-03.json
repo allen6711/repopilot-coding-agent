@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "bugfix-status-transition-03",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "bug_fix",
+  "description": "Warehouse staff have shipped two cancelled orders this week. Cancelling an order is meant to be the end of it: nothing follows a cancellation, and nothing follows a shipment either.",
+  "relevantFiles": [
+    "src/Orders/OrderStatusMachine.cs"
+  ],
+  "baselineTestCommand": "unit-order-status",
+  "successTestCommand": "unit-order-status",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/OrderStatusMachine.cs"
+  ],
+  "referencePatch": "_reference/bugfix-status-transition-03.md"
+}

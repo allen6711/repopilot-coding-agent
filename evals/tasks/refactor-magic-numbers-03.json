@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "refactor-magic-numbers-03",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "refactor",
+  "description": "The loyalty thresholds and point rates are written out as bare numbers in three separate methods, so changing a threshold means changing it in three places and the last change missed one. Give them a single definition. No tier and no point value may change.",
+  "relevantFiles": [
+    "src/Orders/LoyaltyTiers.cs"
+  ],
+  "baselineTestCommand": "unit-loyalty-tiers",
+  "successTestCommand": "unit-loyalty-tiers",
+  "successCondition": {
+    "type": "tests_pass"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/LoyaltyTiers.cs"
+  ],
+  "referencePatch": "_reference/refactor-magic-numbers-03.md"
+}

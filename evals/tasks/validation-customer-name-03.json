@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "validation-customer-name-03",
+  "repositorySlug": "sample-dotnet-api",
+  "category": "input_validation",
+  "description": "Customer names are reaching the order record with runs of internal spaces from one of the checkout surfaces, blank names are being accepted, and a name too long for the record is truncated by the database rather than refused.",
+  "relevantFiles": [
+    "src/Orders/CustomerNameNormalizer.cs"
+  ],
+  "baselineTestCommand": "unit-customer-name",
+  "successTestCommand": "unit-customer-name",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Orders/CustomerNameNormalizer.cs"
+  ],
+  "referencePatch": "_reference/validation-customer-name-03.md"
+}

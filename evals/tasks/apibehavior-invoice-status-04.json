@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-invoice-status-04",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "api_behavior",
+  "description": "The collections screen shows an invoice with a part payment against it as entirely unpaid, so agents chase customers who have already paid half, and an overpayment shows as simply paid so nobody refunds it. Both states already exist in what the screen renders; nothing ever produces them.",
+  "relevantFiles": [
+    "src/Billing/InvoiceStatusReporter.cs"
+  ],
+  "baselineTestCommand": "unit-invoice-status",
+  "successTestCommand": "unit-invoice-status",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/InvoiceStatusReporter.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-invoice-status-04.md"
+}

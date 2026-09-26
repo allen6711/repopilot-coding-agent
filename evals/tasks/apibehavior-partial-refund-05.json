@@ -1,0 +1,19 @@
+{
+  "$schema": "https://repopilot.dev/schemas/eval-task.schema.json",
+  "id": "apibehavior-partial-refund-05",
+  "repositorySlug": "sample-dotnet-billing",
+  "category": "api_behavior",
+  "description": "A support agent refunding the shipping on an order refunds the entire charge instead, and a second refund against the same charge is refused outright. Refunds are meant to be possible in several parts, up to but never beyond what was charged.",
+  "relevantFiles": [
+    "src/Billing/RefundProcessor.cs"
+  ],
+  "baselineTestCommand": "unit-refund",
+  "successTestCommand": "unit-refund",
+  "successCondition": {
+    "type": "tests_pass_and_baseline_failed"
+  },
+  "expectedChangedFiles": [
+    "src/Billing/RefundProcessor.cs"
+  ],
+  "referencePatch": "_reference/apibehavior-partial-refund-05.md"
+}
