@@ -308,18 +308,32 @@ An end-to-end test must execute at least one seeded issue from task creation thr
 
 ## MVP acceptance criteria
 
-The MVP is complete only when:
+The MVP is complete only when every row below is met. The list carries status because the
+constitution makes it a gate rather than an aspiration: no stretch-goal work may begin until all of
+it holds, and a gate whose state a reader has to reverse-engineer from the code is not a gate.
 
-- a repository fixture can be indexed and searched;
-- the agent can call `search_code`, `read_file`, and `search_docs`;
-- the agent can produce a structured patch proposal;
-- no code change can be applied without a recorded approval;
-- approved patches apply only to a disposable workspace;
-- tests run inside Docker with a timeout and allow-listed command;
-- final diff and test output are visible in the React UI;
-- all tool calls are traceable by run ID;
-- a 30-task evaluation suite produces Retrieval Recall@5 and task-completion metrics;
-- a retrieval-only baseline and tool-enabled result can be compared reproducibly.
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | A repository fixture can be indexed and searched | **Met** | `Indexing/*Tests`, `Retrieval/HybridRetrieverTests` |
+| 2 | The agent can call `search_code`, `read_file`, and `search_docs` | **Met** | `ReadCapabilities`, `ToolInvokerTests` |
+| 3 | The agent can produce a structured patch proposal | **Met** | `ProposePatchCapability`, `ProposalValidatorTests` |
+| 4 | No code change can be applied without a recorded approval | **Met** | `ApprovalGateTests`, `SeededTaskFlowTests` |
+| 5 | Approved patches apply only to a disposable workspace | **Met** | `EvaluationSetNoOutsideWritesTests`, `FixtureIsReadOnlyTests` |
+| 6 | Tests run inside Docker with a timeout and allow-listed command | **Met** | `SandboxIsolationTests`, `SandboxTimeoutTests`, `AllowedCommandTests` |
+| 7 | Final diff and test output are visible in the React UI | **Met** | `DiffViewer`, `TestOutput`, and their Vitest suites |
+| 8 | All tool calls are traceable by run ID | **Met** | `RunEventSequenceTests`, `ReconstructabilityTests` |
+| 9 | A 30-task evaluation suite produces Retrieval Recall@5 **and** task-completion metrics | **Partly met** | Recall@5 measured at 83.3% in `evals/results/`; completion needs a provider credential |
+| 10 | A retrieval-only baseline and tool-enabled result can be compared reproducibly | **Not met** | `BaselineMode` runs both conditions and `EvaluationHarness` reports them separately, but no comparison has been produced — it needs a credential |
+
+Rows 9 and 10 are the whole of what remains, and both wait on the same thing: each figure requires
+every committed task run through the agent twice, which requires a model-provider credential. Nothing
+in the codebase blocks them.
+
+**Consequence for stretch goals.** The MVP criteria are therefore *not* met, so the constitution's
+Development Workflow section forbids beginning any of the stretch goals below — including a
+model-provider comparison, which is what swapping the deterministic embedding adapter for a semantic
+one would be. That work is the obvious next step for the five evaluation tasks whose relevant files
+are still missed, and it stays out of scope until rows 9 and 10 hold.
 
 ## Stretch goals
 

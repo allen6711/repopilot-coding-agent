@@ -71,7 +71,9 @@ maximum 4 concurrently executing runs; committed evaluation set of at least 30 t
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` v1.0.0.
+Gates derived from `.specify/memory/constitution.md`, ratified at v1.0.0 and re-checked at v2.0.0.
+The re-check is recorded below the table, and it is where the Technology constraint row's current
+wording comes from.
 
 | # | Gate (Principle) | Design satisfies it by | Status |
 |---|---|---|---|
@@ -163,9 +165,11 @@ src/
 web/
 └── repopilot-ui/
     ├── src/
-    │   ├── components/            # DiffViewer, ApprovalBar, RunTimeline, TestOutput
+    │   ├── components/            # DiffViewer, ApprovalBar, RunTimeline, TestOutput,
+    │   │                          # StartRunForm, PlanPanel, SearchPanel
     │   ├── pages/                 # RepositoryList, RunList, RunDetail
     │   ├── hooks/                 # useRunStream (SSE), useRun, useRepositories
+    │   ├── navigation.ts          # Query-string routes and history; not a router
     │   └── api/                   # Generated/typed client for rest-api.yaml
     └── tests/
 

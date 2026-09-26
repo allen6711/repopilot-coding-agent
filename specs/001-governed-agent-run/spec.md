@@ -4,7 +4,10 @@
 
 **Created**: 2026-08-09
 
-**Status**: Draft
+**Status**: Implemented — clarified 2026-08-10, built through 2026-09-26. Every requirement and
+success criterion below is traceable to code and tests, with one exception recorded in `README.md`:
+SC-006's comparison of baseline and tool-enabled completion has not been measured, because it
+needs a model-provider credential.
 
 **Input**: User description: "Complete MVP end-to-end flow — register a repository fixture,
 index it, retrieve context, plan, propose a patch, require human approval, apply to a disposable
