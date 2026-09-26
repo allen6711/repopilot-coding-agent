@@ -489,3 +489,28 @@ reported.
 - [X] T146 Extract the `useRun` and `useRepositories` hooks the plan names, moving the inline page
   queries behind them, in `web/repopilot-ui/src/hooks/` per plan: `web/repopilot-ui/src/hooks/`
   (partial)
+
+---
+
+## Phase 9: Convergence
+
+Appended by a second `/speckit-converge` on 2026-09-25, after Phase 8 closed. The first convergence
+made Recall@5 measurable; measuring it is what produced these two findings, which is the sequence
+Principle V is built around — the figure came first and the defect followed from it.
+
+- [ ] T147 Make the lexical arm of hybrid retrieval contribute for description-shaped queries: build
+  the text query as an OR of the query's lexemes rather than `plainto_tsquery`'s implicit AND, and
+  drive the trigram comparison from identifier-shaped tokens rather than the whole query string, in
+  `src/RepoPilot.Infrastructure/Retrieval/HybridRetriever.cs` per plan: hybrid retrieval fused with
+  RRF (contradicts — the SQL ANDs every term of the query, so a committed task's description matches
+  no chunk at all, verified as 0 rows for `validation-quantity-bounds-01`; fusion then has one arm to
+  fuse, which the class's own summary says is the entire point of having two)
+- [ ] T148 Coverage for T147: a task-description query returns lexical matches, both arms contribute
+  to a fused result, and exact-identifier lookup still ranks the defining file in the top five, in
+  `tests/integration/RepoPilot.IntegrationTests/Retrieval/HybridRetrieverTests.cs` per FR-004, FR-005
+  (missing)
+- [ ] T149 Re-measure Recall@5 over the committed task set and commit the new report, keeping the
+  previous one so the change in the figure is traceable, per SC-005, SC-007 (partial — measured at
+  70.0%, below the 80% the criterion requires)
+- [ ] T150 Update the README's measured Recall@5 row from the new report, and state whether SC-005 is
+  met, per Principle V (partial)
