@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, type Repository } from '../api/client';
 import { SearchPanel } from '../components/SearchPanel';
 import { StartRunForm } from '../components/StartRunForm';
+import { useRepositories } from '../hooks/useRepositories';
 
 /**
  * The operator view: register a fixture, build its index, and see what the
@@ -12,10 +13,7 @@ export function RepositoryList() {
   const queryClient = useQueryClient();
   const [slug, setSlug] = useState('');
 
-  const repositories = useQuery({
-    queryKey: ['repositories'],
-    queryFn: api.listRepositories,
-  });
+  const repositories = useRepositories();
 
   const register = useMutation({
     mutationFn: (value: string) => api.registerRepository(value),

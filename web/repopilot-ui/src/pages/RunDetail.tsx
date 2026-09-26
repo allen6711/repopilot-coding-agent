@@ -6,6 +6,7 @@ import { DiffViewer } from '../components/DiffViewer';
 import { PlanPanel } from '../components/PlanPanel';
 import { RunTimeline } from '../components/RunTimeline';
 import { TestOutput } from '../components/TestOutput';
+import { useRun } from '../hooks/useRun';
 import { useRunStream } from '../hooks/useRunStream';
 import { navigate } from '../navigation';
 
@@ -45,14 +46,7 @@ export function RunDetail({ runId }: RunDetailProps) {
   // browser with no EventSource.
   const stream = useRunStream(runId);
 
-  const run = useQuery({
-    queryKey: ['run', runId],
-    queryFn: () => api.getRun(runId),
-    // Polls while the run is live and stops once it ends. A finished run's
-    // state cannot change, so continuing to poll would be pure noise.
-    refetchInterval: (query) =>
-      query.state.data && isTerminal(query.state.data.stage) ? false : 2000,
-  });
+  const run = useRun(runId);
 
   // Refetch on each event rather than on a timer: the stream already knows
   // something changed, and waiting out the poll interval after it would be a

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, isTerminal, stageLabel } from '../api/client';
+import { useRepositories } from '../hooks/useRepositories';
 import { navigate } from '../navigation';
 
 /**
@@ -19,10 +20,7 @@ import { navigate } from '../navigation';
 export function RunList() {
   const [repositoryId, setRepositoryId] = useState('');
 
-  const repositories = useQuery({
-    queryKey: ['repositories'],
-    queryFn: api.listRepositories,
-  });
+  const repositories = useRepositories();
 
   const runs = useQuery({
     queryKey: ['runs', repositoryId || null],

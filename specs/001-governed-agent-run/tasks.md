@@ -486,6 +486,6 @@ reported.
 - [ ] T145 Replace the README rows the measured report covers with their measured values, keeping
   every model-dependent row labelled as a target — advances T137 without closing it per Principle V
   (partial)
-- [ ] T146 Extract the `useRun` and `useRepositories` hooks the plan names, moving the inline page
+- [X] T146 Extract the `useRun` and `useRepositories` hooks the plan names, moving the inline page
   queries behind them, in `web/repopilot-ui/src/hooks/` per plan: `web/repopilot-ui/src/hooks/`
   (partial)
