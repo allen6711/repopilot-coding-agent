@@ -225,19 +225,24 @@ Facts about what is committed, checked by the test suite rather than asserted he
 | Task mix | 8 bug fix, 6 input validation, 6 API behaviour, 5 refactor, 5 test | same |
 | Fixtures | 2 evaluation, 1 adversarial | `evals/fixtures/` |
 | File modifications outside a working copy, across the set | **0** | `EvaluationSetNoOutsideWritesTests` |
-| Retrieval Recall@5 over the committed task set | **70.0%** (21 / 30) | `evals/results/20260926-011429-retrieval.json` |
+| Retrieval Recall@5 over the committed task set | **83.3%** (25 / 30) | `evals/results/20260926-013445-retrieval.json` |
 
-**On that Recall@5 figure.** It is below the 80–90% target stated below, and it is reported as
-measured rather than adjusted. Two things are worth knowing before reading it as a verdict on
-retrieval. It is reproducible: a second pass over an unchanged index produces a byte-identical
-report apart from its timestamp (SC-007). And it was measured against the shipped default embedding
-adapter, `DeterministicEmbeddingAdapter` — a local hash-based embedding chosen so that retrieval
-needs no credential and repeats exactly. That is the right default for reproducibility and it is not
-a semantic model, which is the likeliest reason the meaning-based arm of hybrid search
-underperforms. The nine misses and the five paths each of them retrieved instead are in the report.
+**On that Recall@5 figure.** SC-005 asks for a relevant file in the top five for at least 80% of
+tasks, so **SC-005 is met** — on a measurement, not a target. It is reproducible: a second pass over
+an unchanged index produces a byte-identical report apart from its timestamp (SC-007).
 
-SC-005 asks for at least 80%, so **SC-005 is currently unmet**. It is reported, not gated: no build
-fails on the value.
+It is worth knowing how it got there, because the first measurement is also committed and reads
+70.0% (`20260926-011429-retrieval.json`). Measuring it is what found the reason: the lexical arm of
+hybrid search built its text query with `plainto_tsquery`, which ANDs every term, so a task
+description — a sentence of prose — matched no chunk at all and Reciprocal Rank Fusion had one arm to
+fuse. Nothing failed; retrieval simply ran at half strength, and no amount of reading the code had
+caught it. An OR of the query's lexemes moved four tasks.
+
+Five tasks still miss, with the paths each retrieved recorded in the report. That is a
+retrieval-quality question rather than a defect: the arm carrying them is
+`DeterministicEmbeddingAdapter`, the shipped default — a local hash-based embedding chosen so
+retrieval needs no credential and repeats exactly. It is the right default for reproducibility and it
+is not a semantic model.
 
 ### Not yet measured
 

@@ -512,5 +512,5 @@ Principle V is built around — the figure came first and the defect followed fr
 - [X] T149 Re-measure Recall@5 over the committed task set and commit the new report, keeping the
   previous one so the change in the figure is traceable, per SC-005, SC-007 (partial — measured at
   70.0%, below the 80% the criterion requires)
-- [ ] T150 Update the README's measured Recall@5 row from the new report, and state whether SC-005 is
+- [X] T150 Update the README's measured Recall@5 row from the new report, and state whether SC-005 is
   met, per Principle V (partial)

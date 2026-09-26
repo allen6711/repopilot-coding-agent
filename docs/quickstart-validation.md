@@ -203,11 +203,11 @@ the service runs as a different user.
   record with one before treating the quickstart as validated.
 - **No full evaluation report exists.** The completion, baseline, and latency figures stay labelled
   as targets until one does (Principle V, T137).
-- **Retrieval is measured.** `--retrieval-only` needs no credential, so Recall@5 is now a measured
-  70.0% (21/30) in `evals/results/`, reproducible byte-for-byte across passes. It is below SC-005's
-  80% bar; the report carries the nine misses. The likeliest cause is the shipped default embedding
-  adapter being a deterministic local hash rather than a semantic model — see the note in the
-  README's Measured table.
+- **Retrieval is measured and SC-005 is met.** `--retrieval-only` needs no credential, so Recall@5 is
+  a measured 83.3% (25/30) in `evals/results/`, reproducible byte-for-byte across passes. The first
+  measurement read 70.0% and is kept beside it: measuring is what found the lexical arm ANDing every
+  term of a query, which left hybrid search fusing one arm. Five tasks still miss, with their
+  retrieved paths in the report.
 - **The `.env` in `evals/fixtures/adversarial-content/config/` is force-added** past `.gitignore`. It
   is test data with a fake token, and the exclusion test needs it committed — but it will look like a
   leaked credential to any scanner that does not read the surrounding comment.
