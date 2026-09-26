@@ -315,7 +315,14 @@ metrics are consistent and derived only from committed task definitions.
 - [X] T135 [P] Accessibility pass over the review view (keyboard operation of approve and reject, focus order, contrast) in `web/repopilot-ui/src/components/`
 - [X] T136 [P] Author the capability contract and fixture authoring guide in `docs/`
 - [ ] T137 Replace the target values in `README.md` with measured values from the first complete evaluation, keeping unmeasured figures labelled as targets (Principle V)
-  - Blocked on a completed evaluation. The README now separates measured facts (task-set size and mix, fixture count, zero out-of-workspace writes) from targets and release gates, and every unmeasured figure is labelled as a target. Fill the remaining rows from `evals/results/` once the harness has run against a provider credential — see `docs/quickstart-validation.md`.
+  - Blocked on a completed evaluation, and now blocked on nothing else. The rows that need no
+    model-provider credential are measured and published: Recall@5 is 83.3% (25/30) from
+    `evals/results/20260926-013445-retrieval.json`, which closed the measurable half of this task
+    (T142, T144, T145, T149, T150). What remains needs a credential, because each figure requires
+    running every committed task through the agent twice: the retrieval-only completion baseline,
+    tool-enabled completion, and start-of-run-to-diff p95. All three stay labelled as targets. Run
+    `dotnet run --project src/RepoPilot.Evals` against a credential and fill them from the report
+    it writes — see `docs/quickstart-validation.md`.
 - [X] T138 Run the full `quickstart.md` validation end to end and record any deviation
 
 ---
