@@ -7,6 +7,7 @@ import { PlanPanel } from '../components/PlanPanel';
 import { RunTimeline } from '../components/RunTimeline';
 import { TestOutput } from '../components/TestOutput';
 import { useRunStream } from '../hooks/useRunStream';
+import { navigate } from '../navigation';
 
 interface RunDetailProps {
   readonly runId: string;
@@ -118,6 +119,14 @@ export function RunDetail({ runId }: RunDetailProps) {
   return (
     <article className="run-detail">
       <header className="run-detail__header">
+        <button
+          type="button"
+          className="run-detail__back"
+          onClick={() => navigate({ view: 'runs', runId: null })}
+        >
+          ← All runs
+        </button>
+
         <h1>{current.taskDescription}</h1>
 
         {/* Announced when it changes. The stage arrives over the event stream

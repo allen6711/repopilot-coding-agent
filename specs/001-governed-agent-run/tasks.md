@@ -464,7 +464,7 @@ reported.
   indexed fixture without leaving the UI, wiring the already-typed `api.createRun`, in
   `web/repopilot-ui/src/components/StartRunForm.tsx` and `web/repopilot-ui/src/pages/RepositoryList.tsx`
   per FR-007, US1/AC1 (missing)
-- [ ] T140 Add a run list as the way into review — every run for a fixture with its stage and task,
+- [X] T140 Add a run list as the way into review — every run for a fixture with its stage and task,
   each opening the existing review view — wiring the already-typed `api.listRuns`, in
   `web/repopilot-ui/src/pages/RunList.tsx` and `web/repopilot-ui/src/App.tsx` per US1/AC5,
   plan: `pages/RunList` (missing)

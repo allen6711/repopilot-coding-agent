@@ -808,3 +808,141 @@ pre {
   border-radius: 6px;
   padding: 0.5rem 0.7rem;
 }
+
+/* Views nav --------------------------------------------------------------- */
+
+.app-nav {
+  display: flex;
+  gap: 0.25rem;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 0;
+}
+
+.app-nav__link {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The current view carries a border and full-strength text, not colour alone —
+   the same reason the diff marks lines with + and -. */
+.app-nav__link[aria-current='page'] {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Runs ------------------------------------------------------------------- */
+
+.run-list__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.run-list__filter select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.run-list__waiting {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.run-list__loading,
+.run-list__empty {
+  color: var(--text-muted);
+}
+
+.run-list__error {
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+}
+
+.run-list__runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.run-list__run {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* A run waiting on a person is the one row worth finding at a glance. */
+.run-list__run[data-awaiting='true'] {
+  border-color: var(--warn);
+}
+
+.run-list__open {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+}
+
+.run-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0.55rem 0 0;
+}
+
+.run-list__meta dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.run-list__meta dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+}
+
+.run-list__stage {
+  font-weight: 600;
+}
+
+.run-detail__back {
+  border: 0;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+}
