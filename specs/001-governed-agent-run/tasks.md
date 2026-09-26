@@ -445,3 +445,47 @@ After Phase 2 completes:
 - Commit after each task or logical group; stop at any checkpoint to validate a story on its own.
 - Do not begin stretch-goal work (identity, RBAC, GitHub App, checkpoint/resume, reviewer agent, MCP
   exposure, provider comparison) until the MVP acceptance criteria in `README.md` are met.
+
+---
+
+## Phase 8: Convergence
+
+Appended by `/speckit-converge` on 2026-09-25, after `/speckit-implement` completed Phases 1–7.
+Each task names the requirement it closes and the gap type observed in the code. No existing task
+was renumbered or rewritten.
+
+The two UI gaps are the notable ones: every governance control in Principles I and II is
+implemented and tested, but the P1 story's entry point is not reachable from the browser — a
+reviewer can decide on a run only by hand-typing its id into the URL. The evaluation gaps are
+Principle V: the one metric that needs no model credential is computed inside a test and never
+reported.
+
+- [ ] T139 Add a start-run form to the operator view so a developer can start a run against an
+  indexed fixture without leaving the UI, wiring the already-typed `api.createRun`, in
+  `web/repopilot-ui/src/components/StartRunForm.tsx` and `web/repopilot-ui/src/pages/RepositoryList.tsx`
+  per FR-007, US1/AC1 (missing)
+- [ ] T140 Add a run list as the way into review — every run for a fixture with its stage and task,
+  each opening the existing review view — wiring the already-typed `api.listRuns`, in
+  `web/repopilot-ui/src/pages/RunList.tsx` and `web/repopilot-ui/src/App.tsx` per US1/AC5,
+  plan: `pages/RunList` (missing)
+- [ ] T141 Vitest coverage for T139 and T140: a started run navigates to its review view, a
+  disabled control on an unindexed fixture, and a run list that opens a run by id, in
+  `web/repopilot-ui/src/components/StartRunForm.test.tsx` and
+  `web/repopilot-ui/src/pages/RunList.test.tsx` per FR-007, US1/AC5 (missing)
+- [ ] T142 Add a retrieval-only evaluation mode — `repopilot-evals --retrieval-only` — that measures
+  Recall@5 over the committed task set through `HybridRetriever` alone and writes a report, making
+  the metric obtainable with no chat-provider credential, in `src/RepoPilot.Evals/Modes/RetrievalOnlyEvaluation.cs`,
+  `src/RepoPilot.Evals/Reporting/ReportWriter.cs`, and `src/RepoPilot.Evals/Program.cs` per FR-032,
+  SC-005, Principle V (partial)
+- [ ] T143 Integration coverage asserting the retrieval-only mode reports the same per-task hits as
+  `HybridRetriever` queried directly, and needs no `IChatProviderAdapter` call, in
+  `tests/integration/RepoPilot.IntegrationTests/Evals/RetrievalOnlyEvaluationTests.cs` per SC-005,
+  SC-007 (missing)
+- [ ] T144 Run the retrieval-only evaluation against the committed fixtures and commit its report to
+  `evals/results/` as the first measured artefact per SC-007, plan: `evals/results/` (partial)
+- [ ] T145 Replace the README rows the measured report covers with their measured values, keeping
+  every model-dependent row labelled as a target — advances T137 without closing it per Principle V
+  (partial)
+- [ ] T146 Extract the `useRun` and `useRepositories` hooks the plan names, moving the inline page
+  queries behind them, in `web/repopilot-ui/src/hooks/` per plan: `web/repopilot-ui/src/hooks/`
+  (partial)
