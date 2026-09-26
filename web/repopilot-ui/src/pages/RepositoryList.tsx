@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, type Repository } from '../api/client';
 import { SearchPanel } from '../components/SearchPanel';
+import { StartRunForm } from '../components/StartRunForm';
 
 /**
  * The operator view: register a fixture, build its index, and see what the
@@ -152,6 +153,8 @@ function RepositoryCard({ repository }: { readonly repository: Repository }) {
       )}
 
       <SearchPanel repositoryId={repository.id} indexed={indexed} />
+
+      <StartRunForm repositoryId={repository.id} indexed={indexed} />
     </article>
   );
 }

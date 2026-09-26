@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RepositoryList } from './pages/RepositoryList';
 import { RunDetail } from './pages/RunDetail';
+import { useRoute } from './navigation';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -15,23 +16,17 @@ const queryClient = new QueryClient({
 });
 
 /**
- * Reads the run to display from the URL: `/?run=<uuid>`. Without one, the
- * operator view.
- *
- * Deliberately not a router. This feature has two views and one link between
- * them; a router would be a dependency carried for a navigation model that does
- * not exist yet.
+ * Which view the URL asks for. See `navigation.ts` for the route shape and for
+ * why this is a query string rather than a router.
  */
-function runIdFromLocation(): string | null {
-  return new URLSearchParams(window.location.search).get('run');
-}
-
 export default function App() {
-  const runId = runIdFromLocation();
+  const route = useRoute();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <main className="app">{runId ? <RunDetail runId={runId} /> : <RepositoryList />}</main>
+      <main className="app">
+        {route.runId ? <RunDetail runId={route.runId} /> : <RepositoryList />}
+      </main>
     </QueryClientProvider>
   );
 }

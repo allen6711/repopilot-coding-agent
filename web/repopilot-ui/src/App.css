@@ -732,3 +732,79 @@ pre {
 .run-timeline__entry[data-event-type='stage_changed'] .run-timeline__label {
   font-family: inherit;
 }
+
+/* Start a run ------------------------------------------------------------- */
+
+.start-run {
+  border-top: 1px solid var(--border);
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.start-run h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.2rem;
+}
+
+.start-run label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.start-run__optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.start-run textarea,
+.start-run input {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
+
+.start-run button {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.start-run button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Why the form is inert, stated where the form is rather than after a refused
+   request. The reason is the same one the server gives, so an operator who does
+   press through to a 409 reads the same sentence twice rather than two. */
+.start-run__blocked {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+.start-run__error {
+  margin: 0;
+  color: var(--removed);
+  background: var(--removed-bg);
+  border: 1px solid var(--removed);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}

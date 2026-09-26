@@ -460,7 +460,7 @@ reviewer can decide on a run only by hand-typing its id into the URL. The evalua
 Principle V: the one metric that needs no model credential is computed inside a test and never
 reported.
 
-- [ ] T139 Add a start-run form to the operator view so a developer can start a run against an
+- [X] T139 Add a start-run form to the operator view so a developer can start a run against an
   indexed fixture without leaving the UI, wiring the already-typed `api.createRun`, in
   `web/repopilot-ui/src/components/StartRunForm.tsx` and `web/repopilot-ui/src/pages/RepositoryList.tsx`
   per FR-007, US1/AC1 (missing)

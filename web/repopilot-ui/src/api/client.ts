@@ -90,6 +90,13 @@ async function request<T>(path: string, init: RequestInit = {}, actor?: Actor): 
   return (await response.json()) as T;
 }
 
+/** What a run is started from: a description, a seeded task id, or both (FR-007). */
+export interface CreateRunTask {
+  readonly taskDescription?: string;
+  readonly seededTaskId?: string;
+  readonly toolsEnabled?: boolean;
+}
+
 export const api = {
   listRepositories: () => request<Repository[]>('/api/repositories'),
 
@@ -143,10 +150,23 @@ export const api = {
   cancel: (runId: string, actor: Actor) =>
     request<Run>(`/api/runs/${runId}/cancel`, { method: 'POST' }, actor),
 
-  createRun: (repositoryId: string, taskDescription: string, toolsEnabled = true) =>
+  /**
+   * Starts a run (FR-007).
+   *
+   * `taskDescription` and `seededTaskId` are both optional here and the server
+   * refuses a body carrying neither. FR-007 offers the two as alternatives, so
+   * the client models them as alternatives rather than making the caller pass an
+   * empty description alongside a seeded id.
+   */
+  createRun: (repositoryId: string, task: CreateRunTask) =>
     request<Run>('/api/runs', {
       method: 'POST',
-      body: JSON.stringify({ repositoryId, taskDescription, toolsEnabled }),
+      body: JSON.stringify({
+        repositoryId,
+        taskDescription: task.taskDescription?.trim() || undefined,
+        seededTaskId: task.seededTaskId?.trim() || undefined,
+        toolsEnabled: task.toolsEnabled ?? true,
+      }),
     }),
 };
 
