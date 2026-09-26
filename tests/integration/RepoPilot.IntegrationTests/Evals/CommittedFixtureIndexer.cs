@@ -8,13 +8,12 @@ using RepoPilot.Infrastructure.Persistence.Repositories;
 using RepoPilot.Infrastructure.Providers;
 using RepoPilot.Infrastructure.Retrieval;
 
-// CommittedArtifacts locates evals/tasks and evals/fixtures from a test binary.
-// It lives beside the evaluation tests that six other files already import it
-// from, so it is imported rather than moved: relocating it would edit six files
-// to spare this one line.
-using RepoPilot.IntegrationTests.Evals;
-
-namespace RepoPilot.IntegrationTests.Infrastructure;
+// Beside the evaluation tests, not in Infrastructure/. That folder is linked
+// wholesale into the e2e project as shared harness plumbing — the Docker probe
+// and the PostgreSQL fixture — and a helper that reaches for the committed
+// evaluation artefacts is not that. Putting it there would make the e2e build
+// depend on a namespace it does not link.
+namespace RepoPilot.IntegrationTests.Evals;
 
 /// <summary>
 /// Registers and indexes a committed fixture, once.
