@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using RepoPilot.Application.Configuration;
 using RepoPilot.Domain.Entities;
 using RepoPilot.Infrastructure.Indexing;
+using Microsoft.EntityFrameworkCore;
 using RepoPilot.Infrastructure.Persistence;
 using RepoPilot.Infrastructure.Providers;
 using RepoPilot.Infrastructure.Retrieval;
@@ -167,6 +168,106 @@ public sealed class HybridRetrieverTests(PostgresFixture postgres) : IDisposable
             repository.Id, "calculate shipping cost for a parcel", limit: 5);
 
         Assert.Contains(results, r => r.RelativePath == "src/ShippingCalculator.cs");
+    }
+
+    [RequiresDockerFact]
+    public async Task TheLexicalArmMatchesASentenceShapedQuery()
+    {
+        // The defect this pins down cost four tasks of Recall@5. plainto_tsquery
+        // ANDs every term, so a sentence — which is the shape every committed
+        // evaluation task's description has — matched no chunk at all, and
+        // Reciprocal Rank Fusion was left with one arm to fuse.
+        //
+        // Asserted against the two predicates directly rather than through
+        // SearchAsync, because the point is which arm contributes: a behavioural
+        // test would still pass on the vector arm alone and would not notice a
+        // revert.
+        await using var db = postgres.CreateContext();
+        var repository = await IndexAsync(db);
+
+        // A paraphrase, deliberately not a substring of anything indexed. Its
+        // words are spread across the fixture the way a task description's words
+        // are spread across a repository, which is the shape that matters.
+        const string Sentence =
+            "an order for a customer is projected through the dedicated lookup service layer";
+
+        var conjunctive = await CountMatchesAsync(
+            db, repository.Id, "plainto_tsquery('simple', @query)", Sentence);
+
+        var disjunctive = await CountMatchesAsync(
+            db,
+            repository.Id,
+            """
+            to_tsquery('simple',
+                (SELECT string_agg(DISTINCT lexeme, ' | ')
+                 FROM unnest(to_tsvector('simple', @query)) AS lexeme))
+            """,
+            Sentence);
+
+        Assert.Equal(0, conjunctive);
+        Assert.True(
+            disjunctive > 0,
+            "An OR of the sentence's lexemes must match something for the lexical arm to contribute.");
+    }
+
+    [RequiresDockerFact]
+    public async Task ASentenceShapedQueryStillRanksTheFileItDescribes()
+    {
+        await using var db = postgres.CreateContext();
+        var repository = await IndexAsync(db);
+
+        var results = await CreateRetriever(db).SearchAsync(
+            repository.Id,
+            "Orders are looked up through a dedicated service layer for each customer",
+            limit: 5);
+
+        Assert.Contains(results, r => r.RelativePath == "src/OrderLookupService.cs");
+    }
+
+    [RequiresDockerFact]
+    public async Task AnIdentifierQueryIsUnaffectedByTheDisjunction()
+    {
+        // An OR of one term is that term, so exact-identifier lookup ranks the
+        // defining file exactly as it did before — the property the change was
+        // required not to trade away (FR-005, User Story 2 acceptance scenario 3).
+        await using var db = postgres.CreateContext();
+        var repository = await IndexAsync(db);
+
+        var results = await CreateRetriever(db).SearchAsync(
+            repository.Id, "InventoryReconciler", limit: 5);
+
+        Assert.Equal("src/InventoryReconciler.cs", results[0].RelativePath);
+    }
+
+    /// <summary>
+    /// How many chunks of a repository a given tsquery expression matches.
+    /// </summary>
+    private async Task<int> CountMatchesAsync(
+        RepoPilotDbContext db,
+        Guid repositoryId,
+        string tsqueryExpression,
+        string query)
+    {
+        var connection = (Npgsql.NpgsqlConnection)db.Database.GetDbConnection();
+
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        await using var command = new Npgsql.NpgsqlCommand(
+            $"""
+            SELECT count(*)
+            FROM index_entries
+            WHERE "RepositoryId" = @repositoryId
+              AND "ContentSearchVector" @@ {tsqueryExpression};
+            """,
+            connection);
+
+        command.Parameters.AddWithValue("repositoryId", repositoryId);
+        command.Parameters.AddWithValue("query", query);
+
+        return (int)(long)(await command.ExecuteScalarAsync())!;
     }
 
     [RequiresDockerFact]

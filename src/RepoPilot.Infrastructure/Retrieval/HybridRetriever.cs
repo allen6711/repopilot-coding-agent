@@ -86,19 +86,44 @@ public sealed class HybridRetriever(
         var candidateDepth = Math.Max(take * 5, 50);
 
         var sql = $"""
-            WITH lexical AS (
-                SELECT "Id",
+            WITH terms AS (
+                -- The query's lexemes, OR-ed together.
+                --
+                -- plainto_tsquery ANDs every term, which makes it the right tool
+                -- for a phrase and the wrong one for a sentence: a task
+                -- description is a dozen words of prose, and requiring all of them
+                -- in a single chunk matched nothing at all. The lexical arm
+                -- returned zero rows for every description-shaped query, so
+                -- Reciprocal Rank Fusion below had one arm to fuse.
+                --
+                -- Built in SQL rather than assembled in C# so no caller-supplied
+                -- text is ever interpolated into tsquery syntax. A single-term
+                -- query produces the same tsquery either way, so exact-identifier
+                -- lookup is unaffected: an OR of one term is that term.
+                SELECT to_tsquery(
+                           'simple',
+                           (SELECT string_agg(DISTINCT lexeme, ' | ')
+                            FROM unnest(to_tsvector('simple', @query)) AS lexeme)
+                       ) AS tsq
+            ),
+            lexical AS (
+                SELECT e."Id",
                        ROW_NUMBER() OVER (
-                           ORDER BY ts_rank("ContentSearchVector", plainto_tsquery('simple', @query)) DESC,
-                                    similarity("Content", @query) DESC
+                           ORDER BY ts_rank(e."ContentSearchVector", t.tsq) DESC,
+                                    similarity(e."Content", @query) DESC
                        ) AS rank
-                FROM index_entries
-                WHERE "RepositoryId" = @repositoryId
-                  AND "IndexVersion" = @version
-                  {(documentationOnly ? "AND \"Language\" = 'markdown'" : string.Empty)}
+                FROM index_entries e, terms t
+                WHERE e."RepositoryId" = @repositoryId
+                  AND e."IndexVersion" = @version
+                  {(documentationOnly ? "AND e.\"Language\" = 'markdown'" : string.Empty)}
                   AND (
-                        "ContentSearchVector" @@ plainto_tsquery('simple', @query)
-                        OR "Content" ILIKE @likeQuery
+                        e."ContentSearchVector" @@ t.tsq
+                        -- Only identifier-shaped tokens reach the substring
+                        -- comparison. The whole query never matched, and every
+                        -- ordinary word in it would match too much: ranking is
+                        -- ts_rank's job, and this predicate only decides
+                        -- candidacy.
+                        OR e."Content" ILIKE ANY (@identifierPatterns)
                       )
                 LIMIT @depth
             ),
@@ -132,7 +157,9 @@ public sealed class HybridRetriever(
 
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("query", query);
-        command.Parameters.AddWithValue("likeQuery", $"%{EscapeLike(query)}%");
+        command.Parameters.AddWithValue(
+            "identifierPatterns",
+            IdentifierTokens(query).Select(t => $"%{EscapeLike(t)}%").ToArray());
         command.Parameters.AddWithValue("repositoryId", repositoryId);
         command.Parameters.AddWithValue("version", activeVersion.Value);
         command.Parameters.AddWithValue("embedding", queryVector);
@@ -157,6 +184,52 @@ public sealed class HybridRetriever(
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// The tokens in <paramref name="query"/> that look like code identifiers.
+    /// </summary>
+    /// <remarks>
+    /// Narrow on purpose: a token qualifies only if it carries an internal
+    /// capital, an underscore, or a dot between word characters — the shapes
+    /// <c>OrderLookupService</c>, <c>line_item</c>, and <c>Orders.Total</c> have
+    /// and that English words do not. A sentence-initial capital is not an
+    /// internal one, so "Orders are arriving with lines for zero units" yields
+    /// nothing, which is the correct answer: its words belong to the text-search
+    /// arm, and passing them to a substring comparison would make every chunk
+    /// mentioning an order a candidate.
+    /// </remarks>
+    public static IReadOnlyList<string> IdentifierTokens(string query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var tokens = new List<string>();
+
+        foreach (var raw in query.Split(
+            [' ', '\t', '\n', '\r', ',', ';', ':', '(', ')', '[', ']', '{', '}', '"', '\'', '`'],
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            // Trailing sentence punctuation is not part of the identifier, but an
+            // interior dot is.
+            var token = raw.Trim('.', '!', '?');
+
+            if (token.Length < 3 || tokens.Contains(token, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            var hasInternalCapital = token.Skip(1).Any(char.IsUpper);
+            var hasUnderscore = token.Contains('_', StringComparison.Ordinal);
+            var hasInteriorDot = token.IndexOf('.', StringComparison.Ordinal) > 0 &&
+                token.IndexOf('.', StringComparison.Ordinal) < token.Length - 1;
+
+            if (hasInternalCapital || hasUnderscore || hasInteriorDot)
+            {
+                tokens.Add(token);
+            }
+        }
+
+        return tokens;
     }
 
     /// <summary>
