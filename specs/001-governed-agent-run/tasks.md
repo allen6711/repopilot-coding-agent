@@ -468,7 +468,7 @@ reported.
   each opening the existing review view — wiring the already-typed `api.listRuns`, in
   `web/repopilot-ui/src/pages/RunList.tsx` and `web/repopilot-ui/src/App.tsx` per US1/AC5,
   plan: `pages/RunList` (missing)
-- [ ] T141 Vitest coverage for T139 and T140: a started run navigates to its review view, a
+- [X] T141 Vitest coverage for T139 and T140: a started run navigates to its review view, a
   disabled control on an unindexed fixture, and a run list that opens a run by id, in
   `web/repopilot-ui/src/components/StartRunForm.test.tsx` and
   `web/repopilot-ui/src/pages/RunList.test.tsx` per FR-007, US1/AC5 (missing)
