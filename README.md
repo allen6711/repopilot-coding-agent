@@ -225,29 +225,50 @@ Facts about what is committed, checked by the test suite rather than asserted he
 | Task mix | 8 bug fix, 6 input validation, 6 API behaviour, 5 refactor, 5 test | same |
 | Fixtures | 2 evaluation, 1 adversarial | `evals/fixtures/` |
 | File modifications outside a working copy, across the set | **0** | `EvaluationSetNoOutsideWritesTests` |
+| Retrieval Recall@5 over the committed task set | **70.0%** (21 / 30) | `evals/results/20260926-011429-retrieval.json` |
+
+**On that Recall@5 figure.** It is below the 80–90% target stated below, and it is reported as
+measured rather than adjusted. Two things are worth knowing before reading it as a verdict on
+retrieval. It is reproducible: a second pass over an unchanged index produces a byte-identical
+report apart from its timestamp (SC-007). And it was measured against the shipped default embedding
+adapter, `DeterministicEmbeddingAdapter` — a local hash-based embedding chosen so that retrieval
+needs no credential and repeats exactly. That is the right default for reproducibility and it is not
+a semantic model, which is the likeliest reason the meaning-based arm of hybrid search
+underperforms. The nine misses and the five paths each of them retrieved instead are in the report.
+
+SC-005 asks for at least 80%, so **SC-005 is currently unmet**. It is reported, not gated: no build
+fails on the value.
 
 ### Not yet measured
 
-These are development targets. No evaluation has been run against a model provider yet, so no
-value below has been observed — they are stated as expectations, and none of them may be quoted as
-an outcome (Principle V).
+These are development targets. No evaluation has been run against a model provider, so no value
+below has been observed — they are stated as expectations, and none of them may be quoted as an
+outcome (Principle V).
 
 | Figure | Target | Status |
 |---|---|---|
-| Retrieval Recall@5 | 80–90% | Not measured |
 | Retrieval-only completion baseline | ~35–50% | Not measured |
 | Tool-enabled completion | ~60–75% | Not measured |
 | Start of run to reviewable diff, p95 | under 3 min | Not measured |
 
-To produce them, run the harness against a provider credential and a running database:
+Recall@5 needs no model provider, because embeddings are deterministic and retrieval is a function
+of committed fixture content alone. Measuring it is therefore a separate mode, and the only thing it
+needs is an indexed fixture in a running database:
+
+```bash
+dotnet run --project src/RepoPilot.Evals -- --retrieval-only
+```
+
+The rows above need a provider credential, because each task is run twice through the agent:
 
 ```bash
 dotnet run --project src/RepoPilot.Evals
 ```
 
-It writes a committed JSON report to `evals/results/`, carrying the summary figures and a per-task
-line with the run id behind each one. Replace the rows above from that file, and leave anything the
-report does not cover labelled as a target.
+Either writes a committed JSON report to `evals/results/` — the full harness carrying the summary
+figures and a per-task line with the run id behind each one, the retrieval-only mode carrying the
+per-task hits and the paths each one retrieved. Replace the rows above from that file, and leave
+anything the report does not cover labelled as a target.
 
 ### Release gates
 

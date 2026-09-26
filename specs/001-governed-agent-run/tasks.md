@@ -483,7 +483,7 @@ reported.
   SC-007 (missing)
 - [X] T144 Run the retrieval-only evaluation against the committed fixtures and commit its report to
   `evals/results/` as the first measured artefact per SC-007, plan: `evals/results/` (partial)
-- [ ] T145 Replace the README rows the measured report covers with their measured values, keeping
+- [X] T145 Replace the README rows the measured report covers with their measured values, keeping
   every model-dependent row labelled as a target — advances T137 without closing it per Principle V
   (partial)
 - [X] T146 Extract the `useRun` and `useRepositories` hooks the plan names, moving the inline page
