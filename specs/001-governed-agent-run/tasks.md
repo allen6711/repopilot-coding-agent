@@ -477,7 +477,7 @@ reported.
   the metric obtainable with no chat-provider credential, in `src/RepoPilot.Evals/Modes/RetrievalOnlyEvaluation.cs`,
   `src/RepoPilot.Evals/Reporting/ReportWriter.cs`, and `src/RepoPilot.Evals/Program.cs` per FR-032,
   SC-005, Principle V (partial)
-- [ ] T143 Integration coverage asserting the retrieval-only mode reports the same per-task hits as
+- [X] T143 Integration coverage asserting the retrieval-only mode reports the same per-task hits as
   `HybridRetriever` queried directly, and needs no `IChatProviderAdapter` call, in
   `tests/integration/RepoPilot.IntegrationTests/Evals/RetrievalOnlyEvaluationTests.cs` per SC-005,
   SC-007 (missing)

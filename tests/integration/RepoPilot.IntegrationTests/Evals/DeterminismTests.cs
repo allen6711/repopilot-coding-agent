@@ -31,56 +31,13 @@ public sealed class DeterminismTests(PostgresFixture postgres)
     /// <summary>The depth SC-005 and FR-032 are stated at.</summary>
     private const int RecallDepth = 5;
 
-    /// <summary>
-    /// Indexes a committed fixture once. Deliberately returns the fixture rather
-    /// than a re-indexing helper: an evaluation never rebuilds an index, and a
-    /// test that quietly did would be exercising the thing SC-007 forbids.
-    /// </summary>
-    private static async Task<RepositoryFixture> IndexOnceAsync(
-        RepoPilotDbContext db, string slug)
-    {
-        var fixture = new RepositoryFixture
-        {
-            Slug = slug + "-" + Guid.NewGuid().ToString("N")[..8],
-            DisplayName = slug,
-            RootPath = Path.Combine(CommittedArtifacts.FixturesDirectory, slug),
-            TestConfigJson = await File.ReadAllTextAsync(
-                Path.Combine(CommittedArtifacts.FixturesDirectory, slug, "repopilot.fixture.json")),
-        };
-
-        db.Repositories.Add(fixture);
-        await db.SaveChangesAsync();
-
-        var useCase = new IndexRepositoryUseCase(
-            new EfRepositoryFixtureStore(db),
-            new IndexingService(
-                db,
-                new DeterministicEmbeddingAdapter(RepoPilotDbContext.EmbeddingDimensions),
-                new IndexingOptions
-                {
-                    EmbeddingDimensions = RepoPilotDbContext.EmbeddingDimensions,
-                },
-                NullLogger<IndexingService>.Instance),
-            NullLogger<IndexRepositoryUseCase>.Instance);
-
-        await useCase.RebuildAsync(fixture.Id);
-
-        return (await new EfRepositoryFixtureStore(db).FindByIdAsync(fixture.Id))!;
-    }
-
-    private static HybridRetriever Retriever(RepoPilotDbContext db) =>
-        new(
-            db,
-            new DeterministicEmbeddingAdapter(RepoPilotDbContext.EmbeddingDimensions),
-            new RetrievalOptions());
-
     /// <summary>Which tasks had a relevant file in the top five, in task order.</summary>
     private static async Task<IReadOnlyList<(string TaskId, bool Hit)>> MeasureRecallAsync(
         RepoPilotDbContext db,
         IReadOnlyList<EvaluationTaskDefinition> tasks,
         IReadOnlyDictionary<string, Guid> repositoriesBySlug)
     {
-        var retriever = Retriever(db);
+        var retriever = CommittedFixtureIndexer.Retriever(db);
         var measured = new List<(string, bool)>(tasks.Count);
 
         foreach (var task in tasks)
@@ -115,7 +72,7 @@ public sealed class DeterminismTests(PostgresFixture postgres)
 
         foreach (var slug in tasks.Select(t => t.RepositorySlug).Distinct(StringComparer.Ordinal))
         {
-            var fixture = await IndexOnceAsync(db, slug);
+            var fixture = await CommittedFixtureIndexer.IndexOnceAsync(db, slug);
             repositories[slug] = fixture.Id;
         }
 
@@ -131,8 +88,8 @@ public sealed class DeterminismTests(PostgresFixture postgres)
     {
         await using var db = postgres.CreateContext();
 
-        var fixture = await IndexOnceAsync(db, "sample-dotnet-api");
-        var retriever = Retriever(db);
+        var fixture = await CommittedFixtureIndexer.IndexOnceAsync(db, "sample-dotnet-api");
+        var retriever = CommittedFixtureIndexer.Retriever(db);
 
         const string Query =
             "order lookup throws when the customer has no shipping address on file";
@@ -156,8 +113,8 @@ public sealed class DeterminismTests(PostgresFixture postgres)
         // Two separate registrations of the same directory. An evaluation never
         // does this — it is how the test distinguishes "the index happens to be
         // stable" from "indexing is a function of the content".
-        var first = await IndexOnceAsync(db, "sample-dotnet-billing");
-        var second = await IndexOnceAsync(db, "sample-dotnet-billing");
+        var first = await CommittedFixtureIndexer.IndexOnceAsync(db, "sample-dotnet-billing");
+        var second = await CommittedFixtureIndexer.IndexOnceAsync(db, "sample-dotnet-billing");
 
         var firstEntries = db.IndexEntries
             .Where(e => e.RepositoryId == first.Id && e.IndexVersion == first.ActiveIndexVersion)
